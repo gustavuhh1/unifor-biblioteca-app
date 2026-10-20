@@ -1,0 +1,25 @@
+{
+  "name": "unifor-biblioteca-app",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "~58.0.16",
+    "expo-status-bar": "~58.0.3",
+    "firebase": "^13.0.0",
+    "react": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-passkey": "^3.6.2"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "typecheck": "tsc --noEmit"
+  },
+  "private": true,
+  "description": "Unifor Biblioteca mobile app (passkey prototype)"
+}
