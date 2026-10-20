@@ -3,8 +3,8 @@ import { BottomNav, type NavRole } from './bottom-nav'
 
 // Rotas das abas de cada perfil, na mesma ordem dos itens do BottomNav.
 export const TAB_ROUTES: Record<NavRole, readonly string[]> = {
-  aluno: ['home', 'catalog', 'loans', 'assistant', 'profile'],
-  bibliotecario: ['panel', 'withdrawals', 'scan', 'queues', 'fines'],
+  aluno: ['index', 'catalog', 'loans', 'assistant', 'profile'],
+  bibliotecario: ['index', 'withdrawals', 'scan', 'queues', 'fines'],
 }
 
 // Liga o BottomNav do design system às abas do Expo Router (prop `tabBar` do Tabs).

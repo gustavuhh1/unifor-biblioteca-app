@@ -8,7 +8,7 @@ export default function StudentLayout() {
       screenOptions={{ headerShown: false }}
       tabBar={(props) => <RoleTabBar role="aluno" {...props} />}
     >
-      <Tabs.Screen name="home" />
+      <Tabs.Screen name="index" />
       <Tabs.Screen name="catalog" />
       <Tabs.Screen name="loans" />
       <Tabs.Screen name="assistant" />
