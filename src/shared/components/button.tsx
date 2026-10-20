@@ -24,13 +24,13 @@ export interface ButtonProps extends Omit<
 
 // Classes de fundo e contorno por variante (o texto vem de TEXT_CLASS).
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary: 'bg-brand active:bg-brand-strong',
+  primary: 'border-transparent bg-brand active:bg-brand-strong',
   secondary: 'bg-surface-raised border-brand',
-  tonal: 'bg-brand-soft',
-  ghost: 'bg-transparent',
+  tonal: 'border-transparent bg-brand-soft',
+  ghost: 'border-transparent bg-transparent',
   danger: 'bg-surface-raised border-danger',
 }
-const DISABLED_CLASS = 'bg-surface-sunken'
+const DISABLED_CLASS = 'border-transparent bg-surface-sunken'
 
 const TEXT_CLASS: Record<ButtonVariant, string> = {
   primary: 'text-on-brand',
@@ -83,7 +83,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityState={{ disabled: inactive, busy: loading }}
       disabled={inactive}
-      className={`flex-row items-center justify-center gap-2 border-[1.5px] border-transparent ${SIZE_CLASS[size]} ${
+      className={`flex-row items-center justify-center gap-2 border-[1.5px] ${SIZE_CLASS[size]} ${
         disabled ? DISABLED_CLASS : VARIANT_CLASS[variant]
       } ${block ? 'w-full' : 'self-start'}`}
       {...rest}
