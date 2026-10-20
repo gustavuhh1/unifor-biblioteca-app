@@ -30,6 +30,18 @@ tab. The real screens come in the next tasks.
   The emulator needs a Google account signed in and a screen lock (PIN), so Credential
   Manager can create passkeys.
 
+### Windows: use a short project path
+
+The native build of `react-native-worklets` (a dependency of Reanimated/NativeWind) fails
+on Windows when the project path is long: CMake/Ninja hit the 260-character limit, even
+with long paths enabled in the registry. Build from a short path, for example by mapping
+the project folder to a drive letter and running every command from there:
+
+```powershell
+subst W: C:\path\to\unifor-biblioteca-app
+W:
+```
+
 ## Run
 
 1. Start the API side (in the API repository): `npm run emulators`, `npm run seed` and
