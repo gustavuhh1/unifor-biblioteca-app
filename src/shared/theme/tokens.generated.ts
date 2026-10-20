@@ -1,0 +1,92 @@
+// @generated por scripts/generate-tokens.mjs a partir de docs/design-system/tokens.json. Não edite: rode `npm run tokens`.
+// Tokens do design system para o que não é classe (cor de ícone, StatusBar,
+// sombras). O nome de cada cor é o do token em camelCase: surface-raised -> surfaceRaised.
+
+export const THEME_IDS = ['light', 'dark'] as const
+export type ThemeId = (typeof THEME_IDS)[number]
+
+export const themeColors = {
+  light: {
+    surface: '#f6f7fb',
+    surfaceRaised: '#ffffff',
+    surfaceSunken: '#edeff5',
+    line: '#d9deea',
+    lineStrong: '#7f879c',
+    ink: '#0b1533',
+    inkMuted: '#55607a',
+    inkFaint: '#8c94a8',
+    brand: '#004af5',
+    brandStrong: '#0039c2',
+    brandSoft: '#e8eeff',
+    onBrand: '#ffffff',
+    focus: '#004af5',
+    success: '#0a6e4d',
+    successSoft: '#e3f5ec',
+    warning: '#8a4e00',
+    warningSoft: '#fff1d6',
+    danger: '#b42318',
+    dangerSoft: '#fde8e6',
+    neutralSoft: '#eef0f4',
+    neutralInk: '#5a6378',
+    scrim: 'rgba(11, 21, 51, 0.48)',
+    onDanger: '#ffffff',
+    onCover: '#ffffff',
+    qrInk: '#0b1533',
+    qrPaper: '#ffffff',
+    cover1: '#0b2a6f',
+    cover2: '#0f5c5c',
+    cover3: '#8e2f1c',
+    cover4: '#4a5a12',
+    cover5: '#5b2a4e',
+    cover6: '#004af5',
+  },
+  dark: {
+    surface: '#0b0f1a',
+    surfaceRaised: '#141a29',
+    surfaceSunken: '#1b2234',
+    line: '#2a3247',
+    lineStrong: '#6b7590',
+    ink: '#eef1f8',
+    inkMuted: '#a3adc4',
+    inkFaint: '#6b7590',
+    brand: '#7fa6ff',
+    brandStrong: '#a9c2ff',
+    brandSoft: '#14244f',
+    onBrand: '#07112e',
+    focus: '#a9c2ff',
+    success: '#5bd6a4',
+    successSoft: '#0e2a21',
+    warning: '#f5b451',
+    warningSoft: '#33240a',
+    danger: '#ff8f84',
+    dangerSoft: '#3a1513',
+    neutralSoft: '#232a3b',
+    neutralInk: '#b5bdd0',
+    scrim: 'rgba(0, 0, 0, 0.64)',
+    onDanger: '#07112e',
+    onCover: '#ffffff',
+    qrInk: '#0b1533',
+    qrPaper: '#ffffff',
+    cover1: '#0b2a6f',
+    cover2: '#0f5c5c',
+    cover3: '#8e2f1c',
+    cover4: '#4a5a12',
+    cover5: '#5b2a4e',
+    cover6: '#004af5',
+  },
+} as const
+export type ColorToken = keyof (typeof themeColors)['light']
+
+export const themeShadows = {
+  light: {
+    card: '0 1px 2px rgba(11, 21, 51, 0.06), 0 4px 12px rgba(11, 21, 51, 0.05)',
+    float: '0 8px 24px rgba(0, 74, 245, 0.28)',
+    sheet: '0 -8px 32px rgba(11, 21, 51, 0.12)',
+  },
+  dark: {
+    card: '0 1px 2px rgba(0, 0, 0, 0.4)',
+    float: '0 8px 24px rgba(0, 0, 0, 0.5)',
+    sheet: '0 -8px 32px rgba(0, 0, 0, 0.5)',
+  },
+} as const
+export type ShadowToken = keyof (typeof themeShadows)['light']

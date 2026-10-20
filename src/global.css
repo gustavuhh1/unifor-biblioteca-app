@@ -1,0 +1,62 @@
+/* @generated por scripts/generate-tokens.mjs a partir de docs/design-system/tokens.json. Não edite: rode `npm run tokens`. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: #f6f7fb;
+  --surface-raised: #ffffff;
+  --surface-sunken: #edeff5;
+  --line: #d9deea;
+  --line-strong: #7f879c;
+  --ink: #0b1533;
+  --ink-muted: #55607a;
+  --ink-faint: #8c94a8;
+  --brand: #004af5;
+  --brand-strong: #0039c2;
+  --brand-soft: #e8eeff;
+  --on-brand: #ffffff;
+  --focus: #004af5;
+  --success: #0a6e4d;
+  --success-soft: #e3f5ec;
+  --warning: #8a4e00;
+  --warning-soft: #fff1d6;
+  --danger: #b42318;
+  --danger-soft: #fde8e6;
+  --neutral-soft: #eef0f4;
+  --neutral-ink: #5a6378;
+  --scrim: rgba(11, 21, 51, 0.48);
+  --on-danger: #ffffff;
+  --on-cover: #ffffff;
+  --qr-ink: #0b1533;
+  --qr-paper: #ffffff;
+}
+
+.dark:root {
+  --surface: #0b0f1a;
+  --surface-raised: #141a29;
+  --surface-sunken: #1b2234;
+  --line: #2a3247;
+  --line-strong: #6b7590;
+  --ink: #eef1f8;
+  --ink-muted: #a3adc4;
+  --ink-faint: #6b7590;
+  --brand: #7fa6ff;
+  --brand-strong: #a9c2ff;
+  --brand-soft: #14244f;
+  --on-brand: #07112e;
+  --focus: #a9c2ff;
+  --success: #5bd6a4;
+  --success-soft: #0e2a21;
+  --warning: #f5b451;
+  --warning-soft: #33240a;
+  --danger: #ff8f84;
+  --danger-soft: #3a1513;
+  --neutral-soft: #232a3b;
+  --neutral-ink: #b5bdd0;
+  --scrim: rgba(0, 0, 0, 0.64);
+  --on-danger: #07112e;
+  --on-cover: #ffffff;
+  --qr-ink: #0b1533;
+  --qr-paper: #ffffff;
+}
