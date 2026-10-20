@@ -1,0 +1,246 @@
+// @generated por scripts/generate-tokens.mjs a partir de docs/design-system/tokens.json. Não edite: rode `npm run tokens`.
+const plugin = require('tailwindcss/plugin')
+
+// Estilos de texto do design system: classes text-body, text-title, text-book-title...
+const textUtilities = {
+  '.text-display': {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: '30px',
+    lineHeight: '36px',
+    letterSpacing: '-0.6px',
+  },
+  '.text-title-lg': {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: '24px',
+    lineHeight: '30px',
+    letterSpacing: '-0.24px',
+  },
+  '.text-title': {
+    fontFamily: 'Figtree_600SemiBold',
+    fontSize: '19px',
+    lineHeight: '26px',
+  },
+  '.text-body-lg': {
+    fontFamily: 'Figtree_400Regular',
+    fontSize: '17px',
+    lineHeight: '24px',
+  },
+  '.text-body': {
+    fontFamily: 'Figtree_400Regular',
+    fontSize: '15px',
+    lineHeight: '22px',
+  },
+  '.text-label': {
+    fontFamily: 'Figtree_600SemiBold',
+    fontSize: '15px',
+    lineHeight: '20px',
+  },
+  '.text-caption': {
+    fontFamily: 'Figtree_500Medium',
+    fontSize: '13px',
+    lineHeight: '18px',
+  },
+  '.text-overline': {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: '11px',
+    lineHeight: '14px',
+    letterSpacing: '0.88px',
+    textTransform: 'uppercase',
+  },
+  '.text-hero': {
+    fontFamily: 'Figtree_800ExtraBold',
+    fontSize: '28px',
+    lineHeight: '34px',
+    letterSpacing: '-0.28px',
+  },
+  '.text-number': {
+    fontFamily: 'Figtree_800ExtraBold',
+    fontSize: '30px',
+    lineHeight: '34px',
+    letterSpacing: '-0.6px',
+  },
+  '.text-number-lg': {
+    fontFamily: 'Figtree_800ExtraBold',
+    fontSize: '36px',
+    lineHeight: '40px',
+    letterSpacing: '-0.72px',
+  },
+  '.text-stat': {
+    fontFamily: 'Figtree_800ExtraBold',
+    fontSize: '20px',
+    lineHeight: '26px',
+  },
+  '.text-title-sm': {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: '17px',
+    lineHeight: '22px',
+  },
+  '.text-label-lg': {
+    fontFamily: 'Figtree_600SemiBold',
+    fontSize: '17px',
+    lineHeight: '22px',
+  },
+  '.text-label-sm': {
+    fontFamily: 'Figtree_600SemiBold',
+    fontSize: '14px',
+    lineHeight: '20px',
+  },
+  '.text-body-sm': {
+    fontFamily: 'Figtree_400Regular',
+    fontSize: '14px',
+    lineHeight: '20px',
+  },
+  '.text-caption-strong': {
+    fontFamily: 'Figtree_600SemiBold',
+    fontSize: '13px',
+    lineHeight: '18px',
+  },
+  '.text-caption-sm': {
+    fontFamily: 'Figtree_500Medium',
+    fontSize: '12px',
+    lineHeight: '16px',
+  },
+  '.text-micro': {
+    fontFamily: 'Figtree_600SemiBold',
+    fontSize: '11px',
+    lineHeight: '14px',
+  },
+  '.text-micro-strong': {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: '11px',
+    lineHeight: '14px',
+    textTransform: 'uppercase',
+  },
+  '.text-code': {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: '24px',
+    lineHeight: '30px',
+    letterSpacing: '3.36px',
+  },
+  '.text-capa-autor': {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: '9px',
+    lineHeight: '12px',
+    letterSpacing: '0.72px',
+    textTransform: 'uppercase',
+  },
+  '.text-book-title-lg': {
+    fontFamily: 'Newsreader_600SemiBold',
+    fontSize: '26px',
+    lineHeight: '31px',
+  },
+  '.text-book-title': {
+    fontFamily: 'Newsreader_600SemiBold',
+    fontSize: '17px',
+    lineHeight: '22px',
+  },
+  '.text-book-title-sm': {
+    fontFamily: 'Newsreader_600SemiBold',
+    fontSize: '15px',
+    lineHeight: '19px',
+  },
+  '.text-capa-g': {
+    fontFamily: 'Newsreader_600SemiBold',
+    fontSize: '22px',
+    lineHeight: '25px',
+  },
+  '.text-capa-m': {
+    fontFamily: 'Newsreader_600SemiBold',
+    fontSize: '13px',
+    lineHeight: '15px',
+  },
+  '.text-capa-p': {
+    fontFamily: 'Newsreader_600SemiBold',
+    fontSize: '10px',
+    lineHeight: '12px',
+  },
+  '.text-secao': {
+    fontFamily: 'Figtree_700Bold',
+    fontSize: '56px',
+    lineHeight: '64px',
+    letterSpacing: '-1.12px',
+  },
+}
+
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ['./src/**/*.{ts,tsx}'],
+  presets: [require('nativewind/preset')],
+  darkMode: 'class',
+  // "theme" (e não "theme.extend") substitui a paleta padrão do Tailwind: só
+  // existem as classes dos tokens. As sombras ficam em src/shared/theme.
+  theme: {
+    colors: {
+      transparent: 'transparent',
+      surface: 'var(--surface)',
+      'surface-raised': 'var(--surface-raised)',
+      'surface-sunken': 'var(--surface-sunken)',
+      line: 'var(--line)',
+      'line-strong': 'var(--line-strong)',
+      ink: 'var(--ink)',
+      'ink-muted': 'var(--ink-muted)',
+      'ink-faint': 'var(--ink-faint)',
+      brand: 'var(--brand)',
+      'brand-strong': 'var(--brand-strong)',
+      'brand-soft': 'var(--brand-soft)',
+      'on-brand': 'var(--on-brand)',
+      focus: 'var(--focus)',
+      success: 'var(--success)',
+      'success-soft': 'var(--success-soft)',
+      warning: 'var(--warning)',
+      'warning-soft': 'var(--warning-soft)',
+      danger: 'var(--danger)',
+      'danger-soft': 'var(--danger-soft)',
+      'neutral-soft': 'var(--neutral-soft)',
+      'neutral-ink': 'var(--neutral-ink)',
+      scrim: 'var(--scrim)',
+      'on-danger': 'var(--on-danger)',
+      'on-cover': 'var(--on-cover)',
+      'qr-ink': 'var(--qr-ink)',
+      'qr-paper': 'var(--qr-paper)',
+      'cover-1': '#0b2a6f',
+      'cover-2': '#0f5c5c',
+      'cover-3': '#8e2f1c',
+      'cover-4': '#4a5a12',
+      'cover-5': '#5b2a4e',
+      'cover-6': '#004af5',
+    },
+    spacing: {
+      0: '0px',
+      1: '4px',
+      2: '8px',
+      3: '12px',
+      4: '16px',
+      5: '20px',
+      6: '24px',
+      8: '32px',
+      10: '40px',
+      12: '48px',
+      14: '56px',
+      18: '72px',
+      0.5: '2px',
+      1.5: '6px',
+      2.5: '10px',
+      3.5: '14px',
+    },
+    borderRadius: {
+      none: '0px',
+      sm: '8px',
+      md: '12px',
+      lg: '20px',
+      sheet: '28px',
+      pill: '999px',
+    },
+    fontSize: {},
+    fontFamily: {},
+    fontWeight: {},
+    letterSpacing: {},
+    lineHeight: {},
+    boxShadow: {},
+  },
+  plugins: [
+    plugin(({ addUtilities }) => {
+      addUtilities(textUtilities)
+    }),
+  ],
+}

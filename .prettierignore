@@ -1,0 +1,8 @@
+node_modules
+android
+ios
+.expo
+docs
+package-lock.json
+PROMPT-INICIAL.md
+CLAUDE.md

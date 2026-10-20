@@ -1,0 +1,1349 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Unifor Biblioteca API",
+    "version": "0.1.0",
+    "description": "API REST do app de biblioteca universitária Unifor Biblioteca."
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Firebase ID token",
+        "description": "ID token do Firebase Authentication, no cabeçalho `Authorization: Bearer <token>`."
+      }
+    },
+    "schemas": {
+      "SignupPendingResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_email"
+            ]
+          },
+          "resendAvailableInSeconds": {
+            "type": "integer",
+            "example": 60
+          }
+        },
+        "required": [
+          "status",
+          "resendAvailableInSeconds"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Identificador estável, em inglês."
+          },
+          "message": {
+            "type": "string",
+            "description": "Texto em português para o usuário."
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "message"
+              ]
+            },
+            "description": "Campos errados, para o app marcar na tela."
+          },
+          "retryAfterSeconds": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "example": {
+          "code": "unauthorized",
+          "message": "Sua sessão expirou ou é inválida. Entre novamente."
+        }
+      },
+      "SignupStartBody": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "pattern": "^[^\\s@]+@edu\\.unifor\\.br$/i",
+            "example": "lucas@edu.unifor.br"
+          },
+          "matricula": {
+            "type": "string",
+            "pattern": "^\\d{7}$",
+            "example": "2412858"
+          },
+          "password": {
+            "type": "string",
+            "pattern": "^\\d{8,128}$",
+            "example": "12345678"
+          },
+          "passwordConfirmation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "matricula",
+          "password",
+          "passwordConfirmation"
+        ]
+      },
+      "SignupConfirmResponse": {
+        "type": "object",
+        "properties": {
+          "passkeyOptions": {
+            "$ref": "#/components/schemas/PasskeyCreationOptions"
+          }
+        },
+        "required": [
+          "passkeyOptions"
+        ]
+      },
+      "PasskeyCreationOptions": {
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "type": "string"
+          },
+          "rp": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": {}
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "displayName"
+            ],
+            "additionalProperties": {}
+          },
+          "pubKeyCredParams": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "alg": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "type",
+                "alg"
+              ],
+              "additionalProperties": {}
+            }
+          },
+          "excludeCredentials": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "additionalProperties": {}
+            }
+          },
+          "authenticatorSelection": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "challenge",
+          "rp",
+          "user",
+          "pubKeyCredParams"
+        ],
+        "additionalProperties": {}
+      },
+      "SignupConfirmBody": {
+        "type": "object",
+        "properties": {
+          "matricula": {
+            "type": "string",
+            "pattern": "^\\d{7}$",
+            "example": "2412858"
+          },
+          "token": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "matricula",
+          "token"
+        ]
+      },
+      "MatriculaBody": {
+        "type": "object",
+        "properties": {
+          "matricula": {
+            "type": "string",
+            "pattern": "^\\d{7}$",
+            "example": "2412858"
+          }
+        },
+        "required": [
+          "matricula"
+        ]
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "PasswordResetBody": {
+        "type": "object",
+        "properties": {
+          "matricula": {
+            "type": "string",
+            "pattern": "^\\d{7}$",
+            "example": "2412858"
+          },
+          "token": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          },
+          "password": {
+            "type": "string",
+            "pattern": "^\\d{8,128}$",
+            "example": "12345678"
+          },
+          "passwordConfirmation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "matricula",
+          "token",
+          "password",
+          "passwordConfirmation"
+        ]
+      },
+      "PasskeySummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "credentialId em base64url"
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "deviceName",
+          "createdAt",
+          "lastUsedAt"
+        ]
+      },
+      "PasskeyRegisterBody": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/RegistrationResponse"
+          },
+          "deviceName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "example": "Galaxy A54"
+          }
+        },
+        "required": [
+          "response",
+          "deviceName"
+        ]
+      },
+      "RegistrationResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rawId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "public-key"
+            ]
+          },
+          "clientExtensionResults": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          },
+          "response": {
+            "type": "object",
+            "properties": {
+              "clientDataJSON": {
+                "type": "string",
+                "minLength": 1
+              },
+              "attestationObject": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "clientDataJSON",
+              "attestationObject"
+            ],
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "id",
+          "rawId",
+          "type",
+          "response"
+        ],
+        "additionalProperties": {}
+      },
+      "PasskeyRequestOptions": {
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "type": "string"
+          },
+          "rpId": {
+            "type": "string"
+          },
+          "allowCredentials": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "additionalProperties": {}
+            }
+          },
+          "userVerification": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge"
+        ],
+        "additionalProperties": {}
+      },
+      "CustomTokenResponse": {
+        "type": "object",
+        "properties": {
+          "customToken": {
+            "type": "string",
+            "description": "Custom token do Firebase; o app o troca pela sessão."
+          }
+        },
+        "required": [
+          "customToken"
+        ]
+      },
+      "PasskeyLoginVerifyBody": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/AuthenticationResponse"
+          }
+        },
+        "required": [
+          "response"
+        ]
+      },
+      "AuthenticationResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rawId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "public-key"
+            ]
+          },
+          "clientExtensionResults": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          },
+          "response": {
+            "type": "object",
+            "properties": {
+              "clientDataJSON": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authenticatorData": {
+                "type": "string",
+                "minLength": 1
+              },
+              "signature": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "clientDataJSON",
+              "authenticatorData",
+              "signature"
+            ],
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "id",
+          "rawId",
+          "type",
+          "response"
+        ],
+        "additionalProperties": {}
+      },
+      "PasskeyListResponse": {
+        "type": "object",
+        "properties": {
+          "passkeys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PasskeySummary"
+            }
+          }
+        },
+        "required": [
+          "passkeys"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "uid": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "student",
+              "librarian"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_email",
+              "active",
+              "disabled"
+            ]
+          },
+          "matricula": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Sem nome, as telas mostram a matrícula."
+          },
+          "initials": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "course": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entryYear": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "deskLabel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "activeLoanCount": {
+            "type": "integer"
+          },
+          "activeQueueCount": {
+            "type": "integer"
+          },
+          "openFineTotalCents": {
+            "type": "integer"
+          },
+          "booksReadByYear": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "notificationPrefs": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "onboardingSeenAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "uid",
+          "role",
+          "status",
+          "matricula",
+          "email",
+          "fullName",
+          "initials",
+          "course",
+          "entryYear",
+          "deskLabel",
+          "activeLoanCount",
+          "activeQueueCount",
+          "openFineTotalCents",
+          "booksReadByYear",
+          "notificationPrefs",
+          "onboardingSeenAt"
+        ]
+      },
+      "UpdateMeBody": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "Lucas Almeida"
+          }
+        },
+        "required": [
+          "fullName"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "example": {
+          "status": "ok"
+        }
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/auth/signup/start": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Inicia o cadastro do aluno",
+        "description": "Valida o e-mail institucional (`@edu.unifor.br`), a matrícula (7 dígitos) e a senha (só números, mínimo 8). Cria a conta desativada e envia o token de 6 dígitos (vale 20 minutos). Repetir a chamada com a mesma matrícula, enquanto o e-mail não foi confirmado, troca o e-mail e a senha.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupStartBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Cadastro criado; o token foi enviado ao e-mail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupPendingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Matrícula ou e-mail já cadastrados (`signup_conflict`, com os campos repetidos).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Novo token pedido antes de 60 segundos (`token_resend_too_soon`, com `retryAfterSeconds`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Falha ao enviar o e-mail (`email_delivery_failed`). O cadastro fica pendente e pode ser reenviado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/signup/confirm": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Confirma o e-mail com o token",
+        "description": "Confere o token, ativa a conta e devolve as opções para o celular criar o passkey.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupConfirmBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "E-mail confirmado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupConfirmResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos ou token errado, vencido ou já usado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/signup/resend": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Reenvia o token de confirmação",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatriculaBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Novo token enviado; o anterior deixa de valer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupPendingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não há cadastro aguardando confirmação para a matrícula (`signup_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Novo token pedido antes de 60 segundos (`token_resend_too_soon`, com `retryAfterSeconds`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Falha ao enviar o e-mail (`email_delivery_failed`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/password/recover": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Pede o token de recuperação de senha",
+        "description": "Para aluno e bibliotecário. A API acha o e-mail da conta pela matrícula e responde sempre a mesma mensagem (200), exista a conta ou não e mesmo dentro dos 60 segundos desde o último token. Nesse caso só não envia outro e-mail.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatriculaBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mensagem genérica.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/password/reset": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Define a nova senha com o token",
+        "description": "Confere o token e grava a nova senha (só números, mínimo 8). Os refresh tokens da conta são revogados.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Senha alterada."
+          },
+          "400": {
+            "description": "Token errado, vencido ou já usado (`token_invalid`, `token_expired_or_used`, `token_attempts_exceeded`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/passkey/register": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Registra o passkey criado pelo celular",
+        "description": "Sem sessão: o desafio, emitido para a conta no fim do cadastro ou em `POST /auth/passkeys`, identifica quem registra. Guarda só a chave pública.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyRegisterBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Passkey registrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeySummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos, desafio vencido ou resposta recusada (`passkey_challenge_invalid`, `passkey_registration_failed`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "O aparelho já tem este passkey (`passkey_already_registered`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/passkey/login/options": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Pede o desafio do login com passkey",
+        "description": "Devolve um desafio novo e os passkeys da matrícula. Matrícula sem passkey ou sem conta recebe a mesma resposta, com a lista vazia.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatriculaBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opções para o celular.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRequestOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/passkey/login/verify": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Confere o passkey e devolve o custom token",
+        "description": "O app troca o custom token pela sessão com `signInWithCustomToken`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyLoginVerifyBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assinatura válida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Passkey recusado (`passkey_login_failed`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/passkeys": {
+      "get": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Lista os passkeys do aluno",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aparelhos cadastrados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Pede as opções para criar um passkey neste aparelho",
+        "description": "O registro termina em `POST /auth/passkey/register`. O aparelho que já tem um passkey da conta recusa criar outro.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Opções para o celular.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyCreationOptions"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/passkeys/{id}": {
+      "delete": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Remove um passkey do aluno",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Passkey removido."
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Passkey não encontrado (`passkey_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Dados de quem está logado",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil da conta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Conta sem perfil ou desativada (`profile_not_found`, `account_disabled`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Informa o nome completo do aluno",
+        "description": "Nome e sobrenome, de 3 a 100 caracteres. Grava também o nome normalizado e as iniciais.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Acesso"
+        ],
+        "summary": "Encerra a sessão",
+        "description": "Revoga os refresh tokens do usuário no Firebase. O app também sai do Firebase.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Sessão encerrada."
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Verifica se a API está no ar",
+        "responses": {
+          "200": {
+            "description": "A API está funcionando.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}
