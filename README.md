@@ -61,6 +61,7 @@ W:
 
    On the Android emulator the computer is `10.0.2.2`: the API is at `:8080` and the
    Auth emulator at `:9099`.
+
 3. Install and run:
 
    ```sh
@@ -74,13 +75,13 @@ W:
 
 Only names are versioned (`.env.example`); values live in the local `.env` (ignored by Git).
 
-| Variable | Purpose |
-| --- | --- |
-| `EXPO_PUBLIC_API_URL` | API base URL (required) |
-| `EXPO_PUBLIC_USE_EMULATORS` | `true` connects to the Firebase Auth emulator |
-| `EXPO_PUBLIC_AUTH_EMULATOR_URL` | Auth emulator URL (default `http://10.0.2.2:9099`) |
-| `EXPO_PUBLIC_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_APP_ID` | Public Firebase web config (required outside the emulator) |
-| `UNIBOOKS_KEYSTORE_PATH`, `UNIBOOKS_KEYSTORE_PASSWORD`, `UNIBOOKS_KEY_ALIAS`, `UNIBOOKS_KEY_PASSWORD` | Own Android signing key (see below) |
+| Variable                                                                                              | Purpose                                                    |
+| ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `EXPO_PUBLIC_API_URL`                                                                                 | API base URL (required)                                    |
+| `EXPO_PUBLIC_USE_EMULATORS`                                                                           | `true` connects to the Firebase Auth emulator              |
+| `EXPO_PUBLIC_AUTH_EMULATOR_URL`                                                                       | Auth emulator URL (default `http://10.0.2.2:9099`)         |
+| `EXPO_PUBLIC_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_APP_ID`                              | Public Firebase web config (required outside the emulator) |
+| `UNIBOOKS_KEYSTORE_PATH`, `UNIBOOKS_KEYSTORE_PASSWORD`, `UNIBOOKS_KEY_ALIAS`, `UNIBOOKS_KEY_PASSWORD` | Own Android signing key (see below)                        |
 
 Variables are validated with Zod at startup (`src/shared/config`).
 
@@ -157,14 +158,14 @@ plugins/                Expo config plugins
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `npx expo run:android` | development build on the emulator/device |
-| `npm start` | Metro with the dev client |
-| `npm run typecheck` | TypeScript (`strict`) |
-| `npm run lint` / `npm run format` | ESLint and Prettier |
-| `npm test` | unit tests (Jest with `jest-expo`) |
-| `npm run tokens` | regenerate theme files from the design-system tokens |
+| Command                           | What it does                                         |
+| --------------------------------- | ---------------------------------------------------- |
+| `npx expo run:android`            | development build on the emulator/device             |
+| `npm start`                       | Metro with the dev client                            |
+| `npm run typecheck`               | TypeScript (`strict`)                                |
+| `npm run lint` / `npm run format` | ESLint and Prettier                                  |
+| `npm test`                        | unit tests (Jest with `jest-expo`)                   |
+| `npm run tokens`                  | regenerate theme files from the design-system tokens |
 
 ## Notes
 
