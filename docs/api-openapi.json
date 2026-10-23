@@ -1634,6 +1634,200 @@
           "changedFields"
         ]
       },
+      "Loan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bookId": {
+            "type": "string"
+          },
+          "bookTitle": {
+            "type": "string"
+          },
+          "bookShelf": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "awaiting_pickup",
+              "active",
+              "returned",
+              "expired",
+              "cancelled"
+            ],
+            "description": "O estado gravado do pedido."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ready_for_pickup",
+              "in_progress",
+              "due_soon",
+              "overdue",
+              "returned",
+              "expired",
+              "cancelled"
+            ],
+            "description": "O que o app mostra, calculado na hora: `ready_for_pickup` (Pronto para retirar), `in_progress` (Em andamento), `due_soon` (Vence em breve: faltam até `dueSoonDays` dias), `overdue` (Atrasado) ou o estado final (`returned`, `expired`, `cancelled`)."
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickupDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Último instante para retirar, no fechamento da biblioteca."
+          },
+          "pickupCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Código curto \"RET-4821\", digitado no balcão. Só vem enquanto `status` é `awaiting_pickup`."
+          },
+          "qrToken": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Segredo do QR da retirada (RF-EMP-07). Só vem enquanto `status` é `awaiting_pickup`. O app o guarda para mostrar o QR sem internet."
+          },
+          "pickedUpAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Vencimento, no fechamento da biblioteca. Vem depois da retirada."
+          },
+          "originalDueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Vencimento antes da renovação."
+          },
+          "renewalCount": {
+            "type": "integer"
+          },
+          "canRenew": {
+            "type": "boolean",
+            "description": "`true` só para empréstimo ativo que pode ser renovado agora (RF-EMP-09)."
+          },
+          "renewalDenialReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "overdue",
+              "has_queue",
+              "already_renewed",
+              null
+            ],
+            "description": "Por que a renovação seria negada (RF-EMP-10). `null` quando pode renovar ou quando o item não é um empréstimo ativo."
+          },
+          "progress": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Quanto do prazo já passou, de 0 a 1: do pedido até `pickupDeadline` (pedido para retirar) ou da retirada até `dueAt` (empréstimo ativo). `null` nos itens do histórico."
+          },
+          "returnedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "cancelledAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expiredAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "bookId",
+          "bookTitle",
+          "bookShelf",
+          "status",
+          "state",
+          "requestedAt",
+          "pickupDeadline",
+          "pickupCode",
+          "qrToken",
+          "pickedUpAt",
+          "dueAt",
+          "originalDueAt",
+          "renewalCount",
+          "canRenew",
+          "renewalDenialReason",
+          "progress",
+          "returnedAt",
+          "cancelledAt",
+          "expiredAt"
+        ]
+      },
+      "CreateLoanBody": {
+        "type": "object",
+        "properties": {
+          "bookId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "bookId"
+        ]
+      },
+      "MyLoansResponse": {
+        "type": "object",
+        "properties": {
+          "view": {
+            "type": "string",
+            "enum": [
+              "active",
+              "history"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Loan"
+            }
+          }
+        },
+        "required": [
+          "view",
+          "items"
+        ]
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -2971,6 +3165,321 @@
           },
           "502": {
             "description": "Nenhuma fonte achou o ISBN e alguma não respondeu: rede, tempo esgotado, 429 ou 5xx (`book_metadata_unavailable`). Nada é alterado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/loans": {
+      "post": {
+        "tags": [
+          "Empréstimos (aluno)"
+        ],
+        "summary": "Solicita um empréstimo",
+        "description": "Separa um exemplar disponível para o aluno, que tem **2 dias úteis** para retirar (`pickupDeadline`, no fechamento da biblioteca). Numa transação: cria o pedido (`awaiting_pickup`), o exemplar vira `reserved`, `copiesAvailable` do livro cai 1 e `activeLoanCount` do aluno sobe 1. Devolve o `pickupCode` (\"RET-4821\") e o `qrToken` do QR da retirada. Recusas, nesta ordem, com o motivo no `code`: `unavailable` (livro removido ou marcado como indisponível para novos pedidos), `overdue` (aluno com empréstimo atrasado), `same_title` (já tem pedido ou empréstimo do mesmo título, de qualquer edição), `loan_limit` (já tem 10), e `no_copy_available` (sem exemplar disponível, ou com fila: o caminho é entrar na fila).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoanBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pedido criado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Loan"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "O livro não existe (`book_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pedido recusado pelas regras: `unavailable`, `overdue`, `same_title`, `loan_limit` ou `no_copy_available`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/loans": {
+      "get": {
+        "tags": [
+          "Empréstimos (aluno)"
+        ],
+        "summary": "Meus empréstimos",
+        "description": "Lista os pedidos e empréstimos do aluno logado. `view=active` (padrão) traz os pedidos para retirar e os empréstimos ativos; `view=history` traz os devolvidos, expirados e cancelados. Cada item traz o `state` calculado na hora (Pronto para retirar, Em andamento, Vence em breve, Atrasado), o `progress` do prazo e, nos ativos, se a renovação é possível (`canRenew`) e o motivo de não ser (`renewalDenialReason`). Os mais novos vêm primeiro (até 200 itens).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "history"
+              ],
+              "default": "active",
+              "description": "`active`: pedidos para retirar e empréstimos ativos. `history`: devolvidos, expirados e cancelados."
+            },
+            "required": false,
+            "description": "`active`: pedidos para retirar e empréstimos ativos. `history`: devolvidos, expirados e cancelados.",
+            "name": "view",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Os pedidos e empréstimos da aba pedida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyLoansResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/loans/{loanId}/cancel": {
+      "post": {
+        "tags": [
+          "Empréstimos (aluno)"
+        ],
+        "summary": "Cancela um pedido antes da retirada",
+        "description": "Só vale para pedido `awaiting_pickup`. Numa transação: o pedido vira `cancelled`, `activeLoanCount` do aluno cai 1 e o exemplar volta (hoje para a estante; quando a fila existir, para o 1º da fila).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "loanId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pedido cancelado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Loan"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "O pedido não existe ou não é deste aluno (`loan_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "O pedido não está aguardando retirada (`loan_not_cancellable`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/loans/{loanId}/renew": {
+      "post": {
+        "tags": [
+          "Empréstimos (aluno)"
+        ],
+        "summary": "Renova um empréstimo",
+        "description": "Uma única vez, por +14 dias a partir do vencimento atual, no fechamento da biblioteca (se o dia cair em domingo, feriado ou recesso, vai para o próximo dia em que a biblioteca abre). Negada com o motivo no `code`: `overdue` (o vencimento já passou), `has_queue` (há gente na fila do livro) ou `already_renewed` (a renovação já foi usada).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "loanId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empréstimo renovado, com o novo vencimento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Loan"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "O pedido não existe ou não é deste aluno (`loan_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Renovação negada (`overdue`, `has_queue` ou `already_renewed`) ou o empréstimo não está ativo (`loan_not_active`).",
             "content": {
               "application/json": {
                 "schema": {
