@@ -2,7 +2,7 @@
 
 Este repositório é o app mobile do Unifor Biblioteca (React Native com Expo), com dois perfis: **aluno** e **bibliotecário**. O dono é o Gustavo, estudante da Unifor. O app é o projeto de conclusão de duas cadeiras:
 
-- **Técnicas de Integração de Sistemas:** apresentação em **29/10/2026**. A API (repositório `unifor-biblioteca-api`) é demonstrada ao vivo **por meio deste app**, então o app completo precisa funcionar nessa data.
+- **Técnicas de Integração de Sistemas:** apresentação em **27/10/2026**. A API (repositório `unifor-biblioteca-api`) é demonstrada ao vivo **por meio deste app**, então o app completo precisa funcionar nessa data.
 - **Desenvolvimento Mobile:** entrega em **09/11/2026**. Apresentação num celular Android físico.
 
 Fale com o Gustavo em **português**, de forma direta, um passo por vez.
