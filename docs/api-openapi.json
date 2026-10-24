@@ -5,6 +5,16 @@
     "version": "0.1.0",
     "description": "API REST do app de biblioteca universitária Unifor Biblioteca."
   },
+  "servers": [
+    {
+      "url": "https://api.uni-books.app",
+      "description": "Produção"
+    },
+    {
+      "url": "http://localhost:8080",
+      "description": "Local"
+    }
+  ],
   "components": {
     "securitySchemes": {
       "bearerAuth": {
@@ -2620,6 +2630,583 @@
           "studentName",
           "matricula",
           "paidAtReturn"
+        ]
+      },
+      "DeskLookupResponse": {
+        "type": "object",
+        "properties": {
+          "student": {
+            "$ref": "#/components/schemas/DeskStudent"
+          },
+          "pickups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "bookId": {
+                  "type": "string"
+                },
+                "bookTitle": {
+                  "type": "string"
+                },
+                "bookShelf": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "awaiting_pickup",
+                    "active",
+                    "returned",
+                    "expired",
+                    "cancelled"
+                  ],
+                  "description": "O estado gravado do pedido."
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "ready_for_pickup",
+                    "in_progress",
+                    "due_soon",
+                    "overdue",
+                    "returned",
+                    "expired",
+                    "cancelled"
+                  ],
+                  "description": "O que o app mostra, calculado na hora: `ready_for_pickup` (Pronto para retirar), `in_progress` (Em andamento), `due_soon` (Vence em breve: faltam até `dueSoonDays` dias), `overdue` (Atrasado) ou o estado final (`returned`, `expired`, `cancelled`)."
+                },
+                "pickupCode": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Código curto \"RET-4821\", digitado no balcão. Só vem enquanto `status` é `awaiting_pickup`."
+                },
+                "pickupDeadline": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Último instante para retirar, no fechamento da biblioteca."
+                },
+                "pickedUpAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "dueAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time",
+                  "description": "Vencimento, no fechamento da biblioteca. Vem depois da retirada."
+                },
+                "returnedAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "progress": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Quanto do prazo já passou, de 0 a 1: do pedido até `pickupDeadline` (pedido para retirar) ou da retirada até `dueAt` (empréstimo ativo). `null` nos itens do histórico."
+                },
+                "scanned": {
+                  "type": "boolean",
+                  "description": "`true` no pedido que o QR ou o código apontou. Na busca por matrícula, nenhum."
+                }
+              },
+              "required": [
+                "id",
+                "bookId",
+                "bookTitle",
+                "bookShelf",
+                "status",
+                "state",
+                "pickupCode",
+                "pickupDeadline",
+                "pickedUpAt",
+                "dueAt",
+                "returnedAt",
+                "progress",
+                "scanned"
+              ]
+            },
+            "description": "Os pedidos do aluno aguardando retirada, do prazo mais curto ao mais longo."
+          },
+          "withStudent": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "bookId": {
+                  "type": "string"
+                },
+                "bookTitle": {
+                  "type": "string"
+                },
+                "bookShelf": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "awaiting_pickup",
+                    "active",
+                    "returned",
+                    "expired",
+                    "cancelled"
+                  ],
+                  "description": "O estado gravado do pedido."
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "ready_for_pickup",
+                    "in_progress",
+                    "due_soon",
+                    "overdue",
+                    "returned",
+                    "expired",
+                    "cancelled"
+                  ],
+                  "description": "O que o app mostra, calculado na hora: `ready_for_pickup` (Pronto para retirar), `in_progress` (Em andamento), `due_soon` (Vence em breve: faltam até `dueSoonDays` dias), `overdue` (Atrasado) ou o estado final (`returned`, `expired`, `cancelled`)."
+                },
+                "pickupCode": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Código curto \"RET-4821\", digitado no balcão. Só vem enquanto `status` é `awaiting_pickup`."
+                },
+                "pickupDeadline": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Último instante para retirar, no fechamento da biblioteca."
+                },
+                "pickedUpAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "dueAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time",
+                  "description": "Vencimento, no fechamento da biblioteca. Vem depois da retirada."
+                },
+                "returnedAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "progress": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Quanto do prazo já passou, de 0 a 1: do pedido até `pickupDeadline` (pedido para retirar) ou da retirada até `dueAt` (empréstimo ativo). `null` nos itens do histórico."
+                },
+                "fine": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "businessDaysLate": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Dias úteis de atraso até agora. Fim de semana, feriado e recesso não contam."
+                    },
+                    "amountCents": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "businessDaysLate",
+                    "amountCents"
+                  ],
+                  "description": "A multa que o empréstimo atrasado já acumulou. `null` se não está atrasado ou ainda não passou um dia útil."
+                }
+              },
+              "required": [
+                "id",
+                "bookId",
+                "bookTitle",
+                "bookShelf",
+                "status",
+                "state",
+                "pickupCode",
+                "pickupDeadline",
+                "pickedUpAt",
+                "dueAt",
+                "returnedAt",
+                "progress",
+                "fine"
+              ]
+            },
+            "description": "Os livros que estão com o aluno (empréstimos ativos), do vencimento mais próximo ao mais distante. Tocar em um abre a devolução."
+          },
+          "blockedReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "overdue"
+            ],
+            "description": "`overdue` quando o aluno tem livro atrasado: a retirada é recusada até ele devolver (RF-EMP-04). `null` caso contrário."
+          }
+        },
+        "required": [
+          "student",
+          "pickups",
+          "withStudent",
+          "blockedReason"
+        ]
+      },
+      "DeskStudent": {
+        "type": "object",
+        "properties": {
+          "uid": {
+            "type": "string"
+          },
+          "matricula": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "O nome do Perfil ou, sem ele, a matrícula."
+          },
+          "initials": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Iniciais do avatar. `null` enquanto o aluno não tem nome."
+          },
+          "activeLoanCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Pedidos para retirar mais empréstimos ativos (\"3 de 10\")."
+          },
+          "maxActiveLoans": {
+            "type": "integer"
+          },
+          "openFineTotalCents": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Soma das multas em aberto (já devolvidas, falta pagar)."
+          }
+        },
+        "required": [
+          "uid",
+          "matricula",
+          "name",
+          "initials",
+          "activeLoanCount",
+          "maxActiveLoans",
+          "openFineTotalCents"
+        ]
+      },
+      "DeskLookupBody": {
+        "type": "object",
+        "properties": {
+          "qrToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "O segredo lido do QR do pedido no app do aluno."
+          },
+          "pickupCode": {
+            "type": "string",
+            "pattern": "^RET-\\d{4}$/i",
+            "description": "O código curto do pedido, digitado sem QR. Maiúsculas ou minúsculas.",
+            "example": "RET-4821"
+          },
+          "matricula": {
+            "type": "string",
+            "pattern": "^\\d{7}$",
+            "example": "2412858"
+          }
+        },
+        "description": "Exatamente um de `qrToken`, `pickupCode` ou `matricula`."
+      },
+      "PickupResponse": {
+        "type": "object",
+        "properties": {
+          "loan": {
+            "$ref": "#/components/schemas/DeskLoan"
+          }
+        },
+        "required": [
+          "loan"
+        ]
+      },
+      "DeskLoan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bookId": {
+            "type": "string"
+          },
+          "bookTitle": {
+            "type": "string"
+          },
+          "bookShelf": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "awaiting_pickup",
+              "active",
+              "returned",
+              "expired",
+              "cancelled"
+            ],
+            "description": "O estado gravado do pedido."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ready_for_pickup",
+              "in_progress",
+              "due_soon",
+              "overdue",
+              "returned",
+              "expired",
+              "cancelled"
+            ],
+            "description": "O que o app mostra, calculado na hora: `ready_for_pickup` (Pronto para retirar), `in_progress` (Em andamento), `due_soon` (Vence em breve: faltam até `dueSoonDays` dias), `overdue` (Atrasado) ou o estado final (`returned`, `expired`, `cancelled`)."
+          },
+          "pickupCode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Código curto \"RET-4821\", digitado no balcão. Só vem enquanto `status` é `awaiting_pickup`."
+          },
+          "pickupDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Último instante para retirar, no fechamento da biblioteca."
+          },
+          "pickedUpAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Vencimento, no fechamento da biblioteca. Vem depois da retirada."
+          },
+          "returnedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "progress": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Quanto do prazo já passou, de 0 a 1: do pedido até `pickupDeadline` (pedido para retirar) ou da retirada até `dueAt` (empréstimo ativo). `null` nos itens do histórico."
+          }
+        },
+        "required": [
+          "id",
+          "bookId",
+          "bookTitle",
+          "bookShelf",
+          "status",
+          "state",
+          "pickupCode",
+          "pickupDeadline",
+          "pickedUpAt",
+          "dueAt",
+          "returnedAt",
+          "progress"
+        ]
+      },
+      "ReturnResponse": {
+        "type": "object",
+        "properties": {
+          "loan": {
+            "$ref": "#/components/schemas/DeskLoan"
+          },
+          "fine": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "accruing",
+                  "open",
+                  "paid"
+                ],
+                "description": "`open` (falta pagar no balcão) ou `paid` (paga na hora, com \"Multa paga agora\")."
+              },
+              "businessDaysLate": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "amountCents": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "id",
+              "status",
+              "businessDaysLate",
+              "amountCents"
+            ],
+            "description": "A multa congelada. `null` se a devolução não gerou multa."
+          },
+          "queueNotified": {
+            "type": "boolean",
+            "description": "`true` se o livro tinha fila: o 1º foi avisado na hora e ficou com o exemplar."
+          }
+        },
+        "required": [
+          "loan",
+          "fine",
+          "queueNotified"
+        ]
+      },
+      "ReturnLoanBody": {
+        "type": "object",
+        "properties": {
+          "finePaidNow": {
+            "type": "boolean",
+            "default": false,
+            "description": "A chave \"Multa paga agora\": o bibliotecário já recebeu o valor no balcão, então a multa fecha como paga. Sem multa, é ignorada."
+          }
+        }
+      },
+      "PickupsResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PickupItem"
+            },
+            "description": "Pedidos aguardando retirada, do prazo mais curto ao mais longo."
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "PickupItem": {
+        "type": "object",
+        "properties": {
+          "loanId": {
+            "type": "string"
+          },
+          "pickupCode": {
+            "type": "string"
+          },
+          "matricula": {
+            "type": "string"
+          },
+          "studentName": {
+            "type": "string"
+          },
+          "bookTitle": {
+            "type": "string"
+          },
+          "bookShelf": {
+            "type": "string"
+          },
+          "pickupDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Último instante para retirar, no fechamento da biblioteca."
+          }
+        },
+        "required": [
+          "loanId",
+          "pickupCode",
+          "matricula",
+          "studentName",
+          "bookTitle",
+          "bookShelf",
+          "pickupDeadline"
+        ]
+      },
+      "DeskSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "pendingPickups": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Pedidos aguardando retirada."
+          },
+          "returnsToday": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Devoluções registradas hoje (fuso de Fortaleza)."
+          },
+          "queueAwaitingConfirm": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Lugares na fila que estão na vez e esperam o aluno confirmar (`your_turn`)."
+          },
+          "openFines": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Multas em aberto (livro devolvido, falta pagar)."
+          }
+        },
+        "required": [
+          "pendingPickups",
+          "returnsToday",
+          "queueAwaitingConfirm",
+          "openFines"
         ]
       },
       "HealthResponse": {
@@ -5287,6 +5874,383 @@
           },
           "409": {
             "description": "A multa ainda está contando (`fine_not_payable`) ou já foi paga (`fine_already_paid`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/librarian/desk/lookup": {
+      "post": {
+        "tags": [
+          "Balcão (bibliotecário)"
+        ],
+        "summary": "Ficha do aluno: por QR, código do pedido ou matrícula",
+        "description": "Abre a ficha do aluno (tela Identificar aluno). Informe **exatamente um**: `qrToken` (lido do QR do pedido), `pickupCode` (\"RET-4821\", digitado) ou `matricula` (7 dígitos). A ficha traz o aluno (\"3 de 10 livros\"), os pedidos **aguardando retirada** (`pickups`, com `scanned` no que o QR ou o código apontou), os livros **com o aluno** (`withStudent`, com a multa já acumulada dos atrasados) e `blockedReason: \"overdue\"` quando um livro atrasado impede a retirada. É POST, e não GET, para o `qrToken` não aparecer na URL do log. Nenhuma resposta devolve o `qrToken`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeskLookupBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A ficha do aluno.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskLookupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o bibliotecário usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "O pedido não existe ou o código não é de um pedido aguardando retirada (`loan_not_found`), ou a matrícula não é de um aluno ativo (`student_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "O QR é de um pedido que não está mais aguardando a retirada (`loan_not_awaiting_pickup`): já retirado, devolvido, cancelado ou expirado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/librarian/loans/{loanId}/pickup": {
+      "post": {
+        "tags": [
+          "Balcão (bibliotecário)"
+        ],
+        "summary": "Registra a retirada de um pedido",
+        "description": "Entrega o exemplar ao aluno. Numa transação: o pedido vira `active` (`pickedUpAt`, `pickedUpBy`), o **empréstimo de 14 dias começa a contar** (`dueAt` no fechamento da biblioteca; se cair em domingo, feriado ou recesso, vai para o próximo dia aberto), o exemplar vira `on_loan`, `nextReturnAt` do livro é atualizado e a ação vai para o `auditLog` (`loan_pickup`). Recusada se o aluno tem **livro atrasado** (`overdue`, RF-EMP-04) ou se o prazo de retirada já passou (`pickup_expired`). Multa em aberto sem atraso não bloqueia.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "loanId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "O empréstimo ativo, com o vencimento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o bibliotecário usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "O pedido não existe (`loan_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "O pedido não está aguardando a retirada (`loan_not_awaiting_pickup`), o prazo passou (`pickup_expired`) ou o aluno tem livro atrasado (`overdue`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/librarian/loans/{loanId}/return": {
+      "post": {
+        "tags": [
+          "Balcão (bibliotecário)"
+        ],
+        "summary": "Registra a devolução de um livro",
+        "description": "Recebe o livro de volta (tela Registrar devolução). Numa transação: o empréstimo vira `returned`, `activeLoanCount` do aluno cai 1, `booksReadByYear` sobe 1, **a multa para de contar** (R$ 2,00 por dia útil de atraso; fica `open` até o pagamento no balcão) e o exemplar vai para o **1º da fila**, que ganha a vez e é avisado na hora, ou volta à estante. Com `finePaidNow: true` (\"Multa paga agora\", depois de receber o valor), a multa fecha como `paid`. A ação vai para o `auditLog` (`loan_return`). Livro devolvido no prazo não gera multa (`fine: null`).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "loanId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReturnLoanBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "O empréstimo devolvido, a multa e se a fila foi avisada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o bibliotecário usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "O empréstimo não existe (`loan_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "O livro não está com o aluno (`loan_not_active`): ainda não foi retirado ou já foi devolvido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/librarian/pickups": {
+      "get": {
+        "tags": [
+          "Balcão (bibliotecário)"
+        ],
+        "summary": "Retiradas: pedidos aguardando retirada",
+        "description": "Lista única de pedidos aguardando retirada, **do prazo mais curto ao mais longo**, com busca opcional pelos primeiros dígitos da matrícula em `matricula` (RF-BAL-05). Cada item traz o código curto, o aluno, o livro e a estante. Não traz o `qrToken`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{1,7}$",
+              "description": "Os primeiros dígitos da matrícula do aluno. Vazia lista todos os pedidos."
+            },
+            "required": false,
+            "description": "Os primeiros dígitos da matrícula do aluno. Vazia lista todos os pedidos.",
+            "name": "matricula",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Os pedidos aguardando retirada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickupsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o bibliotecário usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/librarian/desk/summary": {
+      "get": {
+        "tags": [
+          "Balcão (bibliotecário)"
+        ],
+        "summary": "Painel: os números do dia",
+        "description": "Os quatro números do Painel (RF-BAL-01): **pedidos aguardando retirada**, **devoluções registradas hoje** (fuso de Fortaleza), **lugares na fila esperando o aluno confirmar** e **multas em aberto**.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Os números do dia.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskSummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o bibliotecário usa esta rota.",
             "content": {
               "application/json": {
                 "schema": {
