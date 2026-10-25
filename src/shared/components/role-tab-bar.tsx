@@ -16,25 +16,8 @@ export function RoleTabBar({
   navigateToTab,
 }: BottomTabBarProps & { role: NavRole }) {
   const routeNames = TAB_ROUTES[role]
-  const focusedRoute = state.routes[state.index]
-  const focusedName = focusedRoute?.name
-  if (focusedName === 'appearance') return null
-  const fineState =
-    focusedRoute?.params && typeof focusedRoute.params === 'object'
-      ? (focusedRoute.params as { state?: string }).state
-      : undefined
-  if (focusedName === 'fine' && ['overdue', 'paid'].includes(fineState ?? '')) {
-    return null
-  }
-  const active = routeNames.indexOf(
-    focusedName === 'collection-management'
-      ? 'scan'
-      : focusedName === 'fine' ||
-          focusedName === 'passkeys' ||
-          focusedName === 'saved'
-        ? 'profile'
-        : (focusedName ?? ''),
-  )
+  const focusedName = state.routes[state.index]?.name
+  const active = routeNames.indexOf(focusedName ?? '')
 
   function select(index: number) {
     const route = state.routes.find((item) => item.name === routeNames[index])
