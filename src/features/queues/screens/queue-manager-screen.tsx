@@ -11,7 +11,6 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AppBar } from '@/shared/components/app-bar'
-import { BottomNav } from '@/shared/components/bottom-nav'
 import { Icon } from '@/shared/components/icon'
 import { Button } from '@/shared/components/button'
 import { useTheme } from '@/shared/theme/theme-provider'
@@ -33,7 +32,6 @@ export type AlunoDaFila = {
 export interface FilaLivroProps {
   estado?: EstadoFilaLivro
   onVoltar?: () => void
-  onSelecionarAba?: (indice: number) => void
   onAdicionarAluno?: (
     matricula: string,
     posicao: number,
@@ -83,7 +81,6 @@ const paula: AlunoDaFila = {
 export function QueueManagerScreen({
   estado = 'normal',
   onVoltar,
-  onSelecionarAba,
   onAdicionarAluno,
   onMoverAluno,
   onRemoverAluno,
@@ -269,7 +266,6 @@ export function QueueManagerScreen({
           <Icon name="x" color="onCover" size={15} />
         </Pressable>
       ) : null}
-      <BottomNav role="bibliotecario" active={3} onSelect={onSelecionarAba} />
       <Modal
         transparent
         visible={modal}

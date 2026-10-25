@@ -2,7 +2,6 @@ import { BookCover, coverToneOf } from '@/shared/components'
 import React, { useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { BottomNav } from '@/shared/components/bottom-nav'
 import { Icon } from '@/shared/components/icon'
 import { useTheme } from '@/shared/theme/theme-provider'
 
@@ -51,10 +50,6 @@ export function HomeScreen({
   const safe = useSafeAreaInsets()
   const { colors } = useTheme()
   const [busca, setBusca] = useState('')
-
-  function aba(i: number) {
-    ;[undefined, onAcervo, onEmprestimos, onAssistente, onPerfil][i]?.()
-  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -180,7 +175,6 @@ export function HomeScreen({
           ))}
         </ScrollView>
       </ScrollView>
-      <BottomNav role="aluno" active={0} badges={{ 0: 0 }} onSelect={aba} />
     </View>
   )
 }

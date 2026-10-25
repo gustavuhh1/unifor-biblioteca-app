@@ -1,18 +1,16 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import { AppBar, BottomNav, Button, Icon } from '@/shared/components'
+import { AppBar, Button, Icon } from '@/shared/components'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 export interface MeusPasskeysProps {
   estado?: 'normal' | 'sem-passkey' | 'remover'
   onVoltar?: () => void
   onCriar?: () => void
-  onSelecionarAba?: (i: number) => void
 }
 export function MyPasskeysScreen({
   estado = 'normal',
   onVoltar,
   onCriar,
-  onSelecionarAba,
 }: MeusPasskeysProps) {
   const [galaxy, setGalaxy] = useState(true)
   const [confirmando, setConfirmando] = useState(estado === 'remover')
@@ -83,7 +81,6 @@ export function MyPasskeysScreen({
           </Text>
         ) : null}
       </ScrollView>
-      <BottomNav role="aluno" active={4} onSelect={onSelecionarAba} />
       <ConfirmationSheet
         visible={confirmando}
         title="Remover o passkey do Galaxy A54?"

@@ -1,16 +1,9 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import {
-  AppBar,
-  BottomNav,
-  TextField,
-  BookCover,
-  coverToneOf,
-} from '@/shared/components'
+import { AppBar, TextField, BookCover, coverToneOf } from '@/shared/components'
 import type { CodigoRetirada } from '@/features/desk/screens/register-pickup-screen'
 export interface RetiradasProps {
   onAbrirRetirada?: (codigo: CodigoRetirada) => void
-  onSelecionarAba?: (i: number) => void
 }
 const dados = [
   {
@@ -41,10 +34,7 @@ const dados = [
     cor: 'cover1' as const,
   },
 ]
-export function WithdrawalsScreen({
-  onAbrirRetirada,
-  onSelecionarAba,
-}: RetiradasProps) {
+export function WithdrawalsScreen({ onAbrirRetirada }: RetiradasProps) {
   const [busca, setBusca] = useState('')
   const resultados = dados.filter((d) => d.matricula.includes(busca.trim()))
   return (
@@ -112,7 +102,6 @@ export function WithdrawalsScreen({
           </Text>
         ) : null}
       </ScrollView>
-      <BottomNav role="bibliotecario" active={1} onSelect={onSelecionarAba} />
     </View>
   )
 }

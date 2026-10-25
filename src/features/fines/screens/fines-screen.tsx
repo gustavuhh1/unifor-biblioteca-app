@@ -3,7 +3,6 @@ import { Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   AppBar,
-  BottomNav,
   Button,
   TextField,
   FineCard,
@@ -112,13 +111,7 @@ const pagas: Multa[] = [
 const dinheiro = (value: number) => `R$ ${value.toFixed(2).replace('.', ',')}`
 const ABAS = ['abertas', 'contando', 'pagas'] as const
 
-export function FinesScreen({
-  estado = 'abertas',
-  onSelecionarAba,
-}: {
-  estado?: Estado
-  onSelecionarAba?: (index: number) => void
-}) {
+export function FinesScreen({ estado = 'abertas' }: { estado?: Estado }) {
   const safe = useSafeAreaInsets()
   const [busca, setBusca] = useState('')
   const [aba, setAba] = useState<'abertas' | 'contando' | 'pagas'>(
@@ -302,9 +295,7 @@ export function FinesScreen({
             onPress={() => setConfirmando(true)}
           >{`Registrar pagamento de ${dinheiro(alvo.valor)}`}</Button>
         </View>
-      ) : (
-        <BottomNav role="bibliotecario" active={4} onSelect={onSelecionarAba} />
-      )}
+      ) : null}
       <ConfirmationSheet
         visible={confirmando && Boolean(alvo)}
         title={`Recebeu ${dinheiro(alvo?.valor ?? 6)} de ${alvo?.nome.split(' ')[0] ?? 'Marina'}?`}

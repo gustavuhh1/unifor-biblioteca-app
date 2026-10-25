@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import { AppBar, BottomNav, Icon, type IconName } from '@/shared/components'
+import { AppBar, Icon, type IconName } from '@/shared/components'
 export type PerfilAlunoProps = {
   estado?: 'em-dia' | 'multa'
   onEmprestimos?: () => void
@@ -12,7 +12,6 @@ export type PerfilAlunoProps = {
   onRegras?: () => void
   onMulta?: () => void
   onSair?: () => void
-  onSelecionarAba?: (i: number) => void
 }
 export function StudentProfileScreen({
   estado = 'em-dia',
@@ -24,7 +23,6 @@ export function StudentProfileScreen({
   onRegras,
   onMulta,
   onSair,
-  onSelecionarAba,
 }: PerfilAlunoProps) {
   const multa = estado === 'multa'
   const menu: { label: string; icon: IconName; action?: () => void }[] = [
@@ -127,7 +125,6 @@ export function StudentProfileScreen({
           ))}
         </View>
       </ScrollView>
-      <BottomNav role="aluno" active={4} onSelect={onSelecionarAba} />
     </View>
   )
 }

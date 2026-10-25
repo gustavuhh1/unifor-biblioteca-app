@@ -7,12 +7,10 @@ export function MyFinesScreen({
   estado = 'atraso',
   onVoltar,
   onDetalhar,
-  onSelecionarAba,
 }: {
   estado?: 'atraso' | 'detalhes' | 'congelada'
   onVoltar?: () => void
   onDetalhar?: () => void
-  onSelecionarAba?: (index: number) => void
 }) {
   const frozen = estado === 'congelada'
   const detail = estado === 'detalhes'
@@ -23,8 +21,6 @@ export function MyFinesScreen({
       }
       interna
       onVoltar={onVoltar}
-      aba={detail ? 'perfil' : undefined}
-      onSelecionarAba={onSelecionarAba}
     >
       <FineCard
         amount="R$ 6,00"

@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { BottomNav } from '@/shared/components/bottom-nav'
 import { Button } from '@/shared/components/button'
 import { Icon } from '@/shared/components/icon'
 import { useTheme } from '@/shared/theme/theme-provider'
@@ -27,7 +26,6 @@ type AcervoProps = {
   buscaInicial?: string
   onAbrirLivro?: (id: number) => void
   onPerguntarAssistente?: () => void
-  onSelecionarAba?: (indice: number) => void
   onMostrarQR?: () => void
 }
 
@@ -66,7 +64,6 @@ export function CatalogScreen({
   buscaInicial,
   onAbrirLivro,
   onPerguntarAssistente,
-  onSelecionarAba,
   onMostrarQR,
 }: AcervoProps) {
   const insets = useSafeAreaInsets()
@@ -244,8 +241,6 @@ export function CatalogScreen({
           </View>
         )}
       </ScrollView>
-
-      <BottomNav role="aluno" active={1} onSelect={onSelecionarAba} />
     </View>
   )
 }

@@ -1,13 +1,7 @@
 import { useRef, useState, type ComponentRef } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import {
-  BottomNav,
-  Button,
-  Icon,
-  BookCover,
-  coverToneOf,
-} from '@/shared/components'
+import { Button, Icon, BookCover, coverToneOf } from '@/shared/components'
 import { Caixa, Linha } from '@/shared/components/blocos'
 import { useTheme } from '@/shared/theme/theme-provider'
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
@@ -21,7 +15,6 @@ type AssistenteProps = {
   onBuscarOutroTermo?: () => void
   onAbrirLivro?: () => void
   onConfirmarSolicitacao?: () => void
-  onSelecionarAba?: (indice: number) => void
 }
 function Bolha({ texto, usuario }: Mensagem) {
   return (
@@ -49,7 +42,6 @@ export function AssistantScreen({
   onBuscarOutroTermo,
   onAbrirLivro,
   onConfirmarSolicitacao,
-  onSelecionarAba,
 }: AssistenteProps) {
   const safe = useSafeAreaInsets()
   const { colors } = useTheme()
@@ -282,7 +274,6 @@ export function AssistantScreen({
           <Icon name="send" color="onBrand" />
         </Pressable>
       </View>
-      <BottomNav role="aluno" active={3} onSelect={onSelecionarAba} />
     </View>
   )
 }

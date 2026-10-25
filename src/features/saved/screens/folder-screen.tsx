@@ -13,7 +13,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { AppBar } from '@/shared/components/app-bar'
-import { BottomNav } from '@/shared/components/bottom-nav'
 import { Button } from '@/shared/components/button'
 import { Icon } from '@/shared/components/icon'
 
@@ -25,7 +24,6 @@ type PastaProps = {
   onAbrirLivro?: (id: string) => void
   onRenomear?: (nome: string) => void
   onApagar?: () => void
-  onSelecionarAba?: (indice: number) => void
 }
 
 const livros = [
@@ -64,7 +62,6 @@ export function FolderScreen({
   onAbrirLivro,
   onRenomear,
   onApagar,
-  onSelecionarAba,
 }: PastaProps) {
   const reducedMotion = useReducedMotion()
 
@@ -182,8 +179,6 @@ export function FolderScreen({
           a pasta; os livros continuam em Todos os salvos.
         </Text>
       </ScrollView>
-
-      <BottomNav role="aluno" active={4} onSelect={onSelecionarAba} />
 
       {/* PAINÉIS A20, A21 E A22 */}
       <Modal

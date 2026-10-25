@@ -2,7 +2,6 @@ import React from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 
 import { AppBar } from '@/shared/components/app-bar'
-import { BottomNav } from '@/shared/components/bottom-nav'
 import { useTheme } from '@/shared/theme/theme-provider'
 import type { ColorToken } from '@/shared/theme/tokens.generated'
 import { Icon } from '@/shared/components/icon'
@@ -18,7 +17,6 @@ type SalvosProps = {
   onVoltar?: () => void
   onAbrirPasta?: (id: string) => void
   onNovaPasta?: () => void
-  onSelecionarAba?: (indice: number) => void
 }
 
 const pastas: Pasta[] = [
@@ -52,7 +50,6 @@ export function SavedScreen({
   onVoltar,
   onAbrirPasta,
   onNovaPasta,
-  onSelecionarAba,
 }: SalvosProps) {
   const { colors } = useTheme()
 
@@ -136,8 +133,6 @@ export function SavedScreen({
           </Pressable>
         </View>
       </ScrollView>
-
-      <BottomNav role="aluno" active={4} onSelect={onSelecionarAba} />
     </View>
   )
 }

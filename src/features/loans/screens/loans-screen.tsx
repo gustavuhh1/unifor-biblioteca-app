@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import {
   AppBar,
-  BottomNav,
   Button,
   Icon,
   LoanCard,
@@ -28,7 +27,6 @@ export type EmprestimosProps = {
   onMinhaVez?: () => void
   onMulta?: () => void
   onAcervo?: () => void
-  onSelecionarAba?: (i: number) => void
 }
 const ABAS = ['ativos', 'fila', 'historico'] as const
 const livros = [
@@ -94,7 +92,6 @@ export function LoansScreen({
   onMinhaVez,
   onMulta,
   onAcervo,
-  onSelecionarAba,
 }: EmprestimosProps) {
   const [aba, setAba] = useState<'ativos' | 'fila' | 'historico'>(
     estado === 'historico' ? 'historico' : 'ativos',
@@ -124,7 +121,6 @@ export function LoansScreen({
         onVouRetirar={onMinhaVez}
         onAtivos={() => setAba('ativos')}
         onHistorico={() => setAba('historico')}
-        onSelecionarAba={onSelecionarAba}
       />
     )
   const alvo = livros[selecionado]
@@ -323,7 +319,6 @@ export function LoansScreen({
           </Text>
         ) : null}
       </ScrollView>
-      <BottomNav role="aluno" active={2} onSelect={onSelecionarAba} />
       <ConfirmationSheet
         visible={painel !== ''}
         title={

@@ -3,7 +3,6 @@ import { Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   AppBar,
-  BottomNav,
   Button,
   TextField,
   BookCover,
@@ -59,11 +58,9 @@ const originais: Livro[] = [
 export function LibrarianCatalogScreen({
   estado = 'lista',
   onVoltar,
-  onSelecionarAba,
 }: {
   estado?: Modo
   onVoltar?: () => void
-  onSelecionarAba?: (indice: number) => void
 }) {
   const safe = useSafeAreaInsets()
   const { colors } = useTheme()
@@ -526,9 +523,7 @@ export function LibrarianCatalogScreen({
             </Button>
           ) : null}
         </View>
-      ) : (
-        <BottomNav role="bibliotecario" active={0} onSelect={onSelecionarAba} />
-      )}
+      ) : null}
       <ConfirmationSheet
         visible={modo === 'remover'}
         danger

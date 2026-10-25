@@ -5,7 +5,6 @@ import React, { useState } from 'react'
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { BottomNav } from '@/shared/components/bottom-nav'
 import { Button } from '@/shared/components/button'
 import { Icon } from '@/shared/components/icon'
 
@@ -20,7 +19,6 @@ type MinhasFilasProps = {
   estado?: EstadoMinhasFilas
   onVouRetirar?: () => void
   onSairFila?: () => void
-  onSelecionarAba?: (indice: number) => void
   onAtivos?: () => void
   onHistorico?: () => void
 }
@@ -29,7 +27,6 @@ export function MyQueuesScreen({
   estado = 'duas-filas',
   onVouRetirar,
   onSairFila,
-  onSelecionarAba,
   onAtivos,
   onHistorico,
 }: MinhasFilasProps) {
@@ -284,8 +281,6 @@ export function MyQueuesScreen({
           </View>
         )}
       </ScrollView>
-
-      <BottomNav role="aluno" active={2} onSelect={onSelecionarAba} />
 
       {/* A33 — CONFIRMAR SAÍDA */}
       <Modal

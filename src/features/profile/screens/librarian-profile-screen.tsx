@@ -1,17 +1,15 @@
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import { AppBar, BottomNav, Icon } from '@/shared/components'
+import { AppBar, Icon } from '@/shared/components'
 export interface PerfilBibliotecarioProps {
   onVoltar?: () => void
   onSair?: () => void
   onPainel?: () => void
   onAparencia?: () => void
-  onSelecionarAba?: (index: number) => void
 }
 export function LibrarianProfileScreen({
   onVoltar,
   onSair,
   onAparencia,
-  onSelecionarAba,
 }: PerfilBibliotecarioProps) {
   return (
     <View className="flex-1 bg-surface">
@@ -52,7 +50,6 @@ export function LibrarianProfileScreen({
           </Pressable>
         </View>
       </ScrollView>
-      <BottomNav role="bibliotecario" active={-1} onSelect={onSelecionarAba} />
     </View>
   )
 }

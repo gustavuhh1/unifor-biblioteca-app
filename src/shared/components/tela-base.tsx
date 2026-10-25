@@ -3,25 +3,13 @@ import { Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/shared/theme/theme-provider'
 import { Icon } from '@/shared/components/icon'
-import { BottomNav } from '@/shared/components/bottom-nav'
-
-type Aba = 'inicio' | 'acervo' | 'emprestimos' | 'assistente' | 'perfil'
-const indice: Record<Aba, number> = {
-  inicio: 0,
-  acervo: 1,
-  emprestimos: 2,
-  assistente: 3,
-  perfil: 4,
-}
 
 interface Props {
   titulo?: string
   children: ReactNode
   interna?: boolean
   rodape?: ReactNode
-  aba?: Aba
   onVoltar?: () => void
-  onSelecionarAba?: (index: number) => void
 }
 
 // Contêiner visual compartilhado pelas telas do aluno.
@@ -30,9 +18,7 @@ export default function TelaBase({
   children,
   interna = false,
   rodape,
-  aba,
   onVoltar,
-  onSelecionarAba,
 }: Props) {
   const { colors } = useTheme()
   const safe = useSafeAreaInsets()
@@ -96,13 +82,6 @@ export default function TelaBase({
         >
           {rodape}
         </View>
-      ) : null}
-      {aba ? (
-        <BottomNav
-          role="aluno"
-          active={indice[aba]}
-          onSelect={onSelecionarAba}
-        />
       ) : null}
     </View>
   )

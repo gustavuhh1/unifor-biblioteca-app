@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import { AppBar, BottomNav, Icon, type IconName } from '@/shared/components'
+import { AppBar, Icon, type IconName } from '@/shared/components'
 export interface PainelProps {
   onRetiradas?: () => void
   onEscanear?: () => void
@@ -40,7 +40,6 @@ export function PanelScreen({
   onDevolucao,
 }: PainelProps) {
   const acoes = [onRetiradas, onFilas, onMultas, onDevolucao]
-  const navegar = [undefined, onRetiradas, onEscanear, onFilas, onMultas]
   return (
     <View className="flex-1 bg-surface">
       <AppBar
@@ -113,11 +112,6 @@ export function PanelScreen({
           ))}
         </View>
       </ScrollView>
-      <BottomNav
-        role="bibliotecario"
-        active={0}
-        onSelect={(i) => navegar[i]?.()}
-      />
     </View>
   )
 }
