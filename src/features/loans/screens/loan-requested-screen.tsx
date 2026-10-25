@@ -1,4 +1,4 @@
-import { CapaLivro } from '@/shared/components/livro'
+import { BookCover } from '@/shared/components'
 
 import React from 'react'
 import { ScrollView, Text, View } from 'react-native'
@@ -48,7 +48,7 @@ export function LoanRequestedScreen({
 
         {/* LIVRO */}
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-4">
-          <CapaLivro nome="Refatoração" cor="cover2" largura={77} />
+          <BookCover title="Refatoração" tone={2} size="md" />
 
           <View className="flex-1 justify-center gap-2">
             <Text className="text-book-title text-ink">Refatoração</Text>

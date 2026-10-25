@@ -1,5 +1,5 @@
+import { BookCover } from '@/shared/components'
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
-import { CapaLivro } from '@/shared/components/livro'
 
 import React, { useState } from 'react'
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native'
@@ -126,7 +126,7 @@ export function MyQueuesScreen({
         {exibirCodigo && (
           <View className="gap-4 rounded-md border border-line bg-surface-raised p-4">
             <View className="flex-row gap-3">
-              <CapaLivro nome="Código Limpo" cor="cover1" largura={66} />
+              <BookCover title="Código Limpo" tone={1} size="md" />
 
               <View className="flex-1 gap-2">
                 <Text className="text-book-title text-ink">Código Limpo</Text>
@@ -159,7 +159,7 @@ export function MyQueuesScreen({
         {mostrarArquitetura && !multiplas && (
           <View className="gap-4 rounded-md border border-line bg-surface-raised p-4">
             <View className="flex-row gap-3">
-              <CapaLivro nome="Arquitetura Limpa" cor="cover6" largura={66} />
+              <BookCover title="Arquitetura Limpa" tone={6} size="md" />
 
               <View className="flex-1 gap-2">
                 <Text className="text-book-title text-ink">
@@ -206,7 +206,7 @@ export function MyQueuesScreen({
         {mostrarEdicoes && (
           <View className="gap-4 rounded-md border border-line bg-surface-raised p-4">
             <View className="flex-row gap-3">
-              <CapaLivro nome="Algoritmos" cor="cover4" largura={66} />
+              <BookCover title="Algoritmos" tone={4} size="md" />
 
               <View className="flex-1 gap-2">
                 <Text className="text-label text-ink">

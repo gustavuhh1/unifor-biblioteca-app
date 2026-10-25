@@ -1,4 +1,4 @@
-import { CapaLivro } from '@/shared/components/livro'
+import { BookCover, coverToneOf } from '@/shared/components'
 
 import React, { type ReactNode } from 'react'
 import { ScrollView, Text, View } from 'react-native'
@@ -36,10 +36,10 @@ export function RequestBlockedScreen({
       >
         {/* RESUMO DO LIVRO */}
         <View className="flex-row gap-4">
-          <CapaLivro
-            nome={limite ? 'Refatoração' : 'Engenharia\nde software'}
-            cor={limite ? 'cover2' : 'cover3'}
-            largura={121}
+          <BookCover
+            title={limite ? 'Refatoração' : 'Engenharia\nde software'}
+            tone={coverToneOf(limite ? 'cover2' : 'cover3')}
+            size="lg"
           />
 
           <View className="flex-1 justify-center gap-3">
@@ -113,11 +113,7 @@ export function RequestBlockedScreen({
           /* A27 — MESMO TÍTULO */
           <View className="gap-4">
             <View className="flex-row items-center gap-3 rounded-md border border-line bg-surface-raised p-3">
-              <CapaLivro
-                nome="Engenharia de software"
-                cor="cover3"
-                largura={66}
-              />
+              <BookCover title="Engenharia de software" tone={3} size="md" />
 
               <View className="flex-1 gap-2">
                 <Text className="text-label text-ink">

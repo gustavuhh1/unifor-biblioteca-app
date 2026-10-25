@@ -1,3 +1,4 @@
+import { BookCover } from '@/shared/components'
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 import React, { useState } from 'react'
 import {
@@ -11,7 +12,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AppBar } from '@/shared/components/app-bar'
 import { BottomNav } from '@/shared/components/bottom-nav'
-import { CapaLivro } from '@/shared/components/livro'
 import { Icon } from '@/shared/components/icon'
 import { Button } from '@/shared/components/button'
 import { useTheme } from '@/shared/theme/theme-provider'
@@ -193,7 +193,7 @@ export function QueueManagerScreen({
         contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}
       >
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <CapaLivro nome="Arquitetura Limpa" cor="cover6" largura={72} />
+          <BookCover title="Arquitetura Limpa" tone={6} size="md" />
           <View className="flex-1 gap-2">
             <Text className="text-label text-ink">Arquitetura Limpa</Text>
             <Text className="text-caption text-ink-muted">

@@ -1,5 +1,5 @@
+import { BookCover, coverToneOf } from '@/shared/components'
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
-import { CapaLivro } from '@/shared/components/livro'
 
 import React, { useState } from 'react'
 import {
@@ -134,10 +134,10 @@ export function FolderScreen({
               className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3"
             >
               {/* CAPA */}
-              <CapaLivro
-                nome={livro.capa.split('\n').join(' ')}
-                cor={livro.cor}
-                largura={87}
+              <BookCover
+                title={livro.capa.split('\n').join(' ')}
+                tone={coverToneOf(livro.cor)}
+                size="md"
               />
 
               {/* INFORMAÇÕES */}

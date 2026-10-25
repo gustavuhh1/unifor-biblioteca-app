@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { ScrollView, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { AppBar, Button, Icon, FineCard } from '@/shared/components'
-import { CapaLivro } from '@/shared/components/livro'
+import { AppBar, Button, Icon, FineCard, BookCover } from '@/shared/components'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 import { useTheme } from '@/shared/theme/theme-provider'
 export interface DevolucaoProps {
@@ -27,7 +26,7 @@ export function RegisterReturnScreen({
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}
       >
         <View className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-4">
-          <CapaLivro nome="Cálculo, Vol. 1" cor="cover5" largura={56} />
+          <BookCover title="Cálculo, Vol. 1" tone={5} size="sm" />
           <View className="min-w-0 flex-1 gap-2">
             <Text className="text-book-title text-ink">Cálculo, Vol. 1</Text>
             <Text className="text-caption text-ink-muted">

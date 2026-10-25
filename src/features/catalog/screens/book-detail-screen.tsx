@@ -1,4 +1,4 @@
-import { CapaLivro } from '@/shared/components/livro'
+import { BookCover, coverToneOf } from '@/shared/components'
 
 import React from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
@@ -121,17 +121,19 @@ export function BookDetailScreen({
       >
         {/* CAPA E DISPONIBILIDADE */}
         <View className="flex-row gap-4">
-          <CapaLivro
-            nome={livro.titulo}
-            autor={
+          <BookCover
+            title={livro.titulo}
+            author={
               multiplasEdicoes
                 ? 'Cormen et al.'
                 : emprestado
                   ? 'Robert C. Martin'
                   : 'Martin Fowler'
             }
-            cor={multiplasEdicoes ? 'cover4' : emprestado ? 'cover1' : 'cover2'}
-            largura={148}
+            tone={coverToneOf(
+              multiplasEdicoes ? 'cover4' : emprestado ? 'cover1' : 'cover2',
+            )}
+            size="lg"
           />
 
           <View className="flex-1 justify-center gap-3">
@@ -479,10 +481,10 @@ export function BookDetailScreen({
                 ]
             ).map((titulo, index) => (
               <View key={titulo} className="flex-1 gap-2">
-                <CapaLivro
-                  nome={titulo}
-                  cor={index === 0 ? 'cover4' : 'cover5'}
-                  largura={98}
+                <BookCover
+                  title={titulo}
+                  tone={coverToneOf(index === 0 ? 'cover4' : 'cover5')}
+                  size="md"
                 />
 
                 <Text className="text-book-title-sm text-ink" numberOfLines={3}>

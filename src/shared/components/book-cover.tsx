@@ -4,6 +4,11 @@ import Svg, { Path } from 'react-native-svg'
 export type CoverTone = 1 | 2 | 3 | 4 | 5 | 6
 export type CoverSize = 'sm' | 'md' | 'lg'
 
+// O nome do token da capa ("cover4") vira o tom 4 do BookCover.
+export function coverToneOf(token: string): CoverTone {
+  return Number(token.slice(-1)) as CoverTone
+}
+
 // Cor de fundo de cada tom (tokens cover-1 a cover-6); iguais nos dois temas.
 const TONE_CLASS: Record<CoverTone, string> = {
   1: 'bg-cover-1',

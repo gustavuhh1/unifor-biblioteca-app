@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { AppBar, BottomNav, Button, TextField } from '@/shared/components'
-import { CapaLivro } from '@/shared/components/livro'
+import {
+  AppBar,
+  BottomNav,
+  Button,
+  TextField,
+  BookCover,
+  coverToneOf,
+} from '@/shared/components'
 import { Caixa } from '@/shared/components/blocos'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 import { useTheme } from '@/shared/theme/theme-provider'
@@ -239,17 +245,17 @@ export function LibrarianCatalogScreen({
                 className="gap-2 rounded-lg border border-line bg-surface-raised p-3"
               >
                 <View className="flex-row gap-3">
-                  <CapaLivro
-                    nome={livro.titulo}
-                    autor={livro.autor}
-                    cor={
+                  <BookCover
+                    title={livro.titulo}
+                    author={livro.autor}
+                    tone={coverToneOf(
                       livro.id === 1
                         ? 'cover1'
                         : livro.id === 2
                           ? 'cover4'
-                          : 'cover6'
-                    }
-                    largura={82}
+                          : 'cover6',
+                    )}
+                    size="md"
                   />
                   <View className="min-w-0 flex-1 gap-2">
                     <Text className="text-book-title text-ink">
@@ -300,11 +306,11 @@ export function LibrarianCatalogScreen({
               </Text>
             </Caixa>
             <View className="flex-row gap-3">
-              <CapaLivro
-                nome={alvo.titulo}
-                autor={alvo.autor}
-                cor="cover1"
-                largura={82}
+              <BookCover
+                title={alvo.titulo}
+                author={alvo.autor}
+                tone={1}
+                size="md"
               />
               <View className="flex-1 gap-2">
                 <Text className="text-book-title text-ink">{alvo.titulo}</Text>

@@ -1,8 +1,13 @@
 import { useRef, useState, type ComponentRef } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { BottomNav, Button, Icon } from '@/shared/components'
-import { CapaLivro } from '@/shared/components/livro'
+import {
+  BottomNav,
+  Button,
+  Icon,
+  BookCover,
+  coverToneOf,
+} from '@/shared/components'
 import { Caixa, Linha } from '@/shared/components/blocos'
 import { useTheme } from '@/shared/theme/theme-provider'
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
@@ -157,11 +162,11 @@ export function AssistantScreen({
               onPress={onAbrirLivro}
               className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-3"
             >
-              <CapaLivro
-                nome={busca ? 'Física Quântica' : 'Refatoração'}
-                autor={busca ? 'Eisberg, Resnick' : 'Martin Fowler'}
-                cor={busca ? 'cover1' : 'cover2'}
-                largura={77}
+              <BookCover
+                title={busca ? 'Física Quântica' : 'Refatoração'}
+                author={busca ? 'Eisberg, Resnick' : 'Martin Fowler'}
+                tone={coverToneOf(busca ? 'cover1' : 'cover2')}
+                size="md"
               />
               <View className="min-w-0 flex-1 gap-2">
                 <Text className="text-book-title text-ink">

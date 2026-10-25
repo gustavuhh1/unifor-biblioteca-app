@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { AppBar, Button, Icon } from '@/shared/components'
-import { CapaLivro } from '@/shared/components/livro'
+import {
+  AppBar,
+  Button,
+  Icon,
+  BookCover,
+  coverToneOf,
+} from '@/shared/components'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 const pedidos = {
   'RET-4817': {
@@ -67,17 +72,17 @@ export function RegisterPickupScreen({
             Matrícula {pedido.matricula}
           </Text>
           <View className="flex-row gap-3">
-            <CapaLivro
-              nome={pedido.titulo}
-              autor={pedido.autor}
-              cor={
+            <BookCover
+              title={pedido.titulo}
+              author={pedido.autor}
+              tone={coverToneOf(
                 codigo === 'RET-4821'
                   ? 'cover1'
                   : codigo === 'RET-4809'
                     ? 'cover4'
-                    : 'cover2'
-              }
-              largura={82}
+                    : 'cover2',
+              )}
+              size="md"
             />
             <View className="min-w-0 flex-1 gap-2">
               <Text className="text-book-title text-ink">{pedido.titulo}</Text>

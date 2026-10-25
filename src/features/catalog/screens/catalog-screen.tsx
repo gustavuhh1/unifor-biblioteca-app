@@ -1,4 +1,4 @@
-import { CapaLivro } from '@/shared/components/livro'
+import { BookCover, coverToneOf } from '@/shared/components'
 
 import React, { useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
@@ -164,10 +164,10 @@ export function CatalogScreen({
                   className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3"
                 >
                   {/* CAPA ILUSTRATIVA */}
-                  <CapaLivro
-                    nome={livro.capa.split('\n').join(' ')}
-                    cor={livro.cor}
-                    largura={87}
+                  <BookCover
+                    title={livro.capa.split('\n').join(' ')}
+                    tone={coverToneOf(livro.cor)}
+                    size="md"
                   />
 
                   {/* INFORMAÇÕES */}

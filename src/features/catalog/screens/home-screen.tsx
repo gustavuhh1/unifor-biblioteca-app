@@ -1,8 +1,8 @@
+import { BookCover, coverToneOf } from '@/shared/components'
 import React, { useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BottomNav } from '@/shared/components/bottom-nav'
-import { CapaLivro } from '@/shared/components/livro'
 import { Icon } from '@/shared/components/icon'
 import { useTheme } from '@/shared/theme/theme-provider'
 
@@ -169,7 +169,7 @@ export function HomeScreen({
               accessibilityRole="button"
               style={{ width: 147, gap: 6 }}
             >
-              <CapaLivro nome={l.titulo} cor={l.cor} largura={147} />
+              <BookCover title={l.titulo} tone={coverToneOf(l.cor)} size="lg" />
               <Text className="text-book-title text-ink" numberOfLines={2}>
                 {l.titulo}
               </Text>

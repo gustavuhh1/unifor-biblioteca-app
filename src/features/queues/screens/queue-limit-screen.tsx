@@ -1,4 +1,4 @@
-import { CapaLivro } from '@/shared/components/livro'
+import { BookCover } from '@/shared/components'
 
 import React from 'react'
 import { ScrollView, Text, View } from 'react-native'
@@ -29,11 +29,11 @@ export function QueueLimitScreen({
       >
         {/* LIVRO */}
         <View className="flex-row gap-4">
-          <CapaLivro
-            nome="Domain-Driven Design"
-            autor="Eric Evans"
-            cor="cover5"
-            largura={132}
+          <BookCover
+            title="Domain-Driven Design"
+            author="Eric Evans"
+            tone={5}
+            size="lg"
           />
 
           <View className="flex-1 justify-center gap-3">

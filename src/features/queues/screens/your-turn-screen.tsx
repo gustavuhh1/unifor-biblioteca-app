@@ -1,5 +1,5 @@
+import { BookCover, coverToneOf } from '@/shared/components'
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
-import { CapaLivro } from '@/shared/components/livro'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 
 import React, { useState } from 'react'
@@ -92,10 +92,10 @@ export function YourTurnScreen({
       >
         {/* LIVRO */}
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <CapaLivro
-            nome={edicaoLiberada ? 'Algoritmos' : 'Código Limpo'}
-            cor={edicaoLiberada ? 'cover4' : 'cover1'}
-            largura={66}
+          <BookCover
+            title={edicaoLiberada ? 'Algoritmos' : 'Código Limpo'}
+            tone={coverToneOf(edicaoLiberada ? 'cover4' : 'cover1')}
+            size="md"
           />
 
           <View className="flex-1 justify-center gap-2">

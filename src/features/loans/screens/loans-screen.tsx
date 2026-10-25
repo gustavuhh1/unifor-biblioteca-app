@@ -7,9 +7,9 @@ import {
   Icon,
   LoanCard,
   SegmentedTabs,
-  type CoverTone,
+  coverToneOf,
+  BookCover,
 } from '@/shared/components'
-import { CapaLivro } from '@/shared/components/livro'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 import { Caixa, Linha } from '@/shared/components/blocos'
 import { MyQueuesScreen as MinhasFilas } from '@/features/queues/screens/my-queues-screen'
@@ -30,8 +30,6 @@ export type EmprestimosProps = {
   onAcervo?: () => void
   onSelecionarAba?: (i: number) => void
 }
-// O token da capa (cover3) vira o tom 3 do BookCover.
-const toneOf = (color: string) => Number(color.slice(-1)) as CoverTone
 const ABAS = ['ativos', 'fila', 'historico'] as const
 const livros = [
   {
@@ -178,7 +176,7 @@ export function LoansScreen({
                   accessibilityRole="button"
                   className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-3"
                 >
-                  <CapaLivro nome={l.title} cor="cover4" largura={56} />
+                  <BookCover title={l.title} tone={4} size="sm" />
                   <View className="min-w-0 flex-1 gap-1">
                     <Text className="text-book-title text-ink">{l.title}</Text>
                     <Text className="text-caption text-ink-muted">
@@ -280,7 +278,7 @@ export function LoansScreen({
                     key={l.title}
                     title={l.title}
                     author={l.author}
-                    tone={toneOf(l.color)}
+                    tone={coverToneOf(l.color)}
                     status={l.blocked ? 'vence' : 'ativo'}
                     statusLabel={renovado ? '22 dias restantes' : l.status}
                     progress={l.progress}

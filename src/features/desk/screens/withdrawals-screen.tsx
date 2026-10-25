@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
-import { AppBar, BottomNav, TextField } from '@/shared/components'
+import {
+  AppBar,
+  BottomNav,
+  TextField,
+  BookCover,
+  coverToneOf,
+} from '@/shared/components'
 import type { CodigoRetirada } from '@/features/desk/screens/register-pickup-screen'
-import { CapaLivro } from '@/shared/components/livro'
 export interface RetiradasProps {
   onAbrirRetirada?: (codigo: CodigoRetirada) => void
   onSelecionarAba?: (i: number) => void
@@ -79,7 +84,7 @@ export function WithdrawalsScreen({
             className="gap-3 rounded-lg border border-line bg-surface-raised p-3"
           >
             <View className="flex-row gap-3">
-              <CapaLivro nome={d.titulo} cor={d.cor} largura={56} />
+              <BookCover title={d.titulo} tone={coverToneOf(d.cor)} size="sm" />
               <View className="min-w-0 flex-1 gap-2">
                 <Text className="text-book-title text-ink">{d.titulo}</Text>
                 <Text className="text-caption text-ink-muted">
