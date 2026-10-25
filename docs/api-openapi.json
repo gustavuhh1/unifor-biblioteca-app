@@ -3209,6 +3209,147 @@
           "openFines"
         ]
       },
+      "SavedBooksResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SavedBook"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "SavedBook": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coverUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "coverTone": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "copiesTotal": {
+            "type": "integer"
+          },
+          "copiesAvailable": {
+            "type": "integer"
+          },
+          "queueLength": {
+            "type": "integer"
+          },
+          "nextReturnAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "unavailableForNewRequests": {
+            "type": "boolean"
+          },
+          "savedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "folderIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "As pastas em que o livro está. Vazio: só em \"Todos os salvos\"."
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "authors",
+          "coverUrl",
+          "coverTone",
+          "copiesTotal",
+          "copiesAvailable",
+          "queueLength",
+          "nextReturnAt",
+          "unavailableForNewRequests",
+          "savedAt",
+          "folderIds"
+        ]
+      },
+      "FoldersResponse": {
+        "type": "object",
+        "properties": {
+          "savedCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Quantos livros há em \"Todos os salvos\"."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Folder"
+            },
+            "description": "As pastas, da mais antiga para a mais nova."
+          }
+        },
+        "required": [
+          "savedCount",
+          "items"
+        ]
+      },
+      "Folder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "bookCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "bookCount"
+        ]
+      },
+      "FolderBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30,
+            "description": "De 1 a 30 caracteres. Ex.: \"Ler depois\"."
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -6251,6 +6392,617 @@
           },
           "403": {
             "description": "Perfil errado (`forbidden`): só o bibliotecário usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/saved": {
+      "get": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Livros salvos: \"Todos os salvos\" ou os de uma pasta",
+        "description": "Lista os livros salvos do aluno, os salvos há menos tempo primeiro, no formato do card do acervo (com a disponibilidade de agora) mais `savedAt` e `folderIds`. Com `folderId`, só os livros daquela pasta. Livros removidos do acervo não aparecem (RF-SAL-01, RF-SAL-03).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Só os livros desta pasta. Sem ela, vêm todos os livros salvos."
+            },
+            "required": false,
+            "description": "Só os livros desta pasta. Sem ela, vêm todos os livros salvos.",
+            "name": "folderId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Os livros salvos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedBooksResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A pasta não existe (`folder_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/saved/{bookId}": {
+      "put": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Salva um livro em \"Todos os salvos\"",
+        "description": "Botão Salvar da página do livro. Salvar de novo um livro já salvo não muda nada (mantém `savedAt` e as pastas), então o app pode chamar sem conferir antes (RF-SAL-01).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "bookId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "O livro salvo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedBook"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "O livro não existe ou foi removido do acervo (`book_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Tira um livro de \"Todos os salvos\"",
+        "description": "O livro sai também de todas as pastas em que estava, e a contagem de cada pasta cai. Se o livro não estava salvo, nada muda (RF-SAL-01).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "bookId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "O livro não está mais salvo."
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/folders": {
+      "get": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Pastas de Salvos",
+        "description": "Lista as pastas do aluno, da mais antiga para a mais nova, com a contagem de livros de cada uma, e devolve em `savedCount` quantos livros há em \"Todos os salvos\" (RF-SAL-02).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "As pastas e a contagem de \"Todos os salvos\".",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoldersResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Cria uma pasta",
+        "description": "O nome tem de 1 a 30 caracteres (espaços nas pontas são ignorados). A pasta nasce vazia (RF-SAL-02).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FolderBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "A pasta criada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Folder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/folders/{folderId}": {
+      "patch": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Renomeia uma pasta",
+        "description": "Mesma regra de nome da criação (RF-SAL-02).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "folderId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FolderBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A pasta com o nome novo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Folder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A pasta não existe (`folder_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Apaga uma pasta",
+        "description": "Os livros da pasta **não** saem de \"Todos os salvos\": só perdem a ligação com a pasta (RF-SAL-02).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "folderId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "A pasta foi apagada."
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A pasta não existe (`folder_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/folders/{folderId}/books/{bookId}": {
+      "put": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Coloca um livro salvo numa pasta",
+        "description": "O livro precisa estar em \"Todos os salvos\" (senão `book_not_saved`). Colocar de novo um livro que já está na pasta não muda nada. Um livro pode estar em várias pastas (RF-SAL-03).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "folderId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "bookId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "O livro salvo, com as pastas atualizadas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedBook"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A pasta não existe (`folder_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "O livro não está salvo (`book_not_saved`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Salvos (aluno)"
+        ],
+        "summary": "Tira um livro de uma pasta",
+        "description": "O livro continua em \"Todos os salvos\". Se ele não estava na pasta, nada muda (RF-SAL-03).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "folderId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "bookId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "O livro não está mais na pasta."
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A pasta não existe (`folder_not_found`).",
             "content": {
               "application/json": {
                 "schema": {
