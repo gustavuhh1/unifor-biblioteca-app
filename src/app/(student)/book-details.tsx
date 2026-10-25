@@ -1,1 +1,1 @@
-export { BookDetailsScreen as default } from '@/features/catalog/screens/book-details-screen'
+export { BookDetailScreen as default } from '@/features/catalog/screens/book-detail-screen'

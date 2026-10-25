@@ -1,1 +1,1 @@
-export { RegistrationScreen as default } from '@/features/auth/screens/registration-screen'
+export { SignupScreen as default } from '@/features/auth/screens/signup-screen'

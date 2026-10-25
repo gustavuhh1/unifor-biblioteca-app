@@ -1,1 +1,1 @@
-export { WithdrawalScreen as default } from '@/features/loans/screens/withdrawal-screen'
+export { PickupQrScreen as default } from '@/features/loans/screens/pickup-qr-screen'

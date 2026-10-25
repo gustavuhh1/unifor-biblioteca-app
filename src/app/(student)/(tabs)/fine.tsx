@@ -1,1 +1,1 @@
-export { FineScreen as default } from '@/features/loans/screens/fine-screen'
+export { MyFinesScreen as default } from '@/features/fines/screens/my-fines-screen'

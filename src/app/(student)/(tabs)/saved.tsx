@@ -1,1 +1,1 @@
-export { SavedScreen as default } from '@/features/profile/screens/saved-screen'
+export { SavedScreen as default } from '@/features/saved/screens/saved-screen'

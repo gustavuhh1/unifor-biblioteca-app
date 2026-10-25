@@ -1,1 +1,1 @@
-export { CollectionManagementScreen as default } from '@/features/desk/screens/collection-management-screen'
+export { LibrarianCatalogScreen as default } from '@/features/catalog/screens/librarian-catalog-screen'

@@ -7,6 +7,7 @@ export default function StudentLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="book-details" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="library-rules" />
       <Stack.Screen name="withdrawal" />

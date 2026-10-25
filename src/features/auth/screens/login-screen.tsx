@@ -217,7 +217,7 @@ export function LoginScreen() {
       <BottomSheet
         visible={otherWays}
         title="Outras formas de entrar"
-        description="Se o passkey não funcionar neste celular, entre com a senha do seu cadastro. Se esqueceu a senha, enviamos um token para o seu e-mail."
+        text="Se o passkey não funcionar neste celular, entre com a senha do seu cadastro. Se esqueceu a senha, enviamos um token para o seu e-mail."
         onClose={() => setOtherWays(false)}
       >
         <Button block variant="secondary" icon="lock" onPress={showPassword}>
@@ -241,7 +241,7 @@ export function LoginScreen() {
       <BottomSheet
         visible={failedPasskey}
         title="Não foi possível entrar"
-        description={`A biometria não foi reconhecida, ou este celular não tem um passkey para matrícula ${form.getValues('matricula')}. Você pode entrar com a senha.`}
+        text={`A biometria não foi reconhecida, ou este celular não tem um passkey para matrícula ${form.getValues('matricula')}. Você pode entrar com a senha.`}
         onClose={() => passkeyLogin.reset()}
       >
         <Button

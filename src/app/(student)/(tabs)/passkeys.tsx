@@ -1,1 +1,1 @@
-export { PasskeysScreen as default } from '@/features/profile/screens/passkeys-screen'
+export { MyPasskeysScreen as default } from '@/features/profile/screens/my-passkeys-screen'
