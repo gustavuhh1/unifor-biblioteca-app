@@ -14,6 +14,8 @@ export interface FineCardProps {
   // Texto de apoio do cartão no lugar do livro, quando houver.
   note?: string
   label?: string
+  // Texto do selo no canto: por padrão "3 dias"; na multa congelada é "Congelada".
+  tag?: string
   // O aviso fixo de pagamento só presencial (README do DS). No bibliotecário fica oculto.
   showPayment?: boolean
   action?: ReactNode
@@ -33,6 +35,7 @@ export function FineCard({
   book,
   note,
   label = 'Multa acumulada',
+  tag,
   showPayment = true,
   action,
 }: FineCardProps) {
@@ -50,7 +53,7 @@ export function FineCard({
         <View className="min-h-6 flex-row items-center gap-1 rounded-sm bg-danger-soft pl-1.5 pr-2">
           <Icon name="alert" size={14} color="danger" />
           <Text className="text-overline text-danger">
-            {daysLate} {daysLate === 1 ? 'dia' : 'dias'}
+            {tag ?? `${daysLate} ${daysLate === 1 ? 'dia' : 'dias'}`}
           </Text>
         </View>
       </View>

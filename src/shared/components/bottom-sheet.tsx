@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Modal, Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '../theme/theme-provider'
+import { useReducedMotion } from '../theme/use-reduced-motion'
 
 export interface BottomSheetProps {
   // Controla se a folha está aberta (a tela guarda esse estado).
@@ -28,9 +29,11 @@ export function BottomSheet({
 }: BottomSheetProps) {
   const { shadows } = useTheme()
   const insets = useSafeAreaInsets()
+  // Quem pediu menos animação no celular não vê a folha deslizar.
+  const reducedMotion = useReducedMotion()
   return (
     <Modal
-      animationType="slide"
+      animationType={reducedMotion ? 'none' : 'slide'}
       transparent
       visible={visible}
       onRequestClose={onClose}
