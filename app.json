@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "scheme": "unibooks",
     "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": true,
