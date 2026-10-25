@@ -91,7 +91,7 @@ export function StudentLoginScreen({
         {/* APRESENTAÇÃO */}
         <View className="mb-8 items-center gap-2">
           <Image
-            source={require('../../../assets/logo-unifor.png')}
+            source={require('../../../../assets/logo-unifor.png')}
             style={{ width: 73, height: 78 }}
             resizeMode="contain"
           />

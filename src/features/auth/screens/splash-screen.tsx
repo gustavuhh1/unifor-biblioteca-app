@@ -9,7 +9,7 @@ export function SplashScreen() {
     <View className="flex-1 items-center justify-center bg-surface">
       <View className="items-center gap-3">
         <Image
-          source={require('../../../assets/logo-unifor.png')}
+          source={require('../../../../assets/logo-unifor.png')}
           className="h-[112px] w-[104px]"
           resizeMode="contain"
         />

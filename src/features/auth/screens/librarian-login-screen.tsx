@@ -43,7 +43,7 @@ export function LibrarianLoginScreen({
       >
         <View className="items-center gap-2 pb-6">
           <Image
-            source={require('../../../assets/logo-unifor.png')}
+            source={require('../../../../assets/logo-unifor.png')}
             style={{ width: 73, height: 78 }}
             resizeMode="contain"
           />
