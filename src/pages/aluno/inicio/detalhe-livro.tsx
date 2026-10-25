@@ -1,3 +1,4 @@
+import { CapaLivro } from "@/shared/components/livro";
 
 import React from "react";
 import {
@@ -11,11 +12,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppBar } from "@/shared/components/app-bar";
 import { Button } from "@/shared/components/button";
 import { Icon } from "@/shared/components/icon";
+import { LoanCard } from '@/shared/components/loan-card';
 
 type EstadoLivro =
   | "disponivel"
   | "emprestado"
-  | "pausado";
+  | "pausado"
+  | "atrasado"
+  | "multiplas-edicoes";
 
 type DetalheLivroProps = {
   estado?: EstadoLivro;
@@ -24,9 +28,16 @@ type DetalheLivroProps = {
   onCompartilhar?: () => void;
   onSolicitar?: () => void;
   onEntrarFila?: () => void;
+  onMulta?: () => void;
+  salvo?: boolean;
 };
 
 const dados = {
+  algoritmos: {
+    titulo: 'Algoritmos', subtitulo: 'teoria e prática', autor: 'Cormen et al.',
+    descricao: 'Livro impresso · 3ª e 4ª edições', sinopse: 'Exemplo demonstrativo de um livro com mais de uma edição.',
+    isbn: 'Não informado nesta referência', cutter: 'Não informado nesta referência', edicao: '3ª / 4ª', publicacao: 'Não informado nesta referência',
+  },
   refatoracao: {
     titulo: "Refatoração",
     subtitulo: "aperfeiçoando o design de códigos existentes",
@@ -88,12 +99,16 @@ export default function DetalheLivro({
   onCompartilhar,
   onSolicitar,
   onEntrarFila,
+  onMulta,
+  salvo = false,
 }: DetalheLivroProps) {
   const insets = useSafeAreaInsets();
 
-  const emprestado = estado === "emprestado";
+  const multiplasEdicoes = estado === 'multiplas-edicoes';
+  const emprestado = estado === "emprestado" || multiplasEdicoes;
   const pausado = estado === "pausado";
-  const livro = emprestado
+  const atrasado = estado === 'atrasado';
+  const livro = multiplasEdicoes ? dados.algoritmos : emprestado
     ? dados.codigoLimpo
     : dados.refatoracao;
 
@@ -123,25 +138,7 @@ export default function DetalheLivro({
       >
         {/* CAPA E DISPONIBILIDADE */}
         <View className="flex-row gap-4">
-          <View
-            className={
-              emprestado
-                ? "h-48 w-32 justify-center rounded-md bg-[#112875] p-3"
-                : "h-48 w-32 justify-center rounded-md bg-[#145B4B] p-3"
-            }
-          >
-            <Text className="text-title text-white">
-              {emprestado
-                ? "Código\nLimpo"
-                : "Refatoração"}
-            </Text>
-
-            <Text className="mt-auto text-caption text-white">
-              {emprestado
-                ? "Robert C. Martin"
-                : "Martin Fowler"}
-            </Text>
-          </View>
+          <CapaLivro nome={livro.titulo} autor={multiplasEdicoes ? 'Cormen et al.' : emprestado ? "Robert C. Martin" : "Martin Fowler"} cor={multiplasEdicoes ? 'cover4' : emprestado ? "cover1" : "cover2"} largura={148} />
 
           <View className="flex-1 justify-center gap-3">
             <View
@@ -163,7 +160,7 @@ export default function DetalheLivro({
             </View>
 
             <Text className="text-body text-ink">
-              {emprestado
+              {multiplasEdicoes ? '0 de 4 exemplares na estante' : emprestado
                 ? "0 de 3 exemplares na estante"
                 : "2 de 3 exemplares na estante"}
             </Text>
@@ -202,7 +199,7 @@ export default function DetalheLivro({
 
         {/* IDENTIFICAÇÃO DO LIVRO */}
         <View className="gap-2">
-          <Text className="text-title-lg text-ink">
+          <Text className="text-book-title-lg text-ink">
             {livro.titulo}
           </Text>
 
@@ -216,15 +213,16 @@ export default function DetalheLivro({
         </View>
 
         {/* SALVAR E COMPARTILHAR */}
+        {atrasado ? <><View className="gap-2 rounded-lg bg-danger-soft p-4"><Text className="text-label text-danger">Empréstimos bloqueados</Text><Text className="text-body text-ink">Você tem 1 livro em atraso: Cálculo, Vol. 1 (3 dias, multa de R$ 6,00). Devolva no balcão para voltar a solicitar livros e entrar em filas.</Text></View><LoanCard title="Cálculo, Vol. 1" author="James Stewart" color="cover5" status="Atrasado · R$ 6,00" start="Retirado 26/09" due="Venceu 10/10" progress={1} late onFine={onMulta} /></> : null}
         <View className="flex-row gap-3">
           <View className="flex-1">
             <Button
               block
               variant="secondary"
-              icon="bookmark"
+              icon={salvo ? 'bookmarkFill' : 'bookmark'}
               onPress={onSalvar}
             >
-              Salvar
+              {salvo ? 'Salvo' : 'Salvar'}
             </Button>
           </View>
 
@@ -289,8 +287,8 @@ export default function DetalheLivro({
                   key={numero}
                   className={
                     numero === 2
-                      ? "h-9 flex-1 items-center justify-center rounded-md bg-brand"
-                      : "h-9 flex-1 items-center justify-center rounded-md bg-surface-raised"
+                      ? "h-[36px] flex-1 items-center justify-center rounded-md bg-brand"
+                      : "h-[36px] flex-1 items-center justify-center rounded-md bg-surface-raised"
                   }
                 >
                   <Text
@@ -502,20 +500,10 @@ export default function DetalheLivro({
                 ]
             ).map((titulo, index) => (
               <View key={titulo} className="flex-1 gap-2">
-                <View
-                  className="h-32 justify-center rounded-md p-3"
-                  style={{
-                    backgroundColor:
-                      index === 0 ? "#506A2B" : "#572440",
-                  }}
-                >
-                  <Text className="text-label text-white">
-                    {titulo}
-                  </Text>
-                </View>
+                <CapaLivro nome={titulo} cor={index === 0 ? "cover4" : "cover5"} largura={98} />
 
                 <Text
-                  className="text-caption-strong text-ink"
+                  className="text-book-title-sm text-ink"
                   numberOfLines={3}
                 >
                   {titulo}
@@ -537,7 +525,7 @@ export default function DetalheLivro({
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        {pausado ? (
+        {atrasado ? <><Button block disabled>Solicitar empréstimo</Button><Button block variant="ghost" onPress={onMulta}>Como devolver</Button></> : pausado ? (
           <Button block variant="primary" disabled>
             Indisponível para novos pedidos
           </Button>

@@ -1,3 +1,4 @@
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 
 import React, { type ReactNode } from "react";
 import {
@@ -23,6 +24,8 @@ export default function SolicitarLivro({
   onConfirmar,
   onCancelar,
 }: SolicitarLivroProps) {
+  const reducedMotion = useReducedMotion()
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -34,20 +37,20 @@ export default function SolicitarLivro({
       <Modal
         visible={aberto}
         transparent
-        animationType="slide"
+        animationType={reducedMotion ? "none" : "slide"}
         statusBarTranslucent
         onRequestClose={() => onCancelar?.()}
       >
         <View className="flex-1 justify-end">
           <Pressable
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
             accessibilityRole="button"
             accessibilityLabel="Fechar confirmação"
             onPress={onCancelar}
           />
 
           <View
-            className="rounded-t-[28px] bg-surface-raised px-4 pt-5"
+            className="rounded-t-sheet bg-surface-raised px-4 pt-5"
             style={{
               paddingBottom: Math.max(insets.bottom, 20),
             }}

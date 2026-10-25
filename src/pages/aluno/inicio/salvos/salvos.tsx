@@ -6,17 +6,18 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppBar } from "@/shared/components/app-bar";
 import { BottomNav } from "@/shared/components/bottom-nav";
+import { useTheme } from '@/shared/theme/theme-provider';
+import type { ColorToken } from '@/shared/theme/tokens.generated';
 import { Icon } from "@/shared/components/icon";
 
 type Pasta = {
   id: string;
   nome: string;
   quantidade: number;
-  cores: [string, string, string, string];
+  cores: [ColorToken, ColorToken, ColorToken, ColorToken];
 };
 
 type SalvosProps = {
@@ -31,25 +32,25 @@ const pastas: Pasta[] = [
     id: "todos",
     nome: "Todos os salvos",
     quantidade: 6,
-    cores: ["#194B59", "#566F27", "#792C25", "#172F7E"],
+    cores: ["cover1","cover2","cover3","cover4"],
   },
   {
     id: "ler-depois",
     nome: "Ler depois",
     quantidade: 2,
-    cores: ["#566F27", "#172F7E", "#194B59", "#792C25"],
+    cores: ["cover5","cover6","cover5","cover6"],
   },
   {
     id: "amei",
     nome: "Amei!!!",
     quantidade: 3,
-    cores: ["#145B4B", "#8E3325", "#172F7E", "#3F571B"],
+    cores: ["cover2","cover6","cover1","cover3"],
   },
   {
     id: "tcc",
     nome: "TCC",
     quantidade: 4,
-    cores: ["#172F7E", "#145B4B", "#8E3325", "#3F571B"],
+    cores: ["cover4","cover1","cover6","cover3"],
   },
 ];
 
@@ -59,7 +60,7 @@ export default function Salvos({
   onNovaPasta,
   onSelecionarAba,
 }: SalvosProps) {
-  const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   return (
     <View className="flex-1 bg-surface">
@@ -90,18 +91,18 @@ export default function Salvos({
               className="w-[48%] gap-2"
             >
               {/* CAPA DA PASTA */}
-              <View className="h-36 overflow-hidden rounded-md bg-surface-sunken">
+              <View className="h-[144px] overflow-hidden rounded-md bg-surface-sunken">
                 <View className="flex-1 flex-row">
                   <View
                     className="flex-1"
                     style={{
-                      backgroundColor: pasta.cores[0],
+                      backgroundColor: colors[pasta.cores[0]],
                     }}
                   />
                   <View
                     className="flex-1"
                     style={{
-                      backgroundColor: pasta.cores[1],
+                      backgroundColor: colors[pasta.cores[1]],
                     }}
                   />
                 </View>
@@ -110,13 +111,13 @@ export default function Salvos({
                   <View
                     className="flex-1"
                     style={{
-                      backgroundColor: pasta.cores[2],
+                      backgroundColor: colors[pasta.cores[2]],
                     }}
                   />
                   <View
                     className="flex-1"
                     style={{
-                      backgroundColor: pasta.cores[3],
+                      backgroundColor: colors[pasta.cores[3]],
                     }}
                   />
                 </View>
@@ -141,7 +142,7 @@ export default function Salvos({
             accessibilityRole="button"
             className="w-[48%] gap-2"
           >
-            <View className="h-36 items-center justify-center gap-3 rounded-md border-2 border-dashed border-line-strong bg-surface-raised">
+            <View className="h-[144px] items-center justify-center gap-3 rounded-md border-2 border-dashed border-line-strong bg-surface-raised">
               <Icon
                 name="plus"
                 color="brand"

@@ -1,3 +1,4 @@
+import { CapaLivro } from "@/shared/components/livro";
 
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -28,7 +29,7 @@ export default function PedidoFeito({
       >
         {/* CONFIRMAÇÃO */}
         <View className="items-center gap-3">
-          <View className="h-20 w-20 items-center justify-center rounded-pill bg-success-soft">
+          <View className="h-[80px] w-[80px] items-center justify-center rounded-pill bg-success-soft">
             <Icon
               name="checkCircle"
               color="success"
@@ -57,14 +58,10 @@ export default function PedidoFeito({
 
         {/* LIVRO */}
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-4">
-          <View className="h-28 w-20 justify-center rounded-md bg-[#145B4B] p-2">
-            <Text className="text-label text-white">
-              Refatoração
-            </Text>
-          </View>
+          <CapaLivro nome="Refatoração" cor="cover2" largura={77} />
 
           <View className="flex-1 justify-center gap-2">
-            <Text className="text-label text-ink">
+            <Text className="text-book-title text-ink">
               Refatoração
             </Text>
 

@@ -12,9 +12,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppBar } from "@/shared/components/app-bar";
 import { Button } from "@/shared/components/button";
 import { Icon } from "@/shared/components/icon";
+import { useResendCooldown } from '@/shared/utils/use-resend-cooldown';
 
 type ConfirmarEmailProps = {
   estado?: "normal" | "token-expirado";
+  tokenEsperado?: string;
   onVoltar?: () => void;
   onConfirmar?: (token: string) => void;
   onReenviar?: () => void;
@@ -23,6 +25,7 @@ type ConfirmarEmailProps = {
 
 export default function ConfirmarEmail({
   estado = "normal",
+  tokenEsperado,
   onVoltar,
   onConfirmar,
   onReenviar,
@@ -32,8 +35,21 @@ export default function ConfirmarEmail({
   const inputRef = useRef<ElementRef<typeof TextInput>>(null);
 
   const [token, setToken] = useState("");
+  const [erroToken, setErroToken] = useState("");
+  function confirmarToken() {
+    if (token.length !== 6) { setErroToken("Digite os seis dígitos do token."); return; }
+    if (expirado) { setErroToken("Token expirado. Reenvie o token para continuar."); return; }
+    if (tokenEsperado && token !== tokenEsperado) { setErroToken("Token incorreto. Confira o código recebido."); return; }
+    setErroToken("");
+    onConfirmar?.(token);
+  }
 
-  const expirado = estado === "token-expirado";
+  const [expirado, setExpirado] = useState(estado === 'token-expirado');
+  const cooldown = useResendCooldown(estado === 'token-expirado' ? 0 : 42);
+  function reenviar() {
+    if (cooldown.waiting) return;
+    setExpirado(false); setErroToken(''); setToken(''); cooldown.restart(); onReenviar?.();
+  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -111,6 +127,8 @@ export default function ConfirmarEmail({
         )}
 
         {/* CÓDIGO */}
+        {tokenEsperado ? <Text className="text-caption text-ink-muted">Demonstração: use 123456 para confirmar ou outro código para testar o erro.</Text> : null}
+        {erroToken ? <Text accessibilityRole="alert" className="text-caption text-danger">{erroToken}</Text> : null}
         <View className="gap-3">
           <Text className="text-caption-strong text-ink">
             Token do e-mail
@@ -157,21 +175,21 @@ export default function ConfirmarEmail({
         {/* LINKS */}
         <View className="flex-row justify-between gap-3">
           <Pressable
-            onPress={onReenviar}
+            onPress={reenviar}
+            disabled={cooldown.waiting}
+            accessibilityState={{ disabled: cooldown.waiting }}
             accessibilityRole="button"
-            className="min-h-11 justify-center"
+            className="min-h-[44px] justify-center"
           >
             <Text className="text-label text-brand">
-              {expirado
-                ? "Reenviar token"
-                : "Reenviar token"}
+              {cooldown.waiting ? `Reenviar em ${cooldown.label}` : 'Reenviar token'}
             </Text>
           </Pressable>
 
           <Pressable
             onPress={onCorrigirEmail}
             accessibilityRole="button"
-            className="min-h-11 justify-center"
+            className="min-h-[44px] justify-center"
           >
             <Text className="text-label text-brand">
               Corrigir e-mail
@@ -191,7 +209,7 @@ export default function ConfirmarEmail({
           block
           variant="primary"
           disabled={token.length !== 6}
-          onPress={() => onConfirmar?.(token)}
+          onPress={confirmarToken}
         >
           Confirmar e-mail
         </Button>

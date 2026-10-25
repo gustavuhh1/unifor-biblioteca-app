@@ -1,152 +1,27 @@
-
-import React from "react";
-import { ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
-
-type RegistrarRetiradaProps = {
-  onVoltar?: () => void;
-  onConfirmar?: () => void;
-  onCancelar?: () => void;
-};
-
-export default function RegistrarRetirada({
-  onVoltar,
-  onConfirmar,
-  onCancelar,
-}: RegistrarRetiradaProps) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View className="flex-1 bg-surface">
-      <AppBar
-        title="Registrar retirada"
-        back
-        onBack={onVoltar}
-      />
-
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-5 px-4 pb-8"
-      >
-        {/* CÓDIGO IDENTIFICADO */}
-        <View className="gap-2 rounded-md bg-success-soft p-4">
-          <View className="flex-row items-center gap-2">
-            <Icon
-              name="check"
-              color="success"
-              size={20}
-            />
-
-            <Text className="text-label text-ink">
-              QR lido: RET-4821
-            </Text>
-          </View>
-
-          <Text className="text-body text-ink">
-            Pedido confirmado pelo aluno, sem
-            pendências. Entregue o exemplar e registre.
-          </Text>
-        </View>
-
-        {/* DADOS DO ALUNO */}
-        <View className="flex-row items-center gap-3 rounded-md border border-line bg-surface-raised p-4">
-          <View className="h-12 w-12 items-center justify-center rounded-pill bg-brand-soft">
-            <Text className="text-label text-brand">
-              BN
-            </Text>
-          </View>
-
-          <View className="flex-1 gap-1">
-            <Text className="text-label text-ink">
-              Beatriz Nogueira
-            </Text>
-
-            <Text className="text-caption text-ink-muted">
-              Matrícula 2310052
-            </Text>
-          </View>
-        </View>
-
-        {/* EXEMPLAR */}
-        <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-4">
-          <View className="h-32 w-24 justify-center rounded-md bg-[#536B22] p-2">
-            <Text className="text-label text-white">
-              Padrões de Projeto
-            </Text>
-          </View>
-
-          <View className="flex-1 justify-center gap-2">
-            <Text className="text-label text-ink">
-              Padrões de Projeto
-            </Text>
-
-            <Text className="text-caption text-ink-muted">
-              Gamma et al.
-            </Text>
-
-            <Text className="text-caption text-ink-muted">
-              Exemplar 1163 · Estante 005.1
-            </Text>
-
-            <View className="self-start rounded-pill bg-brand-soft px-3 py-1">
-              <Text className="text-caption-strong text-brand">
-                Pronto para retirar
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* INFORMAÇÕES DO EMPRÉSTIMO */}
-        <View className="flex-row justify-between gap-3 rounded-md bg-surface-sunken p-4">
-          <View className="gap-1">
-            <Text className="text-caption text-ink-muted">
-              Empréstimo de 14 dias
-            </Text>
-
-            <Text className="text-label text-ink">
-              Inicia na retirada
-            </Text>
-          </View>
-
-          <View className="items-end gap-1">
-            <Text className="text-caption text-ink-muted">
-              Devolver até
-            </Text>
-
-            <Text className="text-label text-ink">
-              29/10
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* AÇÕES */}
-      <View
-        className="gap-3 border-t border-line bg-surface-raised px-4 pt-3"
-        style={{
-          paddingBottom: Math.max(insets.bottom, 16),
-        }}
-      >
-        <Button
-          block
-          variant="primary"
-          onPress={onConfirmar}
-        >
-          Registrar retirada
-        </Button>
-
-        <Button
-          block
-          variant="ghost"
-          onPress={onCancelar}
-        >
-          Cancelar
-        </Button>
-      </View>
-    </View>
-  );
+import { useState } from 'react'
+import { ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { AppBar, Button, Icon } from '@/shared/components'
+import { CapaLivro } from '@/shared/components/livro'
+import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
+const pedidos = {
+  'RET-4817': { nome: 'Beatriz Nogueira', matricula: '2311052', titulo: 'Padrões de Projeto', autor: 'Gamma et al.', estante: '005.1', registro: '51902' },
+  'RET-4809': { nome: 'Rafael Teixeira', matricula: '2210478', titulo: 'Cálculo, Vol. 2', autor: 'James Stewart', estante: '515', registro: '51903' },
+  'RET-4821': { nome: 'Lucas Almeida', matricula: '2412858', titulo: 'Código Limpo', autor: 'Robert C. Martin', estante: '005.1', registro: '46122' },
+}
+export type CodigoRetirada = keyof typeof pedidos
+export interface RegistrarRetiradaProps { codigo?: CodigoRetirada; onVoltar?: () => void; onConcluido?: () => void }
+export default function RegistrarRetirada({ codigo = 'RET-4817', onVoltar, onConcluido }: RegistrarRetiradaProps) {
+  const safe = useSafeAreaInsets()
+  const [confirmar, setConfirmar] = useState(false)
+  const [feito, setFeito] = useState(false)
+  const pedido = pedidos[codigo]
+  return <View className="flex-1 bg-surface"><AppBar title="Registrar retirada" back onBack={onVoltar} /><ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}>
+    <View className="flex-row gap-3 rounded-lg bg-success-soft p-4"><Icon name="qr" color="success" /><View className="flex-1 gap-1"><Text className="text-label text-ink">QR lido: {codigo}</Text><Text className="text-body text-ink-muted">Pedido confirmado pela aluna e sem pendências. Entregue o exemplar e registre.</Text></View></View>
+    <View className="gap-4 rounded-lg border border-line bg-surface-raised p-4"><Text className="text-label text-ink">{pedido.nome}</Text><Text className="text-caption text-ink-muted">Matrícula {pedido.matricula}</Text><View className="flex-row gap-3"><CapaLivro nome={pedido.titulo} autor={pedido.autor} cor={codigo === 'RET-4821' ? 'cover1' : codigo === 'RET-4809' ? 'cover4' : 'cover2'} largura={82} /><View className="min-w-0 flex-1 gap-2"><Text className="text-book-title text-ink">{pedido.titulo}</Text><Text className="text-caption text-ink-muted">{pedido.autor}</Text><Text className="text-caption text-ink-muted">Registro {pedido.registro} · Estante {pedido.estante}</Text><Text className="text-overline text-brand">Pronto para retirar</Text></View></View></View>
+    <View className="flex-row justify-between gap-3 rounded-md bg-brand-soft p-4"><Text className="text-caption text-ink">Empréstimo de 14 dias</Text><Text className="text-caption-strong text-ink">Devolver até 29/10</Text></View>
+    {feito ? <Text accessibilityLiveRegion="polite" className="rounded-md bg-success-soft p-4 text-label text-success">Retirada registrada na simulação.</Text> : null}
+  </ScrollView><View className="gap-2 border-t border-line bg-surface-raised px-4 pt-3" style={{ paddingBottom: Math.max(safe.bottom, 16) }}><Button block icon="check" disabled={feito} onPress={() => setConfirmar(true)}>{feito ? 'Registrado' : 'Registrar entrega'}</Button><Button block variant="ghost" onPress={onVoltar}>Cancelar</Button></View>
+    <ConfirmationSheet visible={confirmar} title="Confirmar retirada?" description="Demonstração: confirmar a entrega presencial do exemplar. Nenhum dado será enviado." onCancel={() => setConfirmar(false)} onConfirm={() => { setConfirmar(false); setFeito(true); onConcluido?.() }} />
+  </View>
 }

@@ -1,5 +1,5 @@
 
-import React, { ElementRef, useRef, useState } from "react";
+import React, { type ComponentRef, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -12,22 +12,34 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppBar } from "@/shared/components/app-bar";
 import { Button } from "@/shared/components/button";
 import { Icon } from "@/shared/components/icon";
+import { useResendCooldown } from '@/shared/utils/use-resend-cooldown';
 
 type VerificarTokenProps = {
+  tokenEsperado?: string;
   onVoltar?: () => void;
   onContinuar?: (token: string) => void;
   onReenviar?: () => void;
 };
 
 export default function VerificarToken({
+  tokenEsperado,
   onVoltar,
   onContinuar,
   onReenviar,
 }: VerificarTokenProps) {
   const insets = useSafeAreaInsets();
+  const cooldown = useResendCooldown(42);
 
   const [token, setToken] = useState("");
-  const inputRef = useRef<ElementRef<typeof TextInput>>(null);
+  const [erroToken, setErroToken] = useState("");
+  function confirmarToken() {
+    if (token.length !== 6) { setErroToken("Digite os seis dígitos do token."); return; }
+    
+    if (tokenEsperado && token !== tokenEsperado) { setErroToken("Token incorreto. Confira o código recebido."); return; }
+    setErroToken("");
+    onContinuar?.(token);
+  }
+  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
 
   return (
     <View className="flex-1 bg-surface">
@@ -43,7 +55,7 @@ export default function VerificarToken({
         contentContainerClassName="gap-5 px-4 pb-8"
       >
         {/* ÍCONE */}
-        <View className="h-14 w-20 items-center justify-center rounded-[20px] bg-brand-soft">
+        <View className="h-14 w-[80px] items-center justify-center rounded-lg bg-brand-soft">
           <Icon
             name="mail"
             color="brand"
@@ -63,6 +75,8 @@ export default function VerificarToken({
           </Text>
         </View>
 
+        {tokenEsperado ? <Text className="text-caption text-ink-muted">Demonstração: use 123456 para confirmar ou outro código para testar o erro.</Text> : null}
+        {erroToken ? <Text accessibilityRole="alert" className="text-caption text-danger">{erroToken}</Text> : null}
         {/* TOKEN */}
         <View className="gap-3">
           <Text className="text-caption-strong text-ink">
@@ -111,11 +125,13 @@ export default function VerificarToken({
         <View className="items-center">
           <Pressable
             accessibilityRole="button"
-            onPress={onReenviar}
-            className="min-h-11 justify-center rounded-md bg-surface-sunken px-5"
+            onPress={() => { if (cooldown.waiting) return; setToken(''); setErroToken(''); cooldown.restart(); onReenviar?.(); }}
+            disabled={cooldown.waiting}
+            accessibilityState={{ disabled: cooldown.waiting }}
+            className="min-h-[44px] justify-center rounded-md bg-surface-sunken px-5"
           >
             <Text className="text-label text-brand">
-              Reenviar token
+              {cooldown.waiting ? `Reenviar token (${cooldown.label})` : 'Reenviar token'}
             </Text>
           </Pressable>
         </View>
@@ -132,7 +148,7 @@ export default function VerificarToken({
           block
           variant="primary"
           disabled={token.length !== 6}
-          onPress={() => onContinuar?.(token)}
+          onPress={confirmarToken}
         >
           Continuar
         </Button>

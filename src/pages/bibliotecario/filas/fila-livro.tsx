@@ -1,675 +1,133 @@
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
+import React, { useState } from 'react'
+import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { AppBar } from '@/shared/components/app-bar'
+import { BottomNav } from '@/shared/components/bottom-nav'
+import { CapaLivro } from '@/shared/components/livro'
+import { Icon } from '@/shared/components/icon'
+import { Button } from '@/shared/components/button'
+import { useTheme } from '@/shared/theme/theme-provider'
 
-import React, { useEffect, useState } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+export type EstadoFilaLivro = 'normal' | 'gerenciar' | 'adicionar' | 'confirmar-posicao' | 'posicao-atualizada' | 'remover'
+export type AlunoDaFila = { id: string; nome: string; matricula: string; iniciais: string; data: string }
+export interface FilaLivroProps {
+  estado?: EstadoFilaLivro
+  onVoltar?: () => void
+  onSelecionarAba?: (indice: number) => void
+  onAdicionarAluno?: (matricula: string, posicao: number, motivo: string) => void
+  onMoverAluno?: (id: string, posicao: number) => void
+  onRemoverAluno?: (id: string, motivo: string) => void
+}
+const iniciais: AlunoDaFila[] = [
+  { id: 'ana', nome: 'Ana Beatriz Lima', matricula: '2311047', iniciais: 'AB', data: 'desde 02/10' },
+  { id: 'lucas', nome: 'Lucas Almeida', matricula: '2412858', iniciais: 'LA', data: 'desde 08/10' },
+  { id: 'carlos', nome: 'Carlos Eduardo Sá', matricula: '2210933', iniciais: 'CS', data: 'desde 10/10' },
+  { id: 'marina', nome: 'Marina Castro', matricula: '2513320', iniciais: 'MC', data: 'desde 09/10' },
+]
+const paula: AlunoDaFila = { id: 'paula', nome: 'Paula Ribeiro', matricula: '2311998', iniciais: 'PR', data: 'desde hoje' }
 
-import { AppBar } from "@/shared/components/app-bar";
-import { BottomNav } from "@/shared/components/bottom-nav";
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
+export default function FilaLivro({ estado = 'normal', onVoltar, onSelecionarAba, onAdicionarAluno, onMoverAluno, onRemoverAluno }: FilaLivroProps) {
+  const reducedMotion = useReducedMotion()
 
-type EstadoFila =
-  | "normal"
-  | "gerenciar"
-  | "adicionar"
-  | "confirmar-posicao"
-  | "posicao-atualizada";
+  const safe = useSafeAreaInsets()
+  const { colors } = useTheme()
+  const [painel, setPainel] = useState<EstadoFilaLivro>(estado)
+  const [alunos, setAlunos] = useState<AlunoDaFila[]>(estado === 'posicao-atualizada' ? [...iniciais, paula] : iniciais)
+  const [selecionado, setSelecionado] = useState<AlunoDaFila>(iniciais[2])
+  const [matricula, setMatricula] = useState(paula.matricula)
+  const [posicao, setPosicao] = useState(estado === 'confirmar-posicao' ? 1 : 5)
+  const [tipoAlteracao, setTipoAlteracao] = useState<'incluir' | 'mover'>('incluir')
+  const [motivo, setMotivo] = useState('Pedido no balcão, sem acesso ao app')
+  const [mensagem, setMensagem] = useState(estado === 'posicao-atualizada' ? 'Paula entrou em 5º e foi avisada.' : '')
+  const modal = ['gerenciar','adicionar','confirmar-posicao','remover'].includes(painel)
 
-type AlunoFila = {
-  id: string;
-  nome: string;
-  matricula: string;
-  data: string;
-  iniciais: string;
-};
-
-type FilaLivroProps = {
-  estado?: EstadoFila;
-  onVoltar?: () => void;
-  onAdicionarAluno?: (
-    matricula: string,
-    posicao: string,
-    motivo: string
-  ) => void;
-  onMoverAluno?: (id: string) => void;
-  onRemoverAluno?: (id: string) => void;
-  onSelecionarAba?: (indice: number) => void;
-};
-
-const alunosIniciais: AlunoFila[] = [
-  {
-    id: "ana",
-    nome: "Ana Beatriz Lima",
-    matricula: "2311107",
-    data: "desde 02/10",
-    iniciais: "AB",
-  },
-  {
-    id: "lucas",
-    nome: "Lucas Almeida",
-    matricula: "2412858",
-    data: "desde 04/10",
-    iniciais: "LA",
-  },
-  {
-    id: "carlos",
-    nome: "Carlos Eduardo Sá",
-    matricula: "2210933",
-    data: "desde 05/10",
-    iniciais: "CE",
-  },
-  {
-    id: "marina",
-    nome: "Marina Castro",
-    matricula: "2513320",
-    data: "desde 09/10",
-    iniciais: "MC",
-  },
-];
-
-export default function FilaLivro({
-  estado = "normal",
-  onVoltar,
-  onAdicionarAluno,
-  onMoverAluno,
-  onRemoverAluno,
-  onSelecionarAba,
-}: FilaLivroProps) {
-  const insets = useSafeAreaInsets();
-
-  const [estadoAtual, setEstadoAtual] =
-    useState<EstadoFila>(estado);
-
-  const [alunoSelecionado, setAlunoSelecionado] =
-    useState<AlunoFila>(alunosIniciais[2]);
-
-  const [matricula, setMatricula] =
-    useState("2311998");
-
-  const [posicao, setPosicao] = useState("fim");
-  const [motivo, setMotivo] = useState(
-    "Pedido no balcão, sem acesso ao app"
-  );
-
-  const [alunos, setAlunos] =
-    useState<AlunoFila[]>(alunosIniciais);
-
-  const [mostrarAviso, setMostrarAviso] = useState(
-    estado === "posicao-atualizada"
-  );
-
-  useEffect(() => {
-    setEstadoAtual(estado);
-    setMostrarAviso(estado === "posicao-atualizada");
-    setAlunos(alunosIniciais);
-  }, [estado]);
-
-  const painelAberto =
-    estadoAtual === "gerenciar" ||
-    estadoAtual === "adicionar" ||
-    estadoAtual === "confirmar-posicao";
-
-  function fecharPainel() {
-    setEstadoAtual("normal");
+  const [erro, setErro] = useState('')
+  const prevista = (() => {
+    const aluno = tipoAlteracao === 'mover' ? selecionado : paula
+    const copia = alunos.filter(a => a.id !== aluno.id)
+    copia.splice(posicao - 1, 0, aluno)
+    return copia
+  })()
+  function voltar() { setPainel('normal') }
+  function adicionar() {
+    if (!/^\d{7}$/.test(matricula.trim()) || !motivo.trim()) { setErro('Informe matrícula de 7 dígitos e motivo.'); return }
+    if (alunos.some(a => a.matricula === matricula.trim() || a.id === 'paula')) { setErro('Este aluno já está na fila.'); return }
+    if (matricula.trim() !== paula.matricula) { setErro('Aluno não encontrado nesta demonstração.'); return }
+    setErro('')
+    const destino = Math.max(1, Math.min(alunos.length + 1, posicao))
+    if (destino < alunos.length + 1) { setTipoAlteracao('incluir'); setPainel('confirmar-posicao'); return }
+    const novo = { ...paula, matricula: matricula.trim() }
+    setAlunos(lista => [...lista.filter(a => a.id !== 'paula'), novo])
+    setMensagem(`${novo.nome} entrou em ${destino}º na fila`)
+    onAdicionarAluno?.(novo.matricula, destino, motivo)
+    voltar()
   }
-
-  function abrirGerenciamento(aluno: AlunoFila) {
-    setAlunoSelecionado(aluno);
-    setEstadoAtual("gerenciar");
+  function confirmarMover() {
+    if (!motivo.trim()) { setErro('Informe o motivo da alteração.'); return }
+    const destino = Math.max(1, Math.min(alunos.length + (tipoAlteracao === 'incluir' ? 1 : 0), posicao))
+    const aluno = tipoAlteracao === 'mover' ? selecionado : { ...paula, matricula: matricula.trim() }
+    setAlunos(lista => {
+      const copia = lista.filter(a => a.id !== aluno.id)
+      copia.splice(destino - 1, 0, aluno)
+      return copia
+    })
+    setMensagem(`${aluno.nome} está em ${destino}º na fila`)
+    if (tipoAlteracao === 'mover') onMoverAluno?.(aluno.id, destino)
+    else onAdicionarAluno?.(aluno.matricula, destino, motivo)
+    voltar()
   }
-
-  function abrirAdicionar() {
-    setEstadoAtual("adicionar");
+  function remover() {
+    if (!motivo.trim()) return
+    setAlunos(lista => lista.filter(a => a.id !== selecionado.id))
+    onRemoverAluno?.(selecionado.id, motivo)
+    setMensagem('Aluno removido da fila (simulação)')
+    voltar()
   }
-
-  function abrirConfirmacao() {
-    setEstadoAtual("confirmar-posicao");
-  }
-
-  function confirmarMudancaPosicao() {
-    // Demonstra visualmente a troca de posições.
-    // A alteração real será feita pelo backend.
-    setAlunos((lista) => {
-      const copia = [...lista];
-
-      const indice = copia.findIndex(
-        (aluno) => aluno.id === "paulo"
-      );
-
-      const posicaoDestino = 3;
-
-      if (indice < 0) {
-        const paulo: AlunoFila = {
-          id: "paulo",
-          nome: "Paulo Ribeiro",
-          matricula: "2311998",
-          data: "desde hoje",
-          iniciais: "PR",
-        };
-
-        copia.splice(posicaoDestino, 0, paulo);
-      } else {
-        const [paulo] = copia.splice(indice, 1);
-        copia.splice(posicaoDestino, 0, paulo);
-      }
-
-      return copia;
-    });
-
-    setMostrarAviso(true);
-    setEstadoAtual("posicao-atualizada");
-    onMoverAluno?.("paulo");
-  }
-
-  function adicionarAluno() {
-    const numero = matricula.trim();
-
-    if (!numero) return;
-
-    onAdicionarAluno?.(numero, posicao, motivo);
-
-    // Sem criar registro real: somente apresenta
-    // o estado de confirmação do Figma.
-    fecharPainel();
-  }
-
-  function removerAluno() {
-    onRemoverAluno?.(alunoSelecionado.id);
-    fecharPainel();
-  }
-
-  function LinhaAluno({
-    aluno,
-    indice,
-  }: {
-    aluno: AlunoFila;
-    indice: number;
-  }) {
-    return (
-      <Pressable
-        onPress={() => abrirGerenciamento(aluno)}
-        accessibilityRole="button"
-        accessibilityLabel={`Gerenciar ${aluno.nome}, posição ${indice + 1}`}
-        className="min-h-[70px] flex-row items-center gap-3 border-b border-line px-3 py-3"
-      >
-        {/* POSIÇÃO */}
-        <Text className="w-4 text-center text-caption-strong text-ink-muted">
-          {indice + 1}
-        </Text>
-
-        {/* AVATAR */}
-        <View className="h-10 w-10 items-center justify-center rounded-pill bg-brand-soft">
-          <Text className="text-caption-strong text-brand">
-            {aluno.iniciais}
-          </Text>
-        </View>
-
-        {/* DADOS */}
-        <View className="flex-1 gap-1">
-          <Text className="text-label text-ink">
-            {aluno.nome}
-          </Text>
-
-          <Text className="text-caption text-ink-muted">
-            {aluno.matricula} · {aluno.data}
-          </Text>
-        </View>
-
-        {/* MENU */}
-        <Text className="text-title text-ink-muted">
-          ⋮
-        </Text>
-      </Pressable>
-    );
-  }
-
-  return (
-    <View className="flex-1 bg-surface">
-      {/* CABEÇALHO */}
-      <AppBar
-        title="Fila do livro"
-        subtitle={`${alunos.length} alunos aguardando`}
-        back
-        onBack={onVoltar}
-      />
-
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-5 px-4 pb-8"
-      >
-        {/* LIVRO */}
-        <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <View className="h-24 w-16 justify-center rounded-md bg-[#004AF5] p-2">
-            <Text className="text-caption-strong text-white">
-              Arquitetura Limpa
-            </Text>
-          </View>
-
-          <View className="flex-1 justify-center gap-2">
-            <Text className="text-label text-ink">
-              Arquitetura Limpa
-            </Text>
-
-            <Text className="text-caption text-ink-muted">
-              Com Robert Martin · devolve 21/10
-            </Text>
-
-            <View className="self-start rounded-pill bg-warning-soft px-3 py-1">
-              <Text className="text-caption-strong text-warning">
-                Emprestado
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* REGRA DA FILA */}
-        <View className="flex-row items-start gap-3 rounded-md bg-brand-soft p-4">
-          <Icon
-            name="info"
-            color="brand"
-            size={20}
-          />
-
-          <Text className="flex-1 text-body text-ink">
-            Fila automática. Quando o livro volta,
-            o 1º da fila é avisado e tem 24h para
-            confirmar. Mais de um exemplar pode
-            atender alunos diferentes.
-          </Text>
-        </View>
-
-        {/* LISTA DE ALUNOS */}
-        <View className="overflow-hidden rounded-md border border-line bg-surface-raised">
-          {alunos.map((aluno, indice) => (
-            <LinhaAluno
-              key={aluno.id}
-              aluno={aluno}
-              indice={indice}
-            />
-          ))}
-        </View>
-
-        {/* ADICIONAR ALUNO */}
-        <Button
-          block
-          variant="secondary"
-          onPress={abrirAdicionar}
-        >
-          Adicionar aluno à fila
-        </Button>
-      </ScrollView>
-
-      {/* B12 — AVISO DE CONFIRMAÇÃO */}
-      {mostrarAviso && !painelAberto && (
-        <View
-          className="absolute bottom-20 left-4 right-4 flex-row items-center gap-3 rounded-md bg-[#0B1533] p-4"
-          accessibilityRole="alert"
-        >
-          <Icon
-            name="check"
-            color="onBrand"
-            size={20}
-          />
-
-          <Text className="flex-1 text-caption-strong text-white">
-            Paulo entrou em 4º na fila
-          </Text>
-        </View>
-      )}
-
-      {/* NAVEGAÇÃO */}
-      <BottomNav
-        role="bibliotecario"
-        active={2}
-        onSelect={onSelecionarAba}
-      />
-
-      {/* PAINÉIS B09, B10 E B11 */}
-      <Modal
-        visible={painelAberto}
-        transparent
-        animationType="slide"
-        statusBarTranslucent
-        onRequestClose={fecharPainel}
-      >
-        <View className="flex-1 justify-end">
-          {/* SOBREPOSIÇÃO */}
-          <Pressable
-            className="absolute inset-0 bg-black/40"
-            onPress={fecharPainel}
-            accessibilityRole="button"
-            accessibilityLabel="Fechar painel"
-          />
-
-          <View
-            className="max-h-[90%] rounded-t-[28px] bg-surface-raised px-4 pt-5"
-            style={{
-              paddingBottom: Math.max(insets.bottom, 20),
-            }}
-          >
-            <View className="mb-5 items-center">
-              <View className="h-1 w-10 rounded-pill bg-line-strong" />
-            </View>
-
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerClassName="gap-4 pb-2"
-            >
-              {/* B09 — OPÇÕES DO ALUNO */}
-              {estadoAtual === "gerenciar" && (
-                <>
-                  <Text className="text-title text-ink">
-                    {alunoSelecionado.nome}
-                  </Text>
-
-                  <Text className="text-body text-ink-muted">
-                    3º na fila de Arquitetura Limpa ·
-                    matrícula {alunoSelecionado.matricula}
-                  </Text>
-
-                  <View className="gap-2">
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={abrirConfirmacao}
-                      className="min-h-[52px] flex-row items-center justify-between rounded-md border border-line px-4"
-                    >
-                      <Text className="text-label text-ink">
-                        Mudar posição
-                      </Text>
-                      <Icon
-                        name="chevronRight"
-                        color="inkMuted"
-                        size={20}
-                      />
-                    </Pressable>
-
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={fecharPainel}
-                      className="min-h-[52px] flex-row items-center justify-between rounded-md border border-line px-4"
-                    >
-                      <Text className="text-label text-ink">
-                        Reenviar aviso
-                      </Text>
-                      <Icon
-                        name="chevronRight"
-                        color="inkMuted"
-                        size={20}
-                      />
-                    </Pressable>
-
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={removerAluno}
-                      className="min-h-[52px] flex-row items-center justify-between rounded-md border border-line px-4"
-                    >
-                      <Text className="text-label text-danger">
-                        Remover da fila
-                      </Text>
-                      <Icon
-                        name="chevronRight"
-                        color="danger"
-                        size={20}
-                      />
-                    </Pressable>
-                  </View>
-
-                  <View className="gap-2 rounded-md bg-surface-sunken p-4">
-                    <Text className="text-label text-ink">
-                      Motivo (obrigatório para remover)
-                    </Text>
-
-                    <Text className="text-body text-ink-muted">
-                      O aluno recebe um aviso com o motivo
-                      e as pessoas de baixo sobem uma posição.
-                    </Text>
-                  </View>
-
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={fecharPainel}
-                  >
-                    Fechar
-                  </Button>
-                </>
-              )}
-
-              {/* B10 — ADICIONAR ALUNO */}
-              {estadoAtual === "adicionar" && (
-                <>
-                  <Text className="text-title text-ink">
-                    Adicionar aluno à fila
-                  </Text>
-
-                  <Text className="text-body text-ink-muted">
-                    Arquitetura Limpa · 4 alunos aguardando
-                  </Text>
-
-                  {/* MATRÍCULA */}
-                  <View className="gap-2">
-                    <Text className="text-label text-ink">
-                      Matrícula
-                    </Text>
-
-                    <View className="min-h-12 flex-row items-center gap-2 rounded-md border border-line-strong bg-surface px-3">
-                      <Icon
-                        name="search"
-                        color="inkMuted"
-                        size={20}
-                      />
-
-                      <TextInput
-                        value={matricula}
-                        onChangeText={setMatricula}
-                        keyboardType="number-pad"
-                        maxLength={7}
-                        className="flex-1 text-body text-ink"
-                        accessibilityLabel="Matrícula do aluno"
-                      />
-                    </View>
-                  </View>
-
-                  {/* ALUNO ENCONTRADO — DEMONSTRAÇÃO */}
-                  <View className="flex-row items-center gap-3 rounded-md border border-line bg-surface p-3">
-                    <View className="h-10 w-10 items-center justify-center rounded-pill bg-brand-soft">
-                      <Text className="text-caption-strong text-brand">
-                        PR
-                      </Text>
-                    </View>
-
-                    <View className="flex-1 gap-1">
-                      <Text className="text-label text-ink">
-                        Paulo Ribeiro
-                      </Text>
-
-                      <Text className="text-caption text-ink-muted">
-                        Aluno de graduação · 2 livros com você
-                      </Text>
-                    </View>
-
-                    <Icon
-                      name="check"
-                      color="success"
-                      size={20}
-                    />
-                  </View>
-
-                  {/* POSIÇÃO */}
-                  <View className="gap-3">
-                    <Text className="text-label text-ink">
-                      Posição
-                    </Text>
-
-                    <View className="flex-row flex-wrap gap-2">
-                      {[
-                        { id: "1", titulo: "1º" },
-                        { id: "2", titulo: "2º" },
-                        { id: "3", titulo: "3º" },
-                        { id: "4", titulo: "4º" },
-                        { id: "fim", titulo: "No fim (5º)" },
-                      ].map((opcao) => (
-                        <Pressable
-                          key={opcao.id}
-                          onPress={() => setPosicao(opcao.id)}
-                          accessibilityRole="radio"
-                          accessibilityState={{
-                            checked: posicao === opcao.id,
-                          }}
-                          className={
-                            posicao === opcao.id
-                              ? "min-h-10 justify-center rounded-pill border border-brand bg-brand-soft px-4"
-                              : "min-h-10 justify-center rounded-pill border border-line bg-surface px-4"
-                          }
-                        >
-                          <Text
-                            className={
-                              posicao === opcao.id
-                                ? "text-label text-brand"
-                                : "text-label text-ink"
-                            }
-                          >
-                            {opcao.titulo}
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </View>
-
-                    <Text className="text-caption text-ink-muted">
-                      No fim da fila ninguém é afetado.
-                    </Text>
-                  </View>
-
-                  {/* MOTIVO */}
-                  <View className="gap-2">
-                    <Text className="text-label text-ink">
-                      Motivo (obrigatório)
-                    </Text>
-
-                    <TextInput
-                      value={motivo}
-                      onChangeText={setMotivo}
-                      multiline
-                      textAlignVertical="top"
-                      className="min-h-20 rounded-md border border-line-strong bg-surface p-3 text-body text-ink"
-                      accessibilityLabel="Motivo da inclusão"
-                    />
-
-                    <Text className="text-caption text-ink-muted">
-                      Fica no histórico da fila e o aluno
-                      recebe um aviso.
-                    </Text>
-                  </View>
-
-                  <Button
-                    block
-                    variant="primary"
-                    disabled={
-                      !matricula.trim() || !motivo.trim()
-                    }
-                    onPress={() => {
-                      if (posicao !== "fim") {
-                        abrirConfirmacao();
-                      } else {
-                        adicionarAluno();
-                      }
-                    }}
-                  >
-                    Adicionar na fila
-                  </Button>
-
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={fecharPainel}
-                  >
-                    Cancelar
-                  </Button>
-                </>
-              )}
-
-              {/* B11 — CONFIRMAR ALTERAÇÃO */}
-              {estadoAtual === "confirmar-posicao" && (
-                <>
-                  <Text className="text-title text-ink">
-                    Colocar Paulo à frente de 4 alunos?
-                  </Text>
-
-                  <Text className="text-body text-ink-muted">
-                    Ele passa a ser o 1º da fila de
-                    Arquitetura Limpa. Quem está na
-                    fila desce uma posição e é avisado
-                    na hora.
-                  </Text>
-
-                  <View className="gap-3 rounded-md border border-line bg-surface p-4">
-                    <Text className="text-label text-ink">
-                      Antes → Depois
-                    </Text>
-
-                    {[
-                      "Ana Beatriz Lima",
-                      "Lucas Almeida",
-                      "Carlos Eduardo Sá",
-                      "Marina Castro",
-                    ].map((nome, indice) => (
-                      <View
-                        key={nome}
-                        className="flex-row justify-between"
-                      >
-                        <Text className="text-caption text-ink">
-                          {nome}
-                        </Text>
-
-                        <Text className="text-caption-strong text-danger">
-                          {indice + 1}º → {indice + 2}º
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-
-                  <View className="flex-row items-start gap-2 rounded-md bg-danger-soft p-4">
-                    <Icon
-                      name="alert"
-                      color="danger"
-                      size={20}
-                    />
-
-                    <Text className="flex-1 text-body text-ink">
-                      Isso não é uma simples adição.
-                      Mudar a ordem prejudica quem
-                      já estava na fila.
-                    </Text>
-                  </View>
-
-                  <Button
-                    block
-                    variant="danger"
-                    onPress={confirmarMudancaPosicao}
-                  >
-                    Colocar à frente mesmo assim
-                  </Button>
-
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={fecharPainel}
-                  >
-                    Voltar e colocar no fim
-                  </Button>
-                </>
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
+  return <View className="flex-1 bg-surface">
+    <AppBar title="Fila do livro" subtitle={`${alunos.length} alunos aguardando`} back onBack={onVoltar}/>
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}>
+      <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3"><CapaLivro nome="Arquitetura Limpa" cor="cover6" largura={72}/><View className="flex-1 gap-2"><Text className="text-label text-ink">Arquitetura Limpa</Text><Text className="text-caption text-ink-muted">Robert C. Martin · devolve 21/10</Text><View className="self-start rounded-pill bg-warning-soft px-2 py-1"><Text className="text-caption text-warning">Emprestado</Text></View></View></View>
+      <View className="flex-row gap-3 rounded-md bg-brand-soft p-4"><Icon name="info" color="brand" size={19}/><Text className="flex-1 text-body text-ink">Fila automática. Quando o livro volta, o 1º da fila é avisado e tem 24h para confirmar. Mais de um exemplar pode atender alunos diferentes.</Text></View>
+      <View className="overflow-hidden rounded-md border border-line bg-surface-raised">
+        {alunos.map((aluno, i) => <Pressable key={aluno.id} onPress={() => { setSelecionado(aluno); setPosicao(i + 1); setTipoAlteracao('mover'); setPainel('gerenciar') }} accessibilityRole="button" accessibilityLabel={`Gerenciar ${aluno.nome}, posição ${i + 1}`} className="flex-row items-center gap-2 border-b border-line p-3">
+          <Text className="w-4 text-center text-caption text-ink-muted">{i + 1}</Text><View className="h-10 w-10 items-center justify-center rounded-pill bg-brand-soft"><Text className="text-caption-strong text-brand">{aluno.iniciais}</Text></View><View className="flex-1 gap-1"><Text className="text-label text-ink">{aluno.nome}</Text><Text className="text-caption text-ink-muted">{aluno.matricula} · {aluno.data}</Text></View><Text className="text-title text-ink-muted">⋮</Text>
+        </Pressable>)}
+      </View>
+      <Button block variant="secondary" icon="plus" onPress={() => { setTipoAlteracao('incluir'); setPosicao(alunos.length + 1); setPainel('adicionar') }}>Adicionar aluno à fila</Button>
+    </ScrollView>
+    {mensagem && !modal ? <Pressable onPress={() => setMensagem('')} className="absolute bottom-[80px] left-4 right-4 flex-row items-center gap-2 rounded-md bg-ink p-4"><Icon name="check" color="surface" size={18}/><Text className="flex-1 text-caption-strong text-surface">{mensagem}</Text><Icon name="x" color="onCover" size={15}/></Pressable> : null}
+    <BottomNav role="bibliotecario" active={3} onSelect={onSelecionarAba}/>
+    <Modal transparent visible={modal} animationType={reducedMotion ? "none" : "slide"} onRequestClose={voltar}>
+      <View className="flex-1 justify-end"><Pressable className="absolute inset-0" style={{ backgroundColor: colors.scrim }} onPress={voltar} accessibilityLabel="Fechar"/>
+        <View className="max-h-[88%] rounded-t-sheet bg-surface-raised p-4" style={{ paddingBottom: Math.max(safe.bottom, 16) }}><View className="mb-4 items-center"><View className="h-1 w-[36px] rounded-pill bg-line-strong" /></View><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 15, paddingBottom: 4 }}>
+          {erro ? <Text accessibilityRole="alert" className="text-caption text-danger">{erro}</Text> : null}
+          {painel === 'remover' ? <>
+            <Text className="text-title text-ink">Remover {selecionado.nome} da fila?</Text>
+            <Text className="text-body text-ink-muted">Motivo: {motivo || 'Informe o motivo antes de confirmar.'}</Text>
+            <Button block variant="danger" disabled={!motivo.trim()} onPress={remover}>Confirmar remoção</Button>
+            <Button block variant="ghost" onPress={() => setPainel('gerenciar')}>Cancelar</Button>
+          </> : painel === 'gerenciar' ? <>
+            <Text className="text-title text-ink">{selecionado.nome}</Text><Text className="text-body text-ink-muted">{alunos.findIndex(a => a.id === selecionado.id) + 1}º na fila · matrícula {selecionado.matricula}</Text>
+            <View className="flex-row flex-wrap gap-2">{alunos.map((a, i) => <Pressable key={a.id} accessibilityRole="button" accessibilityLabel={`Mover para ${i + 1}`} onPress={() => setPosicao(i + 1)} className={`min-h-[44px] justify-center rounded-pill border px-3 ${posicao === i + 1 ? 'border-brand bg-brand-soft' : 'border-line bg-surface'}`}><Text className="text-caption-strong text-ink">{i + 1}º</Text></Pressable>)}</View><Button block variant="secondary" onPress={() => { setTipoAlteracao('mover'); setMatricula(selecionado.matricula); setPainel('confirmar-posicao') }}>Mudar posição</Button>
+            <Button block variant="secondary" onPress={() => { setMensagem('Aviso reenviado (simulação)'); voltar() }}>Reenviar aviso</Button>
+            <Text className="text-label text-ink">Motivo para remoção</Text><TextInput value={motivo} onChangeText={setMotivo} multiline className="min-h-[64px] rounded-md border border-line bg-surface p-3 text-body text-ink"/>
+            <Button block variant="danger" onPress={() => setPainel('remover')}>Remover da fila</Button><Button block variant="ghost" onPress={voltar}>Fechar</Button>
+          </> : painel === 'adicionar' ? <>
+            <Text className="text-title text-ink">Adicionar aluno à fila</Text><Text className="text-caption text-ink-muted">Arquitetura Limpa · {alunos.length} alunos aguardando</Text>
+            <Text className="text-label text-ink">Matrícula</Text><TextInput value={matricula} onChangeText={setMatricula} maxLength={7} keyboardType="number-pad" className="min-h-12 rounded-md border border-line bg-surface px-3 text-body text-ink"/>
+            <View className="flex-row items-center gap-3 rounded-md bg-surface-sunken p-3"><View className="h-10 w-10 items-center justify-center rounded-pill bg-brand-soft"><Text className="text-caption-strong text-brand">PR</Text></View><View className="flex-1"><Text className="text-label text-ink">Paula Ribeiro</Text><Text className="text-caption text-ink-muted">Aluno encontrado · demonstrativo</Text></View><Icon name="checkCircle" color="success"/></View>
+            <Text className="text-label text-ink">Posição</Text><View className="flex-row flex-wrap gap-2">{Array.from({ length: alunos.length + 1 }, (_, i) => i + 1).map(n => <Pressable key={n} onPress={() => setPosicao(n)} className={`min-h-10 justify-center rounded-pill border px-3 ${n === posicao ? 'border-brand bg-brand-soft' : 'border-line bg-surface'}`}><Text className={n === posicao ? 'text-caption-strong text-brand' : 'text-caption text-ink'}>{n === alunos.length + 1 ? `No fim (${n}º)` : `${n}º`}</Text></Pressable>)}</View>
+            <Text className="text-label text-ink">Motivo (obrigatório)</Text><TextInput multiline value={motivo} onChangeText={setMotivo} className="min-h-[64px] rounded-md border border-line bg-surface p-3 text-body text-ink"/>
+            <Button block disabled={!/^\d{7}$/.test(matricula.trim()) || !motivo.trim()} onPress={adicionar}>Adicionar na fila</Button><Button block variant="ghost" onPress={voltar}>Cancelar</Button>
+          </> : <>
+            <Text className="text-title text-ink">{tipoAlteracao === 'mover' ? `Mover ${selecionado.nome} para o início da fila?` : `Adicionar ${paula.nome} à frente da fila?`}</Text><Text className="text-body text-ink-muted">A nova posição será {posicao}º. Os demais alunos poderão descer uma posição e serão avisados pelo sistema.</Text>
+            <View className="gap-2 rounded-md border border-line bg-surface p-4"><Text className="text-label text-ink">Impacto na ordem</Text>{alunos.filter(a => prevista.findIndex(p => p.id === a.id) !== alunos.findIndex(p => p.id === a.id)).map((a) => <View key={a.id} className="flex-row justify-between"><Text className="text-caption text-ink">{a.nome}</Text><Text className="text-caption-strong text-danger">{alunos.findIndex(p => p.id === a.id) + 1}º → {prevista.findIndex(p => p.id === a.id) + 1}º</Text></View>)}</View>
+            <View className="flex-row gap-2 rounded-md bg-danger-soft p-4"><Icon name="alert" color="danger"/><Text className="flex-1 text-body text-ink">Alterar a ordem da fila afeta os demais alunos. Confirme apenas quando houver justificativa.</Text></View>
+            <Text className="text-label text-ink">Motivo obrigatório</Text><TextInput accessibilityLabel="Motivo da alteração" value={motivo} onChangeText={setMotivo} multiline className="min-h-[64px] rounded-md border border-line bg-surface p-3 text-body text-ink"/><Button block variant="danger" disabled={!motivo.trim()} onPress={confirmarMover}>Colocar à frente mesmo assim</Button><Button block variant="ghost" onPress={() => { setTipoAlteracao('incluir'); setPosicao(alunos.length + 1); setPainel('adicionar') }}>Voltar e colocar no fim</Button>
+          </>}
+        </ScrollView></View>
+      </View>
+    </Modal>
+  </View>
 }

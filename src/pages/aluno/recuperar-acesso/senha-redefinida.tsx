@@ -26,7 +26,7 @@ export default function SenhaRedefinida({
     >
       {/* CONFIRMAÇÃO */}
       <View className="flex-1 items-center justify-center gap-4 px-6">
-        <View className="h-24 w-28 items-center justify-center rounded-[28px] bg-success-soft">
+        <View className="h-[96px] w-[112px] items-center justify-center rounded-sheet bg-success-soft">
           <Icon
             name="checkCircle"
             size={48}

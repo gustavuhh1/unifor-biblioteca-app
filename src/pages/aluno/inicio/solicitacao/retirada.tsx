@@ -1,5 +1,7 @@
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
+import { CapaLivro } from '@/shared/components/livro'
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   Pressable,
@@ -27,14 +29,12 @@ export default function Retirada({
   onVoltar,
   onCancelarPedido,
 }: RetiradaProps) {
+  const reducedMotion = useReducedMotion()
+
   const insets = useSafeAreaInsets();
 
   const [mostrarCancelamento, setMostrarCancelamento] =
     useState(estado === "cancelar");
-
-  useEffect(() => {
-    setMostrarCancelamento(estado === "cancelar");
-  }, [estado]);
 
   function confirmarCancelamento() {
     setMostrarCancelamento(false);
@@ -87,8 +87,8 @@ export default function Retirada({
 
         {/* CARTÃO DE RETIRADA */}
         <View className="overflow-hidden rounded-md border border-line bg-surface-raised">
-          <View className="flex-row items-center justify-between bg-[#123C92] px-4 py-3">
-            <Text className="text-caption-strong text-white">
+          <View className="flex-row items-center justify-between bg-brand px-4 py-3">
+            <Text className="text-caption-strong text-on-brand">
               RETIRADA NA BIBLIOTECA
             </Text>
 
@@ -115,14 +115,10 @@ export default function Retirada({
           </View>
 
           <View className="flex-row items-center gap-3 border-t border-line p-4">
-            <View className="h-20 w-14 justify-center rounded-sm bg-[#112875] p-1">
-              <Text className="text-caption text-white">
-                Código Limpo
-              </Text>
-            </View>
+            <CapaLivro nome="Código Limpo"  cor="cover1" largura={55} />
 
             <View className="flex-1 gap-1">
-              <Text className="text-label text-ink">
+              <Text className="text-book-title text-ink">
                 Código Limpo
               </Text>
 
@@ -157,20 +153,20 @@ export default function Retirada({
       <Modal
         visible={mostrarCancelamento}
         transparent
-        animationType="slide"
+        animationType={reducedMotion ? "none" : "slide"}
         statusBarTranslucent
         onRequestClose={() => setMostrarCancelamento(false)}
       >
         <View className="flex-1 justify-end">
           <Pressable
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
             accessibilityRole="button"
             accessibilityLabel="Fechar confirmação"
             onPress={() => setMostrarCancelamento(false)}
           />
 
           <View
-            className="rounded-t-[28px] bg-surface-raised px-4 pt-5"
+            className="rounded-t-sheet bg-surface-raised px-4 pt-5"
             style={{
               paddingBottom: Math.max(insets.bottom, 20),
             }}
@@ -189,7 +185,7 @@ export default function Retirada({
               pode pedir de novo depois.
             </Text>
 
-            <View className="mt-7 gap-3">
+            <View className="mt-6 gap-3">
               <Button
                 block
                 variant="danger"

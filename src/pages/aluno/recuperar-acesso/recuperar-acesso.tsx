@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -18,6 +18,13 @@ export default function RecuperarAcesso({
   onEnviarToken,
 }: RecuperarAcessoProps) {
   const insets = useSafeAreaInsets();
+  const [matricula, setMatricula] = useState('');
+  const [tentou, setTentou] = useState(false);
+  function enviar() {
+    setTentou(true);
+    if (!/^\d{7}$/.test(matricula)) return;
+    onEnviarToken?.();
+  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -33,7 +40,7 @@ export default function RecuperarAcesso({
         contentContainerClassName="gap-5 px-4 pb-8"
       >
         {/* ÍCONE */}
-        <View className="h-14 w-20 items-center justify-center rounded-[20px] bg-brand-soft">
+        <View className="h-14 w-[80px] items-center justify-center rounded-lg bg-brand-soft">
           <Icon
             name="lock"
             color="brand"
@@ -58,7 +65,9 @@ export default function RecuperarAcesso({
         <TextField
           label="Matrícula"
           icon="user"
-          defaultValue="2412858"
+          value={matricula}
+          onChangeText={valor => setMatricula(valor.replace(/\D/g, ''))}
+          error={tentou && !/^\d{7}$/.test(matricula) ? 'Informe os 7 dígitos da matrícula.' : undefined}
           inputMode="numeric"
           maxLength={7}
           hint="7 dígitos."
@@ -90,7 +99,7 @@ export default function RecuperarAcesso({
         <Button
           block
           variant="primary"
-          onPress={onEnviarToken}
+          onPress={enviar}
         >
           Enviar token
         </Button>

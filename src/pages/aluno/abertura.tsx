@@ -10,12 +10,12 @@ export default function Abertura() {
     <View className="flex-1 items-center justify-center bg-surface">
       <View className="items-center gap-3">
         <Image
-          source={require("../../assets/logo-unifor.png")}
-          className="h-[78px] w-[72px]"
+          source={require("../../../assets/logo-unifor.png")}
+          className="h-[112px] w-[104px]"
           resizeMode="contain"
         />
 
-        <Text className="text-title text-ink">
+        <Text className="text-title-lg text-ink">
           Unifor Biblioteca
         </Text>
       </View>

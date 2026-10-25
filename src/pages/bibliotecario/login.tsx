@@ -1,112 +1,23 @@
+import React, { useState } from 'react'
+import { Image, Pressable, ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Button } from '@/shared/components/button'
+import { TextField } from '@/shared/components/text-field'
 
-import React from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { Button } from "@/shared/components/button";
-import { TextField } from "@/shared/components/text-field";
-import { Icon } from "@/shared/components/icon";
-
-type LoginBibliotecarioProps = {
-  onEntrar?: () => void;
-  onEsqueciSenha?: () => void;
-  onAcessarComoAluno?: () => void;
-};
-
-export default function LoginBibliotecario({
-  onEntrar,
-  onEsqueciSenha,
-  onAcessarComoAluno,
-}: LoginBibliotecarioProps) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View className="flex-1 bg-surface">
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerClassName="flex-grow justify-between px-4"
-        contentContainerStyle={{
-          paddingTop: insets.top + 40,
-          paddingBottom: Math.max(insets.bottom, 24),
-        }}
-      >
-        <View className="gap-8">
-          {/* IDENTIDADE DO APLICATIVO */}
-          <View className="items-center gap-3">
-            <View className="h-24 w-24 items-center justify-center rounded-[28px] bg-brand-soft">
-              <Icon
-                name="books"
-                size={48}
-                color="brand"
-              />
-            </View>
-
-            <Text className="text-center text-title-lg text-ink">
-              Unifor Biblioteca
-            </Text>
-
-            <Text className="text-center text-body text-ink-muted">
-              Acesso do bibliotecário. Entre com a
-              matrícula e a senha pré-cadastradas
-              pela biblioteca.
-            </Text>
-          </View>
-
-          {/* CAMPOS DE LOGIN */}
-          <View className="gap-5">
-            <TextField
-              label="Matrícula"
-              icon="user"
-              defaultValue="1800123"
-              inputMode="numeric"
-              keyboardType="number-pad"
-            />
-
-            <View className="gap-2">
-              <TextField
-                label="Senha"
-                icon="lock"
-                type="password"
-                defaultValue="1234567890"
-              />
-
-              <Pressable
-                accessibilityRole="button"
-                onPress={onEsqueciSenha}
-                className="min-h-11 items-end justify-center"
-              >
-                <Text className="text-label text-brand">
-                  Esqueci minha senha
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-
-        {/* AÇÕES INFERIORES */}
-        <View className="gap-3 pt-8">
-          <Button
-            block
-            variant="primary"
-            onPress={onEntrar}
-          >
-            Entrar
-          </Button>
-
-          <Button
-            block
-            variant="ghost"
-            onPress={onAcessarComoAluno}
-          >
-            Acessar como aluno
-          </Button>
-        </View>
-      </ScrollView>
-    </View>
-  );
+export interface LoginBibliotecarioProps { erro?: boolean; onEntrar?: () => void; onAluno?: () => void; onEsqueciSenha?: () => void }
+export default function LoginBibliotecario({ erro = false, onEntrar, onAluno, onEsqueciSenha }: LoginBibliotecarioProps) {
+  const safe = useSafeAreaInsets()
+  const [matricula, setMatricula] = useState('')
+  const [senha, setSenha] = useState('')
+  const [erroCampo, setErroCampo] = useState(false)
+  function enviar() { if (!/^\d{7}$/.test(matricula) || !senha) { setErroCampo(true); return }; setErroCampo(false); onEntrar?.() }
+  return <View className="flex-1 bg-surface"><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingTop: safe.top + 20, paddingBottom: safe.bottom + 24, gap: 16 }}>
+    <View className="items-center gap-2 pb-6"><Image source={require("../../../assets/logo-unifor.png")} style={{ width: 73, height: 78 }} resizeMode="contain"/><Text className="text-title-lg text-ink">Unifor Biblioteca</Text><Text className="text-body text-ink-muted">Acesso do bibliotecário</Text></View>
+    {(erro || erroCampo) ? <View className="rounded-md border border-danger bg-danger-soft p-3"><Text className="text-label text-danger">Não foi possível entrar. Confira a matrícula e a senha.</Text></View> : null}
+    <TextField label="Matrícula" icon="user" value={matricula} onChangeText={v => setMatricula(v.replace(/\D/g, ''))} inputMode="numeric" maxLength={7} autoCapitalize="none" error={erroCampo && !/^\d{7}$/.test(matricula) ? 'Informe os 7 dígitos da matrícula.' : undefined}/>
+    <TextField label="Senha" icon="lock" type="password" value={senha} onChangeText={setSenha} error={erroCampo && !senha ? 'Informe a senha.' : undefined}/>
+    <Button block variant="ghost" onPress={onEsqueciSenha}>Esqueci minha senha</Button>
+    <Button block onPress={enviar}>Entrar</Button>
+    <Pressable onPress={onAluno} className="min-h-[44px] items-center justify-center"><Text className="text-label text-brand">Acessar como aluno</Text></Pressable>
+  </ScrollView></View>
 }

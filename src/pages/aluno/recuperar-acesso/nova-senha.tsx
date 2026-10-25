@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -7,6 +7,7 @@ import { AppBar } from "@/shared/components/app-bar";
 import { Button } from "@/shared/components/button";
 import { TextField } from "@/shared/components/text-field";
 import { Icon } from "@/shared/components/icon";
+import { newPasswordSchema } from '@/features/auth/schemas/registration.schemas';
 
 type NovaSenhaProps = {
   onVoltar?: () => void;
@@ -18,6 +19,14 @@ export default function NovaSenha({
   onRedefinir,
 }: NovaSenhaProps) {
   const insets = useSafeAreaInsets();
+  const [senha, setSenha] = useState('');
+  const [confirmacao, setConfirmacao] = useState('');
+  const [tentou, setTentou] = useState(false);
+  function redefinir() {
+    setTentou(true);
+    if (!newPasswordSchema.safeParse(senha).success || senha !== confirmacao) return;
+    onRedefinir?.();
+  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -33,7 +42,7 @@ export default function NovaSenha({
         contentContainerClassName="gap-5 px-4 pb-8"
       >
         {/* ÍCONE */}
-        <View className="h-14 w-20 items-center justify-center rounded-[20px] bg-brand-soft">
+        <View className="h-14 w-[80px] items-center justify-center rounded-lg bg-brand-soft">
           <Icon
             name="lock"
             color="brand"
@@ -58,7 +67,9 @@ export default function NovaSenha({
           label="Nova senha"
           icon="lock"
           type="password"
-          defaultValue="123456789012"
+          value={senha}
+          onChangeText={setSenha}
+          error={tentou && !newPasswordSchema.safeParse(senha).success ? 'Use uma senha numérica de pelo menos 8 dígitos.' : undefined}
           hint="Você usa a senha para entrar no app."
         />
 
@@ -67,7 +78,9 @@ export default function NovaSenha({
           label="Confirmar nova senha"
           icon="lock"
           type="password"
-          defaultValue="123456789012"
+          value={confirmacao}
+          onChangeText={setConfirmacao}
+          error={tentou && confirmacao !== senha ? 'As senhas não são iguais.' : undefined}
           hint="Repita a senha."
         />
       </ScrollView>
@@ -82,7 +95,7 @@ export default function NovaSenha({
         <Button
           block
           variant="primary"
-          onPress={onRedefinir}
+          onPress={redefinir}
         >
           Redefinir senha
         </Button>
