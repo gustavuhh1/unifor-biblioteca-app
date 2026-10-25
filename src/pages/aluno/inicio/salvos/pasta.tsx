@@ -1,5 +1,7 @@
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
+import { CapaLivro } from "@/shared/components/livro";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   Pressable,
@@ -37,7 +39,7 @@ const livros = [
     autor: "Martin Fowler",
     descricao: "Disponível · 2 exemplares na estante",
     status: "Disponível",
-    cor: "#145B4B",
+    cor: "cover2" as const,
     capa: "Refatoração",
   },
   {
@@ -46,7 +48,7 @@ const livros = [
     autor: "Hunt, Thomas",
     descricao: "Emprestado · 1 pessoa na fila",
     status: "Emprestado",
-    cor: "#572440",
+    cor: "cover5" as const,
     capa: "O Programador\nPragmático",
   },
   {
@@ -55,7 +57,7 @@ const livros = [
     autor: "Aditya Bhargava",
     descricao: "Disponível · 1 exemplar na estante",
     status: "Disponível",
-    cor: "#556F29",
+    cor: "cover4" as const,
     capa: "Entendendo\nAlgoritmos",
   },
 ];
@@ -68,6 +70,8 @@ export default function Pasta({
   onApagar,
   onSelecionarAba,
 }: PastaProps) {
+  const reducedMotion = useReducedMotion()
+
   const insets = useSafeAreaInsets();
 
   const [estadoAtual, setEstadoAtual] =
@@ -78,10 +82,6 @@ export default function Pasta({
 
   const [novoNome, setNovoNome] =
     useState("Favoritos da vida");
-
-  useEffect(() => {
-    setEstadoAtual(estado);
-  }, [estado]);
 
   const painelAberto = estadoAtual !== "aberta";
 
@@ -142,21 +142,14 @@ export default function Pasta({
               className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3"
             >
               {/* CAPA */}
-              <View
-                className="h-32 w-24 justify-center rounded-sm p-2"
-                style={{
-                  backgroundColor: livro.cor,
-                }}
-              >
-                <Text className="text-label text-white">
-                  {livro.capa}
-                </Text>
-              </View>
+              <CapaLivro nome={livro.capa.split("\n").join(" ")} cor={livro.cor} largura={87} />
+
+              
 
               {/* INFORMAÇÕES */}
               <View className="min-w-0 flex-1 gap-2">
                 <Text
-                  className="text-label text-ink"
+                  className="text-book-title text-ink"
                   numberOfLines={2}
                 >
                   {livro.titulo}
@@ -210,7 +203,7 @@ export default function Pasta({
       <Modal
         visible={painelAberto}
         transparent
-        animationType="slide"
+        animationType={reducedMotion ? "none" : "slide"}
         statusBarTranslucent
         onRequestClose={fecharPainel}
       >
@@ -219,11 +212,11 @@ export default function Pasta({
             accessibilityRole="button"
             accessibilityLabel="Fechar painel"
             onPress={fecharPainel}
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
           />
 
           <View
-            className="rounded-t-[28px] bg-surface-raised px-4 pt-5"
+            className="rounded-t-sheet bg-surface-raised px-4 pt-5"
             style={{
               paddingBottom: Math.max(insets.bottom, 20),
             }}

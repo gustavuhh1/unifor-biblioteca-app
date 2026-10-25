@@ -109,7 +109,7 @@ export default function CriarPasskey({
             </View>
 
             <View className="items-center gap-3 py-5">
-              <View className="h-24 w-24 items-center justify-center rounded-pill bg-brand-soft">
+              <View className="h-[96px] w-[96px] items-center justify-center rounded-pill bg-brand-soft">
                 <Icon
                   name="fingerprint"
                   size={48}
@@ -159,7 +159,7 @@ export default function CriarPasskey({
         {concluido && (
           <>
             <View className="items-center gap-4">
-              <View className="h-24 w-24 items-center justify-center rounded-[28px] bg-success-soft">
+              <View className="h-[96px] w-[96px] items-center justify-center rounded-sheet bg-success-soft">
                 <Icon
                   name="checkCircle"
                   color="success"

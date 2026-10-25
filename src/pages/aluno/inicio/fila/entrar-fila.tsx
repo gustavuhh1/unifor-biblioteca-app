@@ -1,5 +1,6 @@
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 
-import React, { useEffect, useState, type ReactNode } from "react";
+import React, { useState, type ReactNode } from "react";
 import {
   Modal,
   Pressable,
@@ -29,14 +30,12 @@ export default function EntrarFila({
   onVoltar,
   onConfirmar,
 }: EntrarFilaProps) {
+  const reducedMotion = useReducedMotion()
+
   const insets = useSafeAreaInsets();
 
   const [visivel, setVisivel] = useState(aberto);
   const [edicoes, setEdicoes] = useState<string[]>(["4", "3"]);
-
-  useEffect(() => {
-    setVisivel(aberto);
-  }, [aberto]);
 
   const multiplas = estado === "multiplas-edicoes";
 
@@ -65,20 +64,20 @@ export default function EntrarFila({
       <Modal
         visible={visivel}
         transparent
-        animationType="slide"
+        animationType={reducedMotion ? "none" : "slide"}
         statusBarTranslucent
         onRequestClose={fechar}
       >
         <View className="flex-1 justify-end">
           <Pressable
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
             onPress={fechar}
             accessibilityRole="button"
             accessibilityLabel="Fechar confirmação"
           />
 
           <View
-            className="max-h-[90%] rounded-t-[28px] bg-surface-raised"
+            className="max-h-[90%] rounded-t-sheet bg-surface-raised"
             style={{
               paddingBottom: Math.max(insets.bottom, 16),
             }}
@@ -117,8 +116,8 @@ export default function EntrarFila({
                           key={numero}
                           className={
                             numero === 2
-                              ? "h-9 flex-1 items-center justify-center rounded-md bg-brand"
-                              : "h-9 flex-1 items-center justify-center rounded-md bg-surface-raised"
+                              ? "h-[36px] flex-1 items-center justify-center rounded-md bg-brand"
+                              : "h-[36px] flex-1 items-center justify-center rounded-md bg-surface-raised"
                           }
                         >
                           <Text

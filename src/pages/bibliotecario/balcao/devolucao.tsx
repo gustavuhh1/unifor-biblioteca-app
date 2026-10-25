@@ -1,178 +1,25 @@
-
-import React, { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
-
-type RegistrarDevolucaoProps = {
-  onVoltar?: () => void;
-  onRegistrar?: (multaPaga: boolean) => void;
-  onCancelar?: () => void;
-};
-
-export default function RegistrarDevolucao({
-  onVoltar,
-  onRegistrar,
-  onCancelar,
-}: RegistrarDevolucaoProps) {
-  const insets = useSafeAreaInsets();
-  const [multaPaga, setMultaPaga] = useState(true);
-
-  return (
-    <View className="flex-1 bg-surface">
-      <AppBar
-        title="Registrar devolução"
-        back
-        onBack={onVoltar}
-      />
-
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-5 px-4 pb-8"
-      >
-        {/* EXEMPLAR */}
-        <View className="flex-row items-center gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <View className="h-20 w-16 justify-center rounded-md bg-[#572440] p-2">
-            <Text className="text-caption-strong text-white">
-              Cálculo, Vol. 1
-            </Text>
-          </View>
-
-          <View className="flex-1 gap-2">
-            <Text className="text-label text-ink">
-              Cálculo, Vol. 1
-            </Text>
-
-            <Text className="text-caption text-ink-muted">
-              James Stewart · Exemplar 1163
-            </Text>
-
-            <Text className="text-caption text-ink-muted">
-              Retirado 26/09 · venceu 10/10
-            </Text>
-          </View>
-        </View>
-
-        {/* MULTA */}
-        <View className="gap-3 rounded-md border border-danger bg-surface-raised p-4">
-          <View className="flex-row justify-between">
-            <Text className="text-overline text-ink-muted">
-              MULTA ACUMULADA
-            </Text>
-
-            <Text className="text-caption-strong text-danger">
-              3 DIAS
-            </Text>
-          </View>
-
-          <Text className="text-title-lg text-danger">
-            R$ 6,00
-          </Text>
-
-          <Text className="text-caption text-ink-muted">
-            Cálculo, Vol. 1 · 3 dias úteis de atraso
-          </Text>
-
-          <View className="h-px bg-line" />
-
-          <View className="flex-row justify-between">
-            <Text className="text-caption text-ink-muted">
-              3 dias úteis × R$ 2,00
-            </Text>
-
-            <Text className="text-caption-strong text-ink">
-              R$ 2,00 por dia útil
-            </Text>
-          </View>
-        </View>
-
-        {/* PAGAMENTO PRESENCIAL */}
-        <View className="gap-3 rounded-md border border-line bg-surface-raised p-4">
-          <View className="flex-row items-center justify-between gap-3">
-            <View className="flex-1 gap-1">
-              <Text className="text-label text-ink">
-                Multa paga agora (R$ 6,00)
-              </Text>
-
-              <Text className="text-caption text-ink-muted">
-                Pagamento só presencial. Marque depois
-                de receber no balcão.
-              </Text>
-            </View>
-
-            <Pressable
-              onPress={() => setMultaPaga((atual) => !atual)}
-              accessibilityRole="switch"
-              accessibilityState={{
-                checked: multaPaga,
-              }}
-              className={
-                multaPaga
-                  ? "h-8 w-14 justify-center rounded-pill bg-brand p-1"
-                  : "h-8 w-14 justify-center rounded-pill bg-line-strong p-1"
-              }
-            >
-              <View
-                className={
-                  multaPaga
-                    ? "ml-auto h-6 w-6 rounded-pill bg-white"
-                    : "h-6 w-6 rounded-pill bg-white"
-                }
-              />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* INFORMAÇÃO */}
-        <View className="gap-2 rounded-md bg-brand-soft p-4">
-          <View className="flex-row items-start gap-2">
-            <Icon name="info" color="brand" size={20} />
-
-            <Text className="flex-1 text-label text-ink">
-              Há 2 alunos na fila deste livro
-            </Text>
-          </View>
-
-          <Text className="text-body text-ink">
-            Registrar a devolução libera o próximo
-            da fila, que terá 24h para confirmar
-            a retirada. Mesmo sem o pagamento da multa,
-            a devolução pode ser registrada.
-          </Text>
-        </View>
-      </ScrollView>
-
-      {/* AÇÕES */}
-      <View
-        className="gap-3 border-t border-line bg-surface-raised px-4 pt-3"
-        style={{
-          paddingBottom: Math.max(insets.bottom, 16),
-        }}
-      >
-        <Button
-          block
-          variant="primary"
-          onPress={() => onRegistrar?.(multaPaga)}
-        >
-          Registrar devolução
-        </Button>
-
-        <Button
-          block
-          variant="ghost"
-          onPress={onCancelar}
-        >
-          Cancelar
-        </Button>
-      </View>
-    </View>
-  );
+import { useState } from 'react'
+import { ScrollView, Switch, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { AppBar, Button, Icon } from '@/shared/components'
+import { CapaLivro } from '@/shared/components/livro'
+import { FineCard } from '@/shared/components/fine-card'
+import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
+import { useTheme } from '@/shared/theme/theme-provider'
+export interface DevolucaoProps { multaPagaInicial?: boolean; onVoltar?: () => void; onConcluido?: () => void }
+export default function Devolucao({ multaPagaInicial = false, onVoltar, onConcluido }: DevolucaoProps) {
+  const safe = useSafeAreaInsets()
+  const { colors } = useTheme()
+  const [confirmar, setConfirmar] = useState(false)
+  const [multaPaga, setMultaPaga] = useState(multaPagaInicial)
+  const [registrado, setRegistrado] = useState(false)
+  return <View className="flex-1 bg-surface"><AppBar title="Registrar devolução" back onBack={onVoltar} /><ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}>
+    <View className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-4"><CapaLivro nome="Cálculo, Vol. 1" cor="cover5" largura={56} /><View className="min-w-0 flex-1 gap-2"><Text className="text-book-title text-ink">Cálculo, Vol. 1</Text><Text className="text-caption text-ink-muted">Com Marina Castro · 2513320</Text><Text className="text-caption text-ink-muted">Retirado 26/09 · venceu 10/10</Text></View></View>
+    <FineCard librarian /><Text className="text-caption text-ink-muted">Cobrar no balcão ao registrar a devolução</Text>
+    <View className="flex-row items-center gap-3 rounded-lg border border-line bg-surface-raised p-4"><View className="flex-1 gap-1"><Text className="text-label text-ink">Multa paga agora (R$ 6,00)</Text><Text className="text-caption text-ink-muted">Pagamento só presencial. Marque depois de receber.</Text></View><Switch accessibilityLabel="Multa paga agora" value={multaPaga} onValueChange={setMultaPaga} trackColor={{ true: colors.brand }} /></View>
+    <View className="gap-3 rounded-lg bg-brand-soft p-4"><View className="flex-row gap-2"><Icon name="users" color="brand" /><Text className="text-label text-brand">2 alunos na fila deste livro</Text></View><Text className="text-body text-ink-muted">Ao registrar, Rafael Teixeira (1º da fila) é avisado na hora e tem 24h para confirmar. O bloqueio de Marina para novos empréstimos termina com esta devolução.</Text></View>
+    {registrado ? <Text accessibilityLiveRegion="polite" className="text-label text-success">Devolução registrada apenas nesta simulação.</Text> : null}
+  </ScrollView><View className="gap-2 border-t border-line bg-surface-raised px-4 pt-3" style={{ paddingBottom: Math.max(safe.bottom, 16) }}><Button block icon="check" disabled={registrado} onPress={() => setConfirmar(true)}>Registrar devolução</Button><Button block variant="ghost" onPress={onVoltar}>Cancelar</Button></View>
+    <ConfirmationSheet visible={confirmar} title="Confirmar devolução?" description={multaPaga ? 'Demonstração: registrar devolução e pagamento presencial da multa de R$ 6,00.' : 'Demonstração: registrar devolução mantendo a multa de R$ 6,00 em aberto.'} onCancel={() => setConfirmar(false)} onConfirm={() => { setConfirmar(false); setRegistrado(true); onConcluido?.() }} />
+  </View>
 }

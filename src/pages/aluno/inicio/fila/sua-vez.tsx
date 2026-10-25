@@ -1,5 +1,8 @@
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
+import { CapaLivro } from '@/shared/components/livro'
+import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   Pressable,
@@ -31,14 +34,13 @@ export default function SuaVez({
   onConfirmarRetirada,
   onDesistir,
 }: SuaVezProps) {
+  const reducedMotion = useReducedMotion()
+
   const insets = useSafeAreaInsets();
+  const [confirmarRetirada, setConfirmarRetirada] = useState(false);
 
   const [mostrarDesistencia, setMostrarDesistencia] =
     useState(estado === "desistir");
-
-  useEffect(() => {
-    setMostrarDesistencia(estado === "desistir");
-  }, [estado]);
 
   const edicaoLiberada = estado === "edicao-liberada";
 
@@ -102,20 +104,10 @@ export default function SuaVez({
       >
         {/* LIVRO */}
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <View
-            className={
-              edicaoLiberada
-                ? "h-24 w-16 justify-center rounded-sm bg-[#526C26] p-2"
-                : "h-24 w-16 justify-center rounded-sm bg-[#122A78] p-2"
-            }
-          >
-            <Text className="text-caption-strong text-white">
-              {edicaoLiberada ? "Algoritmos" : "Código Limpo"}
-            </Text>
-          </View>
+          <CapaLivro nome={edicaoLiberada ? "Algoritmos" : "Código Limpo"}  cor={edicaoLiberada ? "cover4" : "cover1"} largura={66} />
 
           <View className="flex-1 justify-center gap-2">
-            <Text className="text-label text-ink">
+            <Text className="text-book-title text-ink">
               {titulo}
             </Text>
 
@@ -204,7 +196,7 @@ export default function SuaVez({
         <Button
           block
           variant="primary"
-          onPress={onConfirmarRetirada}
+          onPress={() => setConfirmarRetirada(true)}
         >
           Vou retirar
         </Button>
@@ -224,23 +216,24 @@ export default function SuaVez({
       </View>
 
       {/* A30 — DESISTIR DA FILA */}
+      <ConfirmationSheet visible={confirmarRetirada} title="Confirmar que vai retirar?" description="Você terá 2 dias úteis para retirar o livro no balcão. Esta operação é demonstrativa." onCancel={() => setConfirmarRetirada(false)} onConfirm={() => { setConfirmarRetirada(false); onConfirmarRetirada?.(); }} />
       <Modal
         visible={mostrarDesistencia}
         transparent
-        animationType="slide"
+        animationType={reducedMotion ? "none" : "slide"}
         statusBarTranslucent
         onRequestClose={() => setMostrarDesistencia(false)}
       >
         <View className="flex-1 justify-end">
           <Pressable
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
             accessibilityRole="button"
             accessibilityLabel="Fechar confirmação"
             onPress={() => setMostrarDesistencia(false)}
           />
 
           <View
-            className="gap-4 rounded-t-[28px] bg-surface-raised px-4 pt-6"
+            className="gap-4 rounded-t-sheet bg-surface-raised px-4 pt-6"
             style={{
               paddingBottom: Math.max(insets.bottom, 20),
             }}

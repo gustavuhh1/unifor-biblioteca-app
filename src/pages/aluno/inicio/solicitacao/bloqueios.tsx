@@ -1,3 +1,4 @@
+import { CapaLivro } from '@/shared/components/livro'
 
 import React, { type ReactNode } from "react";
 import {
@@ -45,19 +46,9 @@ export default function Bloqueios({
       >
         {/* RESUMO DO LIVRO */}
         <View className="flex-row gap-4">
-          <View
-            className={
-              limite
-                ? "h-44 w-28 justify-center rounded-md bg-[#145B4B] p-3"
-                : "h-44 w-28 justify-center rounded-md bg-[#963621] p-3"
-            }
-          >
-            <Text className="text-label text-white">
-              {limite
+          <CapaLivro nome={limite
                 ? "Refatoração"
-                : "Engenharia\nde software"}
-            </Text>
-          </View>
+                : "Engenharia\nde software"}  cor={limite ? "cover2" : "cover3"} largura={121} />
 
           <View className="flex-1 justify-center gap-3">
             <View className="self-start rounded-pill bg-success-soft px-3 py-1">
@@ -138,11 +129,7 @@ export default function Bloqueios({
           /* A27 — MESMO TÍTULO */
           <View className="gap-4">
             <View className="flex-row items-center gap-3 rounded-md border border-line bg-surface-raised p-3">
-              <View className="h-24 w-16 justify-center rounded-sm bg-[#963621] p-2">
-                <Text className="text-caption text-white">
-                  Engenharia de software
-                </Text>
-              </View>
+              <CapaLivro nome="Engenharia de software"  cor="cover3" largura={66} />
 
               <View className="flex-1 gap-2">
                 <Text className="text-label text-ink">

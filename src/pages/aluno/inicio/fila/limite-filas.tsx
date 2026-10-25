@@ -1,3 +1,4 @@
+import { CapaLivro } from '@/shared/components/livro'
 
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -32,15 +33,7 @@ export default function LimiteFilas({
       >
         {/* LIVRO */}
         <View className="flex-row gap-4">
-          <View className="h-48 w-32 justify-center rounded-md bg-[#572440] p-3">
-            <Text className="text-title text-white">
-              Domain-Driven Design
-            </Text>
-
-            <Text className="mt-auto text-caption text-white">
-              Eric Evans
-            </Text>
-          </View>
+          <CapaLivro nome="Domain-Driven Design" autor="Eric Evans" cor="cover5" largura={132} />
 
           <View className="flex-1 justify-center gap-3">
             <View className="self-start rounded-pill bg-warning-soft px-3 py-1">
@@ -57,7 +50,7 @@ export default function LimiteFilas({
 
         {/* IDENTIFICAÇÃO */}
         <View className="gap-2">
-          <Text className="text-title-lg text-ink">
+          <Text className="text-book-title-lg text-ink">
             Domain-Driven Design
           </Text>
 

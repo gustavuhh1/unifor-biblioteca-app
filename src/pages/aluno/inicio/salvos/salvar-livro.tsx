@@ -1,5 +1,7 @@
+import { useTheme } from '@/shared/theme/theme-provider'
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import type { ReactNode } from "react";
 import {
   Modal,
@@ -37,16 +39,15 @@ export default function SalvarLivro({
   onConcluir,
   onCriarPasta,
 }: SalvarLivroProps) {
+  const reducedMotion = useReducedMotion()
+
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const [etapa, setEtapa] = useState<EstadoSalvar>(estado);
   const [nomePasta, setNomePasta] = useState("Amei!!!");
   const [pastasSelecionadas, setPastasSelecionadas] =
     useState<string[]>(["ler-depois"]);
-
-  useEffect(() => {
-    setEtapa(estado);
-  }, [estado]);
 
   function alternarPasta(id: string) {
     setPastasSelecionadas((atual) =>
@@ -78,7 +79,7 @@ export default function SalvarLivro({
       {/* A15 — CONFIRMAÇÃO DE LIVRO SALVO */}
       {etapa === "confirmado" && (
         <View
-          className="absolute bottom-24 left-4 right-4 flex-row items-center justify-between gap-2 rounded-md border border-line bg-surface-raised p-3"
+          className="absolute bottom-[96px] left-4 right-4 flex-row items-center justify-between gap-2 rounded-md border border-line bg-surface-raised p-3"
           accessibilityRole="alert"
         >
           <View className="flex-row flex-1 items-center gap-2">
@@ -96,7 +97,7 @@ export default function SalvarLivro({
           <Pressable
             accessibilityRole="button"
             onPress={() => setEtapa("escolher-pasta")}
-            className="min-h-11 justify-center px-1"
+            className="min-h-[44px] justify-center px-1"
           >
             <Text className="text-caption-strong text-brand">
               Escolher pasta
@@ -109,7 +110,7 @@ export default function SalvarLivro({
       <Modal
         visible={etapa !== "confirmado"}
         transparent
-        animationType="slide"
+        animationType={reducedMotion ? "none" : "slide"}
         statusBarTranslucent
         onRequestClose={() => setEtapa("confirmado")}
       >
@@ -118,11 +119,11 @@ export default function SalvarLivro({
             accessibilityRole="button"
             accessibilityLabel="Fechar painel"
             onPress={() => setEtapa("confirmado")}
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
           />
 
           <View
-            className="rounded-t-[28px] bg-surface-raised px-4 pt-5"
+            className="rounded-t-sheet bg-surface-raised px-4 pt-5"
             style={{
               paddingBottom: Math.max(insets.bottom, 20),
             }}
@@ -150,9 +151,9 @@ export default function SalvarLivro({
                       pastasSelecionadas.includes(pasta.id);
 
                     const cores = [
-                      "#7C3AED",
-                      "#0F766E",
-                      "#2563EB",
+                      colors.cover5,
+                      colors.cover2,
+                      colors.cover6,
                     ];
 
                     return (
@@ -168,7 +169,7 @@ export default function SalvarLivro({
                         className="min-h-[60px] flex-row items-center gap-3 rounded-md px-2"
                       >
                         <View
-                          className="h-9 w-9 rounded-sm"
+                          className="h-[36px] w-[36px] rounded-sm"
                           style={{
                             backgroundColor: cores[index],
                           }}
@@ -207,7 +208,7 @@ export default function SalvarLivro({
                     accessibilityRole="button"
                     className="min-h-[52px] flex-row items-center gap-3 px-2"
                   >
-                    <View className="h-9 w-9 items-center justify-center rounded-md bg-brand-soft">
+                    <View className="h-[36px] w-[36px] items-center justify-center rounded-md bg-brand-soft">
                       <Icon
                         name="plus"
                         color="brand"

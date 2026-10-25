@@ -1,7 +1,9 @@
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
+  Image,
   Pressable,
   ScrollView,
   Text,
@@ -38,23 +40,18 @@ export default function Login({
   onEsqueciSenha,
   onBibliotecario,
 }: LoginProps) {
+  const reducedMotion = useReducedMotion()
+
   const insets = useSafeAreaInsets();
 
-  const [painel, setPainel] = useState<Painel>("nenhum");
+  const [painel, setPainel] = useState<Painel>(estado === "outras-formas" || estado === "erro-passkey" ? estado : "nenhum");
+  const [matricula, setMatricula] = useState("2412858");
+  const [senha, setSenha] = useState("1234567890");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [erroLocal, setErroLocal] = useState(false);
   const [usarSenha, setUsarSenha] = useState(false);
 
-  useEffect(() => {
-    setPainel(
-      estado === "outras-formas" ||
-      estado === "erro-passkey"
-        ? estado
-        : "nenhum"
-    );
-
-    setUsarSenha(false);
-  }, [estado]);
-
-  const erro = estado === "erro";
+  const erro = estado === "erro" || erroLocal;
   const sessaoExpirada = estado === "sessao-expirada";
 
   const loginPasskey =
@@ -62,6 +59,15 @@ export default function Login({
     ["passkey", "outras-formas", "erro-passkey"].includes(
       estado
     );
+
+  function fazerLogin() {
+    if (!/^\d{7}$/.test(matricula) || (!loginPasskey && senha !== "1234567890")) {
+      setErroLocal(true);
+      return;
+    }
+    setErroLocal(false);
+    onEntrar?.();
+  }
 
   function fecharPainel() {
     setPainel("nenhum");
@@ -89,6 +95,7 @@ export default function Login({
       >
         {/* APRESENTAÇÃO */}
         <View className="mb-8 items-center gap-2">
+          <Image source={require("../../../assets/logo-unifor.png")} style={{ width: 73, height: 78 }} resizeMode="contain" />
           <Text className="text-title-lg text-ink">
             Unifor Biblioteca
           </Text>
@@ -137,8 +144,10 @@ export default function Login({
           <TextField
             label="Matrícula"
             icon="user"
-            defaultValue="2412858"
+            value={matricula}
+            onChangeText={(v) => { setMatricula(v.replace(/\D/g, "")); setErroLocal(false); }}
             hint="7 dígitos. Os dois primeiros são o ano de ingresso."
+            error={erro && !/^\d{7}$/.test(matricula) ? 'Informe os 7 dígitos da matrícula.' : undefined}
             inputMode="numeric"
             maxLength={7}
           />
@@ -148,8 +157,10 @@ export default function Login({
               <TextField
                 label="Senha"
                 icon="lock"
-                type="password"
-                defaultValue="1234567890"
+                type={mostrarSenha ? "text" : "password"}
+                value={senha}
+                onChangeText={(v) => { setSenha(v); setErroLocal(false); }}
+                trailing={<Pressable accessibilityRole="button" accessibilityLabel={mostrarSenha ? "Ocultar senha" : "Mostrar senha"} onPress={() => setMostrarSenha(v => !v)}><Icon name={mostrarSenha ? "eyeOff" : "eye"} color="inkMuted" size={20} /></Pressable>}
                 error={
                   erro
                     ? "Matrícula ou senha incorretos."
@@ -158,7 +169,7 @@ export default function Login({
               />
 
               <Pressable
-                className="min-h-11 items-end justify-center"
+                className="min-h-[44px] items-end justify-center"
                 accessibilityRole="button"
                 onPress={recuperarSenha}
               >
@@ -169,7 +180,7 @@ export default function Login({
             </View>
           ) : (
             <Pressable
-              className="min-h-11 items-end justify-center"
+              className="min-h-[44px] items-end justify-center"
               accessibilityRole="button"
               onPress={() => setPainel("outras-formas")}
             >
@@ -185,7 +196,7 @@ export default function Login({
           <Button
             block
             variant="primary"
-            onPress={onEntrar}
+            onPress={fazerLogin}
           >
             Entrar
           </Button>
@@ -200,7 +211,7 @@ export default function Login({
         </View>
 
         <Pressable
-          className="mt-6 min-h-11 items-center justify-center"
+          className="mt-6 min-h-[44px] items-center justify-center"
           accessibilityRole="button"
           onPress={onBibliotecario}
         >
@@ -214,20 +225,20 @@ export default function Login({
       <Modal
         visible={painel !== "nenhum"}
         transparent
-        animationType="slide"
+        animationType={reducedMotion ? "none" : "slide"}
         statusBarTranslucent
         onRequestClose={fecharPainel}
       >
         <View className="flex-1 justify-end">
           <Pressable
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
             accessibilityRole="button"
             accessibilityLabel="Fechar painel"
             onPress={fecharPainel}
           />
 
           <View
-            className="rounded-t-[28px] bg-surface-raised px-4 pt-5"
+            className="rounded-t-sheet bg-surface-raised px-4 pt-5"
             style={{
               paddingBottom: Math.max(insets.bottom, 20),
             }}

@@ -1,5 +1,7 @@
+import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
+import { CapaLivro } from '@/shared/components/livro'
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   Pressable,
@@ -25,6 +27,8 @@ type MinhasFilasProps = {
   onVouRetirar?: () => void;
   onSairFila?: () => void;
   onSelecionarAba?: (indice: number) => void;
+  onAtivos?: () => void;
+  onHistorico?: () => void;
 };
 
 export default function MinhasFilas({
@@ -32,7 +36,11 @@ export default function MinhasFilas({
   onVouRetirar,
   onSairFila,
   onSelecionarAba,
+  onAtivos,
+  onHistorico,
 }: MinhasFilasProps) {
+  const reducedMotion = useReducedMotion()
+
   const insets = useSafeAreaInsets();
 
   const [confirmarSaida, setConfirmarSaida] = useState(
@@ -43,8 +51,7 @@ export default function MinhasFilas({
     useState(
       estado === "desistencia-confirmada" ||
       estado === "duas-filas" ||
-      estado === "confirmar-saida" ||
-      estado === "multiplas-edicoes"
+      estado === "confirmar-saida"
     );
 
   const [mostrarAviso, setMostrarAviso] = useState(
@@ -55,31 +62,14 @@ export default function MinhasFilas({
         : ""
   );
 
-  useEffect(() => {
-    setConfirmarSaida(estado === "confirmar-saida");
-
-    setMostrarArquitetura(
-      estado === "desistencia-confirmada" ||
-        estado === "duas-filas" ||
-        estado === "confirmar-saida" ||
-        estado === "multiplas-edicoes"
-    );
-
-    setMostrarAviso(
-      estado === "desistencia-confirmada"
-        ? "Você desistiu. O próximo foi avisado."
-        : estado === "saiu-da-fila"
-          ? "Você saiu da fila."
-          : ""
-    );
-  }, [estado]);
-
   const multiplas = estado === "multiplas-edicoes";
+  const [mostrarEdicoes, setMostrarEdicoes] = useState(multiplas);
   const exibirCodigo = estado !== "desistencia-confirmada";
 
   function confirmarDesistencia() {
     setConfirmarSaida(false);
-    setMostrarArquitetura(false);
+    if (multiplas) setMostrarEdicoes(false);
+    else setMostrarArquitetura(false);
     setMostrarAviso("Você saiu da fila.");
     onSairFila?.();
   }
@@ -106,8 +96,11 @@ export default function MinhasFilas({
       <View className="flex-row border-b border-line px-4">
         {["Ativos (3)", "Na fila", "Histórico"].map(
           (aba, index) => (
-            <View
+            <Pressable
               key={aba}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: index === 1 }}
+              onPress={index === 0 ? onAtivos : index === 2 ? onHistorico : undefined}
               className={
                 index === 1
                   ? "flex-1 items-center border-b-2 border-brand py-3"
@@ -124,11 +117,11 @@ export default function MinhasFilas({
                 {index === 1
                   ? `Na fila (${
                       (exibirCodigo ? 1 : 0) +
-                      (mostrarArquitetura ? 1 : 0)
+                      (mostrarArquitetura ? 1 : 0) + (mostrarEdicoes ? 1 : 0)
                     })`
                   : aba}
               </Text>
-            </View>
+            </Pressable>
           )
         )}
       </View>
@@ -141,14 +134,10 @@ export default function MinhasFilas({
         {exibirCodigo && (
           <View className="gap-4 rounded-md border border-line bg-surface-raised p-4">
             <View className="flex-row gap-3">
-              <View className="h-24 w-16 justify-center rounded-sm bg-[#122A78] p-2">
-                <Text className="text-caption-strong text-white">
-                  Código Limpo
-                </Text>
-              </View>
+              <CapaLivro nome="Código Limpo"  cor="cover1" largura={66} />
 
               <View className="flex-1 gap-2">
-                <Text className="text-label text-ink">
+                <Text className="text-book-title text-ink">
                   Código Limpo
                 </Text>
 
@@ -184,14 +173,10 @@ export default function MinhasFilas({
         {mostrarArquitetura && !multiplas && (
           <View className="gap-4 rounded-md border border-line bg-surface-raised p-4">
             <View className="flex-row gap-3">
-              <View className="h-24 w-16 justify-center rounded-sm bg-[#2252B5] p-2">
-                <Text className="text-caption-strong text-white">
-                  Arquitetura Limpa
-                </Text>
-              </View>
+              <CapaLivro nome="Arquitetura Limpa"  cor="cover6" largura={66} />
 
               <View className="flex-1 gap-2">
-                <Text className="text-label text-ink">
+                <Text className="text-book-title text-ink">
                   Arquitetura Limpa
                 </Text>
 
@@ -236,14 +221,10 @@ export default function MinhasFilas({
         )}
 
         {/* A37 — DUAS EDIÇÕES */}
-        {multiplas && (
+        {mostrarEdicoes && (
           <View className="gap-4 rounded-md border border-line bg-surface-raised p-4">
             <View className="flex-row gap-3">
-              <View className="h-24 w-16 justify-center rounded-sm bg-[#566F28] p-2">
-                <Text className="text-caption-strong text-white">
-                  Algoritmos
-                </Text>
-              </View>
+              <CapaLivro nome="Algoritmos"  cor="cover4" largura={66} />
 
               <View className="flex-1 gap-2">
                 <Text className="text-label text-ink">
@@ -338,20 +319,20 @@ export default function MinhasFilas({
       <Modal
         visible={confirmarSaida}
         transparent
-        animationType="slide"
+        animationType={reducedMotion ? "none" : "slide"}
         statusBarTranslucent
         onRequestClose={() => setConfirmarSaida(false)}
       >
         <View className="flex-1 justify-end">
           <Pressable
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-scrim"
             onPress={() => setConfirmarSaida(false)}
             accessibilityRole="button"
             accessibilityLabel="Fechar confirmação"
           />
 
           <View
-            className="gap-4 rounded-t-[28px] bg-surface-raised px-4 pt-6"
+            className="gap-4 rounded-t-sheet bg-surface-raised px-4 pt-6"
             style={{
               paddingBottom: Math.max(insets.bottom, 20),
             }}
