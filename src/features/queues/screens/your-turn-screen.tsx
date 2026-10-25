@@ -2,101 +2,89 @@ import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 import { CapaLivro } from '@/shared/components/livro'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 
-import React, { useState } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useState } from 'react'
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
+import { AppBar } from '@/shared/components/app-bar'
+import { Button } from '@/shared/components/button'
+import { Icon } from '@/shared/components/icon'
 
-type EstadoSuaVez =
-  | "normal"
-  | "desistir"
-  | "edicao-liberada";
+type EstadoSuaVez = 'normal' | 'desistir' | 'edicao-liberada'
 
 type SuaVezProps = {
-  estado?: EstadoSuaVez;
-  onVoltar?: () => void;
-  onConfirmarRetirada?: () => void;
-  onDesistir?: () => void;
-};
+  estado?: EstadoSuaVez
+  onVoltar?: () => void
+  onConfirmarRetirada?: () => void
+  onDesistir?: () => void
+}
 
 export function YourTurnScreen({
-  estado = "normal",
+  estado = 'normal',
   onVoltar,
   onConfirmarRetirada,
   onDesistir,
 }: SuaVezProps) {
   const reducedMotion = useReducedMotion()
 
-  const insets = useSafeAreaInsets();
-  const [confirmarRetirada, setConfirmarRetirada] = useState(false);
+  const insets = useSafeAreaInsets()
+  const [confirmarRetirada, setConfirmarRetirada] = useState(false)
 
-  const [mostrarDesistencia, setMostrarDesistencia] =
-    useState(estado === "desistir");
+  const [mostrarDesistencia, setMostrarDesistencia] = useState(
+    estado === 'desistir',
+  )
 
-  const edicaoLiberada = estado === "edicao-liberada";
+  const edicaoLiberada = estado === 'edicao-liberada'
 
   const titulo = edicaoLiberada
-    ? "Algoritmos: teoria e prática"
-    : "Código Limpo";
+    ? 'Algoritmos: teoria e prática'
+    : 'Código Limpo'
 
   const eventos = edicaoLiberada
     ? [
         {
-          titulo: "Entrou na fila de 2 edições",
-          descricao: "08/10 · 3ª e 4ª edição",
+          titulo: 'Entrou na fila de 2 edições',
+          descricao: '08/10 · 3ª e 4ª edição',
         },
         {
-          titulo: "3ª edição liberada para você",
-          descricao: "Hoje, 15/10, às 09:12",
+          titulo: '3ª edição liberada para você',
+          descricao: 'Hoje, 15/10, às 09:12',
         },
         {
-          titulo: "Confirme que vai retirar",
-          descricao: "Até 16/10 às 09:12 (24h)",
+          titulo: 'Confirme que vai retirar',
+          descricao: 'Até 16/10 às 09:12 (24h)',
         },
         {
-          titulo: "Retire no balcão",
-          descricao: "Até 2 dias úteis depois de confirmar",
+          titulo: 'Retire no balcão',
+          descricao: 'Até 2 dias úteis depois de confirmar',
         },
       ]
     : [
         {
-          titulo: "Entrou na fila",
-          descricao: "02/10 · você era o 2º",
+          titulo: 'Entrou na fila',
+          descricao: '02/10 · você era o 2º',
         },
         {
-          titulo: "Livro liberado para você",
-          descricao: "Hoje, 15/10, às 09:12",
+          titulo: 'Livro liberado para você',
+          descricao: 'Hoje, 15/10, às 09:12',
         },
         {
-          titulo: "Confirme que vai retirar",
-          descricao: "Até 16/10 às 09:12 (24h)",
+          titulo: 'Confirme que vai retirar',
+          descricao: 'Até 16/10 às 09:12 (24h)',
         },
         {
-          titulo: "Retire no balcão",
-          descricao: "Até 2 dias úteis depois de confirmar",
+          titulo: 'Retire no balcão',
+          descricao: 'Até 2 dias úteis depois de confirmar',
         },
         {
-          titulo: "Empréstimo de 14 dias",
-          descricao: "Começa na retirada",
+          titulo: 'Empréstimo de 14 dias',
+          descricao: 'Começa na retirada',
         },
-      ];
+      ]
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar
-        title="Sua vez chegou"
-        back
-        onBack={onVoltar}
-      />
+      <AppBar title="Sua vez chegou" back onBack={onVoltar} />
 
       <ScrollView
         className="flex-1"
@@ -104,17 +92,19 @@ export function YourTurnScreen({
       >
         {/* LIVRO */}
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <CapaLivro nome={edicaoLiberada ? "Algoritmos" : "Código Limpo"}  cor={edicaoLiberada ? "cover4" : "cover1"} largura={66} />
+          <CapaLivro
+            nome={edicaoLiberada ? 'Algoritmos' : 'Código Limpo'}
+            cor={edicaoLiberada ? 'cover4' : 'cover1'}
+            largura={66}
+          />
 
           <View className="flex-1 justify-center gap-2">
-            <Text className="text-book-title text-ink">
-              {titulo}
-            </Text>
+            <Text className="text-book-title text-ink">{titulo}</Text>
 
             <Text className="text-body text-ink-muted">
               {edicaoLiberada
-                ? "A 3ª edição (2012) voltou e está separada para você."
-                : "Foi devolvido e está separado para você."}
+                ? 'A 3ª edição (2012) voltou e está separada para você.'
+                : 'Foi devolvido e está separado para você.'}
             </Text>
           </View>
         </View>
@@ -125,9 +115,7 @@ export function YourTurnScreen({
             Tempo para confirmar
           </Text>
 
-          <Text className="text-title-lg text-warning">
-            18h 40min
-          </Text>
+          <Text className="text-title-lg text-warning">18h 40min</Text>
 
           <Text className="text-caption text-ink">
             Até amanhã, sex 16/10, às 09:12
@@ -145,8 +133,8 @@ export function YourTurnScreen({
             </View>
 
             <Text className="text-body text-ink">
-              Saiu sozinha, porque a 3ª voltou primeiro.
-              Quem estava atrás de você lá subiu uma posição.
+              Saiu sozinha, porque a 3ª voltou primeiro. Quem estava atrás de
+              você lá subiu uma posição.
             </Text>
           </View>
         )}
@@ -154,28 +142,23 @@ export function YourTurnScreen({
         {/* HISTÓRICO DA FILA */}
         <View className="gap-4">
           {eventos.map((evento, index) => (
-            <View
-              key={evento.titulo}
-              className="flex-row items-start gap-3"
-            >
+            <View key={evento.titulo} className="flex-row items-start gap-3">
               <View
                 className={
                   index < 2
-                    ? "h-8 w-8 items-center justify-center rounded-pill bg-success-soft"
-                    : "h-8 w-8 items-center justify-center rounded-pill bg-brand-soft"
+                    ? 'h-8 w-8 items-center justify-center rounded-pill bg-success-soft'
+                    : 'h-8 w-8 items-center justify-center rounded-pill bg-brand-soft'
                 }
               >
                 <Icon
-                  name={index < 2 ? "check" : "clock"}
-                  color={index < 2 ? "success" : "brand"}
+                  name={index < 2 ? 'check' : 'clock'}
+                  color={index < 2 ? 'success' : 'brand'}
                   size={18}
                 />
               </View>
 
               <View className="flex-1 gap-1 border-b border-line pb-4">
-                <Text className="text-label text-ink">
-                  {evento.titulo}
-                </Text>
+                <Text className="text-label text-ink">{evento.titulo}</Text>
 
                 <Text className="text-caption text-ink-muted">
                   {evento.descricao}
@@ -210,17 +193,26 @@ export function YourTurnScreen({
         </Button>
 
         <Text className="text-center text-caption text-ink-muted">
-          Sem confirmação até o fim do prazo, você sai
-          da fila e o próximo é avisado.
+          Sem confirmação até o fim do prazo, você sai da fila e o próximo é
+          avisado.
         </Text>
       </View>
 
       {/* A30 — DESISTIR DA FILA */}
-      <ConfirmationSheet visible={confirmarRetirada} title="Confirmar que vai retirar?" description="Você terá 2 dias úteis para retirar o livro no balcão. Esta operação é demonstrativa." onCancel={() => setConfirmarRetirada(false)} onConfirm={() => { setConfirmarRetirada(false); onConfirmarRetirada?.(); }} />
+      <ConfirmationSheet
+        visible={confirmarRetirada}
+        title="Confirmar que vai retirar?"
+        description="Você terá 2 dias úteis para retirar o livro no balcão. Esta operação é demonstrativa."
+        onCancel={() => setConfirmarRetirada(false)}
+        onConfirm={() => {
+          setConfirmarRetirada(false)
+          onConfirmarRetirada?.()
+        }}
+      />
       <Modal
         visible={mostrarDesistencia}
         transparent
-        animationType={reducedMotion ? "none" : "slide"}
+        animationType={reducedMotion ? 'none' : 'slide'}
         statusBarTranslucent
         onRequestClose={() => setMostrarDesistencia(false)}
       >
@@ -238,23 +230,17 @@ export function YourTurnScreen({
               paddingBottom: Math.max(insets.bottom, 20),
             }}
           >
-            <Text className="text-title text-ink">
-              Desistir de {titulo}?
-            </Text>
+            <Text className="text-title text-ink">Desistir de {titulo}?</Text>
 
             <Text className="text-body text-ink-muted">
-              Você sai da fila e o livro vai na hora para o
-              próximo. Para pegar depois, terá que entrar
-              na fila de novo, no fim.
+              Você sai da fila e o livro vai na hora para o próximo. Para pegar
+              depois, terá que entrar na fila de novo, no fim.
             </Text>
 
             <View className="gap-2 rounded-md bg-warning-soft p-4">
-              <Text className="text-label text-ink">
-                Não dá para desfazer
-              </Text>
+              <Text className="text-label text-ink">Não dá para desfazer</Text>
               <Text className="text-body text-ink">
-                O próximo da fila é avisado assim que
-                você confirmar.
+                O próximo da fila é avisado assim que você confirmar.
               </Text>
             </View>
 
@@ -262,8 +248,8 @@ export function YourTurnScreen({
               block
               variant="danger"
               onPress={() => {
-                setMostrarDesistencia(false);
-                onDesistir?.();
+                setMostrarDesistencia(false)
+                onDesistir?.()
               }}
             >
               Desistir e sair da fila
@@ -280,5 +266,5 @@ export function YourTurnScreen({
         </View>
       </Modal>
     </View>
-  );
+  )
 }

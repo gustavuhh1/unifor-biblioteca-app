@@ -1,40 +1,33 @@
+import React, { useState } from 'react'
+import { ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import { TextField } from "@/shared/components/text-field";
-import { Icon } from "@/shared/components/icon";
-import { newPasswordSchema } from '@/features/auth/schemas/registration.schemas';
+import { AppBar } from '@/shared/components/app-bar'
+import { Button } from '@/shared/components/button'
+import { TextField } from '@/shared/components/text-field'
+import { Icon } from '@/shared/components/icon'
+import { newPasswordSchema } from '@/features/auth/schemas/registration.schemas'
 
 type NovaSenhaProps = {
-  onVoltar?: () => void;
-  onRedefinir?: () => void;
-};
+  onVoltar?: () => void
+  onRedefinir?: () => void
+}
 
-export function NewPasswordScreen({
-  onVoltar,
-  onRedefinir,
-}: NovaSenhaProps) {
-  const insets = useSafeAreaInsets();
-  const [senha, setSenha] = useState('');
-  const [confirmacao, setConfirmacao] = useState('');
-  const [tentou, setTentou] = useState(false);
+export function NewPasswordScreen({ onVoltar, onRedefinir }: NovaSenhaProps) {
+  const insets = useSafeAreaInsets()
+  const [senha, setSenha] = useState('')
+  const [confirmacao, setConfirmacao] = useState('')
+  const [tentou, setTentou] = useState(false)
   function redefinir() {
-    setTentou(true);
-    if (!newPasswordSchema.safeParse(senha).success || senha !== confirmacao) return;
-    onRedefinir?.();
+    setTentou(true)
+    if (!newPasswordSchema.safeParse(senha).success || senha !== confirmacao)
+      return
+    onRedefinir?.()
   }
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar
-        title="Nova senha"
-        back
-        onBack={onVoltar}
-      />
+      <AppBar title="Nova senha" back onBack={onVoltar} />
 
       <ScrollView
         className="flex-1"
@@ -43,22 +36,15 @@ export function NewPasswordScreen({
       >
         {/* ÍCONE */}
         <View className="h-14 w-[80px] items-center justify-center rounded-lg bg-brand-soft">
-          <Icon
-            name="lock"
-            color="brand"
-            size={30}
-          />
+          <Icon name="lock" color="brand" size={30} />
         </View>
 
         {/* INTRODUÇÃO */}
         <View className="gap-2">
-          <Text className="text-title-lg text-ink">
-            Crie uma nova senha
-          </Text>
+          <Text className="text-title-lg text-ink">Crie uma nova senha</Text>
 
           <Text className="text-body text-ink-muted">
-            Use uma senha que só você saiba.
-            Ela substitui a anterior.
+            Use uma senha que só você saiba. Ela substitui a anterior.
           </Text>
         </View>
 
@@ -69,7 +55,11 @@ export function NewPasswordScreen({
           type="password"
           value={senha}
           onChangeText={setSenha}
-          error={tentou && !newPasswordSchema.safeParse(senha).success ? 'Use uma senha numérica de pelo menos 8 dígitos.' : undefined}
+          error={
+            tentou && !newPasswordSchema.safeParse(senha).success
+              ? 'Use uma senha numérica de pelo menos 8 dígitos.'
+              : undefined
+          }
           hint="Você usa a senha para entrar no app."
         />
 
@@ -80,7 +70,11 @@ export function NewPasswordScreen({
           type="password"
           value={confirmacao}
           onChangeText={setConfirmacao}
-          error={tentou && confirmacao !== senha ? 'As senhas não são iguais.' : undefined}
+          error={
+            tentou && confirmacao !== senha
+              ? 'As senhas não são iguais.'
+              : undefined
+          }
           hint="Repita a senha."
         />
       </ScrollView>
@@ -92,14 +86,10 @@ export function NewPasswordScreen({
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        <Button
-          block
-          variant="primary"
-          onPress={redefinir}
-        >
+        <Button block variant="primary" onPress={redefinir}>
           Redefinir senha
         </Button>
       </View>
     </View>
-  );
+  )
 }

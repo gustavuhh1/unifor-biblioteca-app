@@ -1,28 +1,25 @@
-import { CapaLivro } from "@/shared/components/livro";
+import { CapaLivro } from '@/shared/components/livro'
 
-import React from "react";
-import { ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React from 'react'
+import { ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
+import { Button } from '@/shared/components/button'
+import { Icon } from '@/shared/components/icon'
 
 type PedidoFeitoProps = {
-  onMostrarQR?: () => void;
-  onVoltarAcervo?: () => void;
-};
+  onMostrarQR?: () => void
+  onVoltarAcervo?: () => void
+}
 
 export function LoanRequestedScreen({
   onMostrarQR,
   onVoltarAcervo,
 }: PedidoFeitoProps) {
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
   return (
-    <View
-      className="flex-1 bg-surface"
-      style={{ paddingTop: insets.top }}
-    >
+    <View className="flex-1 bg-surface" style={{ paddingTop: insets.top }}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="gap-6 px-4 pt-10 pb-8"
@@ -30,11 +27,7 @@ export function LoanRequestedScreen({
         {/* CONFIRMAÇÃO */}
         <View className="items-center gap-3">
           <View className="h-[80px] w-[80px] items-center justify-center rounded-pill bg-success-soft">
-            <Icon
-              name="checkCircle"
-              color="success"
-              size={40}
-            />
+            <Icon name="checkCircle" color="success" size={40} />
           </View>
 
           <Text className="text-center text-title-lg text-ink">
@@ -42,17 +35,14 @@ export function LoanRequestedScreen({
           </Text>
 
           <Text className="text-center text-body text-ink-muted">
-            Refatoração está separado para você
-            no balcão da biblioteca.
+            Refatoração está separado para você no balcão da biblioteca.
           </Text>
         </View>
 
         {/* PRAZO */}
         <View className="items-center">
           <View className="rounded-pill bg-brand-soft px-4 py-2">
-            <Text className="text-label text-brand">
-              Retire até seg, 19/10
-            </Text>
+            <Text className="text-label text-brand">Retire até seg, 19/10</Text>
           </View>
         </View>
 
@@ -61,13 +51,9 @@ export function LoanRequestedScreen({
           <CapaLivro nome="Refatoração" cor="cover2" largura={77} />
 
           <View className="flex-1 justify-center gap-2">
-            <Text className="text-book-title text-ink">
-              Refatoração
-            </Text>
+            <Text className="text-book-title text-ink">Refatoração</Text>
 
-            <Text className="text-caption text-ink-muted">
-              Fowler, Martin
-            </Text>
+            <Text className="text-caption text-ink-muted">Fowler, Martin</Text>
 
             <Text className="text-caption text-ink-muted">
               Biblioteca (Praça Central) · Estante 005.1
@@ -106,23 +92,14 @@ export function LoanRequestedScreen({
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        <Button
-          block
-          variant="primary"
-          icon="qr"
-          onPress={onMostrarQR}
-        >
+        <Button block variant="primary" icon="qr" onPress={onMostrarQR}>
           Mostrar QR de retirada
         </Button>
 
-        <Button
-          block
-          variant="ghost"
-          onPress={onVoltarAcervo}
-        >
+        <Button block variant="ghost" onPress={onVoltarAcervo}>
           Voltar ao acervo
         </Button>
       </View>
     </View>
-  );
+  )
 }

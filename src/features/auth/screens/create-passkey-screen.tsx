@@ -1,120 +1,83 @@
+import React from 'react'
+import { ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import React from "react";
-import {
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppBar } from '@/shared/components/app-bar'
+import { Button } from '@/shared/components/button'
+import { Icon, type IconName } from '@/shared/components/icon'
 
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import {
-  Icon,
-  type IconName,
-} from "@/shared/components/icon";
-
-type EstadoPasskey = "criar" | "concluido" | "erro";
+type EstadoPasskey = 'criar' | 'concluido' | 'erro'
 
 type CriarPasskeyProps = {
-  estado?: EstadoPasskey;
-  onVoltar?: () => void;
-  onCriar?: () => void;
-  onPular?: () => void;
-  onEntrar?: () => void;
-  onTentarNovamente?: () => void;
-};
+  estado?: EstadoPasskey
+  onVoltar?: () => void
+  onCriar?: () => void
+  onPular?: () => void
+  onEntrar?: () => void
+  onTentarNovamente?: () => void
+}
 
 type BeneficioProps = {
-  icone: IconName;
-  titulo: string;
-  descricao: string;
-};
+  icone: IconName
+  titulo: string
+  descricao: string
+}
 
-function Beneficio({
-  icone,
-  titulo,
-  descricao,
-}: BeneficioProps) {
+function Beneficio({ icone, titulo, descricao }: BeneficioProps) {
   return (
     <View className="flex-row items-start gap-3">
-      <Icon
-        name={icone}
-        size={22}
-        color="brand"
-      />
+      <Icon name={icone} size={22} color="brand" />
 
       <View className="flex-1 gap-1">
-        <Text className="text-label text-ink">
-          {titulo}
-        </Text>
+        <Text className="text-label text-ink">{titulo}</Text>
 
-        <Text className="text-body text-ink-muted">
-          {descricao}
-        </Text>
+        <Text className="text-body text-ink-muted">{descricao}</Text>
       </View>
     </View>
-  );
+  )
 }
 
 export function CreatePasskeyScreen({
-  estado = "criar",
+  estado = 'criar',
   onVoltar,
   onCriar,
   onPular,
   onEntrar,
   onTentarNovamente,
 }: CriarPasskeyProps) {
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
-  const concluido = estado === "concluido";
-  const erro = estado === "erro";
+  const concluido = estado === 'concluido'
+  const erro = estado === 'erro'
 
   return (
     <View className="flex-1 bg-surface">
       {!concluido && (
-        <AppBar
-          title="Segurança da conta"
-          back
-          onBack={onVoltar}
-        />
+        <AppBar title="Segurança da conta" back onBack={onVoltar} />
       )}
 
       <ScrollView
         className="flex-1"
         contentContainerClassName={
-          concluido
-            ? "flex-grow justify-center gap-6 px-4"
-            : "gap-6 px-4 pb-8"
+          concluido ? 'flex-grow justify-center gap-6 px-4' : 'gap-6 px-4 pb-8'
         }
       >
         {/* A59 — CRIAR PASSKEY */}
-        {estado === "criar" && (
+        {estado === 'criar' && (
           <>
             {/* ETAPAS */}
             <View className="flex-row gap-2">
-              {["Dados", "E-mail", "Passkey"].map(
-                (nome) => (
-                  <View
-                    key={nome}
-                    className="flex-1 gap-2"
-                  >
-                    <Text className="text-caption-strong text-brand">
-                      {nome}
-                    </Text>
-                    <View className="h-1.5 rounded-pill bg-brand" />
-                  </View>
-                )
-              )}
+              {['Dados', 'E-mail', 'Passkey'].map((nome) => (
+                <View key={nome} className="flex-1 gap-2">
+                  <Text className="text-caption-strong text-brand">{nome}</Text>
+                  <View className="h-1.5 rounded-pill bg-brand" />
+                </View>
+              ))}
             </View>
 
             <View className="items-center gap-3 py-5">
               <View className="h-[96px] w-[96px] items-center justify-center rounded-pill bg-brand-soft">
-                <Icon
-                  name="fingerprint"
-                  size={48}
-                  color="brand"
-                />
+                <Icon name="fingerprint" size={48} color="brand" />
               </View>
 
               <Text className="text-center text-title text-ink">
@@ -122,9 +85,8 @@ export function CreatePasskeyScreen({
               </Text>
 
               <Text className="text-center text-body text-ink-muted">
-                Crie um passkey e, nas próximas vezes,
-                entre com a digital, o rosto ou o PIN
-                do celular.
+                Crie um passkey e, nas próximas vezes, entre com a digital, o
+                rosto ou o PIN do celular.
               </Text>
             </View>
 
@@ -149,8 +111,7 @@ export function CreatePasskeyScreen({
             </View>
 
             <Text className="text-center text-caption text-ink-muted">
-              Se trocar de celular, você entra com
-              a senha e cria outro.
+              Se trocar de celular, você entra com a senha e cria outro.
             </Text>
           </>
         )}
@@ -160,11 +121,7 @@ export function CreatePasskeyScreen({
           <>
             <View className="items-center gap-4">
               <View className="h-[96px] w-[96px] items-center justify-center rounded-sheet bg-success-soft">
-                <Icon
-                  name="checkCircle"
-                  color="success"
-                  size={48}
-                />
+                <Icon name="checkCircle" color="success" size={48} />
               </View>
 
               <Text className="text-center text-title-lg text-ink">
@@ -172,23 +129,16 @@ export function CreatePasskeyScreen({
               </Text>
 
               <Text className="text-center text-body text-ink-muted">
-                Pronto, Lucas. A partir de agora
-                você entra no app com a biometria
-                deste celular.
+                Pronto, Lucas. A partir de agora você entra no app com a
+                biometria deste celular.
               </Text>
             </View>
 
             <View className="flex-row items-center gap-3 rounded-md border border-line bg-surface-raised p-4">
-              <Icon
-                name="smartphone"
-                color="brand"
-                size={24}
-              />
+              <Icon name="smartphone" color="brand" size={24} />
 
               <View className="flex-1 gap-1">
-                <Text className="text-label text-ink">
-                  Este aparelho
-                </Text>
+                <Text className="text-label text-ink">Este aparelho</Text>
 
                 <Text className="text-caption text-ink-muted">
                   Passkey criado hoje, 15/10
@@ -197,8 +147,7 @@ export function CreatePasskeyScreen({
             </View>
 
             <Text className="text-center text-caption text-ink-muted">
-              Em Perfil › Meus passkeys você vê,
-              cria e remove seus passkeys.
+              Em Perfil › Meus passkeys você vê, cria e remove seus passkeys.
             </Text>
           </>
         )}
@@ -207,11 +156,7 @@ export function CreatePasskeyScreen({
         {erro && (
           <>
             <View className="flex-row items-start gap-3 rounded-md border border-danger bg-danger-soft p-4">
-              <Icon
-                name="alert"
-                size={22}
-                color="danger"
-              />
+              <Icon name="alert" size={22} color="danger" />
 
               <View className="flex-1 gap-3">
                 <Text className="text-label text-danger">
@@ -223,8 +168,7 @@ export function CreatePasskeyScreen({
                 </Text>
 
                 <Text className="text-body text-ink">
-                  • O celular não tem bloqueio de
-                  tela ou biometria.
+                  • O celular não tem bloqueio de tela ou biometria.
                 </Text>
 
                 <Text className="text-body text-ink">
@@ -234,15 +178,11 @@ export function CreatePasskeyScreen({
             </View>
 
             <View className="gap-2 rounded-md border border-line bg-surface-raised p-4">
-              <Text className="text-label text-ink">
-                Precisa de ajuda?
-              </Text>
+              <Text className="text-label text-ink">Precisa de ajuda?</Text>
 
               <Text className="text-body text-ink-muted">
-                Sem passkey você ainda entra com
-                matrícula e senha. Se o problema
-                continuar, chame o BiblioZap:
-                (85) 3477-3257.
+                Sem passkey você ainda entra com matrícula e senha. Se o
+                problema continuar, chame o BiblioZap: (85) 3477-3257.
               </Text>
             </View>
           </>
@@ -256,56 +196,36 @@ export function CreatePasskeyScreen({
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        {estado === "criar" && (
+        {estado === 'criar' && (
           <>
-            <Button
-              block
-              variant="primary"
-              onPress={onCriar}
-            >
+            <Button block variant="primary" onPress={onCriar}>
               Criar passkey
             </Button>
 
-            <Button
-              block
-              variant="ghost"
-              onPress={onPular}
-            >
+            <Button block variant="ghost" onPress={onPular}>
               Agora não
             </Button>
           </>
         )}
 
         {concluido && (
-          <Button
-            block
-            variant="primary"
-            onPress={onEntrar}
-          >
+          <Button block variant="primary" onPress={onEntrar}>
             Entrar no app
           </Button>
         )}
 
         {erro && (
           <>
-            <Button
-              block
-              variant="primary"
-              onPress={onTentarNovamente}
-            >
+            <Button block variant="primary" onPress={onTentarNovamente}>
               Tentar de novo
             </Button>
 
-            <Button
-              block
-              variant="ghost"
-              onPress={onVoltar}
-            >
+            <Button block variant="ghost" onPress={onVoltar}>
               Voltar
             </Button>
           </>
         )}
       </View>
     </View>
-  );
+  )
 }

@@ -1,7 +1,7 @@
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
-import { CapaLivro } from "@/shared/components/livro";
+import { CapaLivro } from '@/shared/components/livro'
 
-import React, { useState } from "react";
+import React, { useState } from 'react'
 import {
   Modal,
   Pressable,
@@ -9,61 +9,57 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+} from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { AppBar } from "@/shared/components/app-bar";
-import { BottomNav } from "@/shared/components/bottom-nav";
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
+import { AppBar } from '@/shared/components/app-bar'
+import { BottomNav } from '@/shared/components/bottom-nav'
+import { Button } from '@/shared/components/button'
+import { Icon } from '@/shared/components/icon'
 
-type EstadoPasta =
-  | "aberta"
-  | "menu"
-  | "renomear"
-  | "apagar";
+type EstadoPasta = 'aberta' | 'menu' | 'renomear' | 'apagar'
 
 type PastaProps = {
-  estado?: EstadoPasta;
-  onVoltar?: () => void;
-  onAbrirLivro?: (id: string) => void;
-  onRenomear?: (nome: string) => void;
-  onApagar?: () => void;
-  onSelecionarAba?: (indice: number) => void;
-};
+  estado?: EstadoPasta
+  onVoltar?: () => void
+  onAbrirLivro?: (id: string) => void
+  onRenomear?: (nome: string) => void
+  onApagar?: () => void
+  onSelecionarAba?: (indice: number) => void
+}
 
 const livros = [
   {
-    id: "refatoracao",
-    titulo: "Refatoração",
-    autor: "Martin Fowler",
-    descricao: "Disponível · 2 exemplares na estante",
-    status: "Disponível",
-    cor: "cover2" as const,
-    capa: "Refatoração",
+    id: 'refatoracao',
+    titulo: 'Refatoração',
+    autor: 'Martin Fowler',
+    descricao: 'Disponível · 2 exemplares na estante',
+    status: 'Disponível',
+    cor: 'cover2' as const,
+    capa: 'Refatoração',
   },
   {
-    id: "programador-pragmatico",
-    titulo: "O Programador Pragmático",
-    autor: "Hunt, Thomas",
-    descricao: "Emprestado · 1 pessoa na fila",
-    status: "Emprestado",
-    cor: "cover5" as const,
-    capa: "O Programador\nPragmático",
+    id: 'programador-pragmatico',
+    titulo: 'O Programador Pragmático',
+    autor: 'Hunt, Thomas',
+    descricao: 'Emprestado · 1 pessoa na fila',
+    status: 'Emprestado',
+    cor: 'cover5' as const,
+    capa: 'O Programador\nPragmático',
   },
   {
-    id: "entendendo-algoritmos",
-    titulo: "Entendendo Algoritmos",
-    autor: "Aditya Bhargava",
-    descricao: "Disponível · 1 exemplar na estante",
-    status: "Disponível",
-    cor: "cover4" as const,
-    capa: "Entendendo\nAlgoritmos",
+    id: 'entendendo-algoritmos',
+    titulo: 'Entendendo Algoritmos',
+    autor: 'Aditya Bhargava',
+    descricao: 'Disponível · 1 exemplar na estante',
+    status: 'Disponível',
+    cor: 'cover4' as const,
+    capa: 'Entendendo\nAlgoritmos',
   },
-];
+]
 
 export function FolderScreen({
-  estado = "aberta",
+  estado = 'aberta',
   onVoltar,
   onAbrirLivro,
   onRenomear,
@@ -72,38 +68,35 @@ export function FolderScreen({
 }: PastaProps) {
   const reducedMotion = useReducedMotion()
 
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
-  const [estadoAtual, setEstadoAtual] =
-    useState<EstadoPasta>(estado);
+  const [estadoAtual, setEstadoAtual] = useState<EstadoPasta>(estado)
 
-  const [nomePasta, setNomePasta] =
-    useState("Amei!!!");
+  const [nomePasta, setNomePasta] = useState('Amei!!!')
 
-  const [novoNome, setNovoNome] =
-    useState("Favoritos da vida");
+  const [novoNome, setNovoNome] = useState('Favoritos da vida')
 
-  const painelAberto = estadoAtual !== "aberta";
+  const painelAberto = estadoAtual !== 'aberta'
 
   function fecharPainel() {
-    setEstadoAtual("aberta");
+    setEstadoAtual('aberta')
   }
 
   function renomearPasta() {
-    const nome = novoNome.trim();
+    const nome = novoNome.trim()
 
-    if (!nome) return;
+    if (!nome) return
 
     // Atualiza somente o nome visível na interface.
-    setNomePasta(nome);
-    fecharPainel();
-    onRenomear?.(nome);
+    setNomePasta(nome)
+    fecharPainel()
+    onRenomear?.(nome)
   }
 
   function apagarPasta() {
     // A exclusão real será implementada na integração.
-    fecharPainel();
-    onApagar?.();
+    fecharPainel()
+    onApagar?.()
   }
 
   return (
@@ -117,9 +110,9 @@ export function FolderScreen({
           onBack={onVoltar}
           actions={[
             {
-              icon: "pencil",
-              label: "Gerenciar pasta",
-              onPress: () => setEstadoAtual("menu"),
+              icon: 'pencil',
+              label: 'Gerenciar pasta',
+              onPress: () => setEstadoAtual('menu'),
             },
           ]}
         />
@@ -131,8 +124,7 @@ export function FolderScreen({
         contentContainerClassName="gap-4 px-4 py-4"
       >
         {livros.map((livro) => {
-          const disponivel =
-            livro.status === "Disponível";
+          const disponivel = livro.status === 'Disponível'
 
           return (
             <Pressable
@@ -142,16 +134,15 @@ export function FolderScreen({
               className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3"
             >
               {/* CAPA */}
-              <CapaLivro nome={livro.capa.split("\n").join(" ")} cor={livro.cor} largura={87} />
-
-              
+              <CapaLivro
+                nome={livro.capa.split('\n').join(' ')}
+                cor={livro.cor}
+                largura={87}
+              />
 
               {/* INFORMAÇÕES */}
               <View className="min-w-0 flex-1 gap-2">
-                <Text
-                  className="text-book-title text-ink"
-                  numberOfLines={2}
-                >
+                <Text className="text-book-title text-ink" numberOfLines={2}>
                   {livro.titulo}
                 </Text>
 
@@ -166,15 +157,15 @@ export function FolderScreen({
                 <View
                   className={
                     disponivel
-                      ? "self-start rounded-pill bg-success-soft px-3 py-1"
-                      : "self-start rounded-pill bg-warning-soft px-3 py-1"
+                      ? 'self-start rounded-pill bg-success-soft px-3 py-1'
+                      : 'self-start rounded-pill bg-warning-soft px-3 py-1'
                   }
                 >
                   <Text
                     className={
                       disponivel
-                        ? "text-caption-strong text-success"
-                        : "text-caption-strong text-warning"
+                        ? 'text-caption-strong text-success'
+                        : 'text-caption-strong text-warning'
                     }
                   >
                     {livro.status}
@@ -182,28 +173,23 @@ export function FolderScreen({
                 </View>
               </View>
             </Pressable>
-          );
+          )
         })}
 
         {/* TEXTO INFORMATIVO */}
         <Text className="mt-3 text-center text-caption text-ink-muted">
-          Toque e segure um livro para tirar da pasta.
-          O lápis renomeia ou apaga a pasta; os livros
-          continuam em Todos os salvos.
+          Toque e segure um livro para tirar da pasta. O lápis renomeia ou apaga
+          a pasta; os livros continuam em Todos os salvos.
         </Text>
       </ScrollView>
 
-      <BottomNav
-        role="aluno"
-        active={4}
-        onSelect={onSelecionarAba}
-      />
+      <BottomNav role="aluno" active={4} onSelect={onSelecionarAba} />
 
       {/* PAINÉIS A20, A21 E A22 */}
       <Modal
         visible={painelAberto}
         transparent
-        animationType={reducedMotion ? "none" : "slide"}
+        animationType={reducedMotion ? 'none' : 'slide'}
         statusBarTranslucent
         onRequestClose={fecharPainel}
       >
@@ -227,11 +213,9 @@ export function FolderScreen({
             </View>
 
             {/* A20 — MENU DA PASTA */}
-            {estadoAtual === "menu" && (
+            {estadoAtual === 'menu' && (
               <View className="gap-3">
-                <Text className="text-title text-ink">
-                  {nomePasta}
-                </Text>
+                <Text className="text-title text-ink">{nomePasta}</Text>
 
                 <Text className="text-body text-ink-muted">
                   3 livros · só você vê esta pasta
@@ -240,57 +224,35 @@ export function FolderScreen({
                 <View className="mt-3 gap-2">
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() =>
-                      setEstadoAtual("renomear")
-                    }
+                    onPress={() => setEstadoAtual('renomear')}
                     className="min-h-[52px] flex-row items-center gap-3 rounded-md border border-line px-4"
                   >
-                    <Icon
-                      name="pencil"
-                      color="brand"
-                      size={20}
-                    />
+                    <Icon name="pencil" color="brand" size={20} />
 
-                    <Text className="text-label text-ink">
-                      Renomear pasta
-                    </Text>
+                    <Text className="text-label text-ink">Renomear pasta</Text>
                   </Pressable>
 
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() =>
-                      setEstadoAtual("apagar")
-                    }
+                    onPress={() => setEstadoAtual('apagar')}
                     className="min-h-[52px] flex-row items-center gap-3 rounded-md border border-line px-4"
                   >
-                    <Icon
-                      name="trash"
-                      color="danger"
-                      size={20}
-                    />
+                    <Icon name="trash" color="danger" size={20} />
 
-                    <Text className="text-label text-danger">
-                      Apagar pasta
-                    </Text>
+                    <Text className="text-label text-danger">Apagar pasta</Text>
                   </Pressable>
                 </View>
 
-                <Button
-                  block
-                  variant="ghost"
-                  onPress={fecharPainel}
-                >
+                <Button block variant="ghost" onPress={fecharPainel}>
                   Fechar
                 </Button>
               </View>
             )}
 
             {/* A21 — RENOMEAR PASTA */}
-            {estadoAtual === "renomear" && (
+            {estadoAtual === 'renomear' && (
               <View className="gap-3">
-                <Text className="text-title text-ink">
-                  Renomear pasta
-                </Text>
+                <Text className="text-title text-ink">Renomear pasta</Text>
 
                 <Text className="text-body text-ink-muted">
                   Os livros continuam nela.
@@ -325,11 +287,7 @@ export function FolderScreen({
                     Salvar nome
                   </Button>
 
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={fecharPainel}
-                  >
+                  <Button block variant="ghost" onPress={fecharPainel}>
                     Cancelar
                   </Button>
                 </View>
@@ -337,31 +295,22 @@ export function FolderScreen({
             )}
 
             {/* A22 — APAGAR PASTA */}
-            {estadoAtual === "apagar" && (
+            {estadoAtual === 'apagar' && (
               <View className="gap-3">
                 <Text className="text-title text-ink">
                   Apagar a pasta {nomePasta}?
                 </Text>
 
                 <Text className="text-body text-ink-muted">
-                  Os 3 livros continuam em Todos os
-                  salvos. Só a pasta some.
+                  Os 3 livros continuam em Todos os salvos. Só a pasta some.
                 </Text>
 
                 <View className="mt-5 gap-3">
-                  <Button
-                    block
-                    variant="danger"
-                    onPress={apagarPasta}
-                  >
+                  <Button block variant="danger" onPress={apagarPasta}>
                     Apagar pasta
                   </Button>
 
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={fecharPainel}
-                  >
+                  <Button block variant="ghost" onPress={fecharPainel}>
                     Cancelar
                   </Button>
                 </View>
@@ -371,5 +320,5 @@ export function FolderScreen({
         </View>
       </Modal>
     </View>
-  );
+  )
 }

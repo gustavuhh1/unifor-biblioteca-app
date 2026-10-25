@@ -1,58 +1,52 @@
+import React from 'react'
+import { Pressable, ScrollView, Text, View } from 'react-native'
 
-import React from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-
-import { AppBar } from "@/shared/components/app-bar";
-import { BottomNav } from "@/shared/components/bottom-nav";
-import { useTheme } from '@/shared/theme/theme-provider';
-import type { ColorToken } from '@/shared/theme/tokens.generated';
-import { Icon } from "@/shared/components/icon";
+import { AppBar } from '@/shared/components/app-bar'
+import { BottomNav } from '@/shared/components/bottom-nav'
+import { useTheme } from '@/shared/theme/theme-provider'
+import type { ColorToken } from '@/shared/theme/tokens.generated'
+import { Icon } from '@/shared/components/icon'
 
 type Pasta = {
-  id: string;
-  nome: string;
-  quantidade: number;
-  cores: [ColorToken, ColorToken, ColorToken, ColorToken];
-};
+  id: string
+  nome: string
+  quantidade: number
+  cores: [ColorToken, ColorToken, ColorToken, ColorToken]
+}
 
 type SalvosProps = {
-  onVoltar?: () => void;
-  onAbrirPasta?: (id: string) => void;
-  onNovaPasta?: () => void;
-  onSelecionarAba?: (indice: number) => void;
-};
+  onVoltar?: () => void
+  onAbrirPasta?: (id: string) => void
+  onNovaPasta?: () => void
+  onSelecionarAba?: (indice: number) => void
+}
 
 const pastas: Pasta[] = [
   {
-    id: "todos",
-    nome: "Todos os salvos",
+    id: 'todos',
+    nome: 'Todos os salvos',
     quantidade: 6,
-    cores: ["cover1","cover2","cover3","cover4"],
+    cores: ['cover1', 'cover2', 'cover3', 'cover4'],
   },
   {
-    id: "ler-depois",
-    nome: "Ler depois",
+    id: 'ler-depois',
+    nome: 'Ler depois',
     quantidade: 2,
-    cores: ["cover5","cover6","cover5","cover6"],
+    cores: ['cover5', 'cover6', 'cover5', 'cover6'],
   },
   {
-    id: "amei",
-    nome: "Amei!!!",
+    id: 'amei',
+    nome: 'Amei!!!',
     quantidade: 3,
-    cores: ["cover2","cover6","cover1","cover3"],
+    cores: ['cover2', 'cover6', 'cover1', 'cover3'],
   },
   {
-    id: "tcc",
-    nome: "TCC",
+    id: 'tcc',
+    nome: 'TCC',
     quantidade: 4,
-    cores: ["cover4","cover1","cover6","cover3"],
+    cores: ['cover4', 'cover1', 'cover6', 'cover3'],
   },
-];
+]
 
 export function SavedScreen({
   onVoltar,
@@ -60,15 +54,11 @@ export function SavedScreen({
   onNovaPasta,
   onSelecionarAba,
 }: SalvosProps) {
-  const { colors } = useTheme();
+  const { colors } = useTheme()
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar
-        title="Salvos"
-        back
-        onBack={onVoltar}
-      />
+      <AppBar title="Salvos" back onBack={onVoltar} />
 
       <ScrollView
         className="flex-1"
@@ -76,8 +66,7 @@ export function SavedScreen({
       >
         {/* INTRODUÇÃO */}
         <Text className="text-body text-ink-muted">
-          Só você vê seus salvos. Um livro pode
-          estar em mais de uma pasta.
+          Só você vê seus salvos. Um livro pode estar em mais de uma pasta.
         </Text>
 
         {/* GRADE DE PASTAS */}
@@ -123,10 +112,7 @@ export function SavedScreen({
                 </View>
               </View>
 
-              <Text
-                className="text-label text-ink"
-                numberOfLines={1}
-              >
+              <Text className="text-label text-ink" numberOfLines={1}>
                 {pasta.nome}
               </Text>
 
@@ -143,25 +129,15 @@ export function SavedScreen({
             className="w-[48%] gap-2"
           >
             <View className="h-[144px] items-center justify-center gap-3 rounded-md border-2 border-dashed border-line-strong bg-surface-raised">
-              <Icon
-                name="plus"
-                color="brand"
-                size={30}
-              />
+              <Icon name="plus" color="brand" size={30} />
 
-              <Text className="text-label text-brand">
-                Nova pasta
-              </Text>
+              <Text className="text-label text-brand">Nova pasta</Text>
             </View>
           </Pressable>
         </View>
       </ScrollView>
 
-      <BottomNav
-        role="aluno"
-        active={4}
-        onSelect={onSelecionarAba}
-      />
+      <BottomNav role="aluno" active={4} onSelect={onSelecionarAba} />
     </View>
-  );
+  )
 }

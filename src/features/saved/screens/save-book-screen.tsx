@@ -1,74 +1,64 @@
 import { useTheme } from '@/shared/theme/theme-provider'
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 
-import React, { useState } from "react";
-import type { ReactNode } from "react";
-import {
-  Modal,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useState } from 'react'
+import type { ReactNode } from 'react'
+import { Modal, Pressable, Text, TextInput, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
+import { Button } from '@/shared/components/button'
+import { Icon } from '@/shared/components/icon'
 
-type EstadoSalvar =
-  | "confirmado"
-  | "escolher-pasta"
-  | "nova-pasta";
+type EstadoSalvar = 'confirmado' | 'escolher-pasta' | 'nova-pasta'
 
 type SalvarLivroProps = {
-  children: ReactNode;
-  estado?: EstadoSalvar;
-  onConcluir?: () => void;
-  onCriarPasta?: (nome: string) => void;
-};
+  children: ReactNode
+  estado?: EstadoSalvar
+  onConcluir?: () => void
+  onCriarPasta?: (nome: string) => void
+}
 
 const pastas = [
-  { id: "ler-depois", nome: "Ler depois", livros: 2 },
-  { id: "amei", nome: "Amei!!!", livros: 3 },
-  { id: "tcc", nome: "TCC", livros: 4 },
-];
+  { id: 'ler-depois', nome: 'Ler depois', livros: 2 },
+  { id: 'amei', nome: 'Amei!!!', livros: 3 },
+  { id: 'tcc', nome: 'TCC', livros: 4 },
+]
 
 export function SaveBookScreen({
   children,
-  estado = "confirmado",
+  estado = 'confirmado',
   onConcluir,
   onCriarPasta,
 }: SalvarLivroProps) {
   const reducedMotion = useReducedMotion()
 
-  const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const insets = useSafeAreaInsets()
+  const { colors } = useTheme()
 
-  const [etapa, setEtapa] = useState<EstadoSalvar>(estado);
-  const [nomePasta, setNomePasta] = useState("Amei!!!");
-  const [pastasSelecionadas, setPastasSelecionadas] =
-    useState<string[]>(["ler-depois"]);
+  const [etapa, setEtapa] = useState<EstadoSalvar>(estado)
+  const [nomePasta, setNomePasta] = useState('Amei!!!')
+  const [pastasSelecionadas, setPastasSelecionadas] = useState<string[]>([
+    'ler-depois',
+  ])
 
   function alternarPasta(id: string) {
     setPastasSelecionadas((atual) =>
-      atual.includes(id)
-        ? atual.filter((item) => item !== id)
-        : [...atual, id]
-    );
+      atual.includes(id) ? atual.filter((item) => item !== id) : [...atual, id],
+    )
   }
 
   function concluir() {
-    setEtapa("confirmado");
-    onConcluir?.();
+    setEtapa('confirmado')
+    onConcluir?.()
   }
 
   function criarPasta() {
-    const nome = nomePasta.trim();
+    const nome = nomePasta.trim()
 
-    if (!nome) return;
+    if (!nome) return
 
-    onCriarPasta?.(nome);
-    setEtapa("confirmado");
+    onCriarPasta?.(nome)
+    setEtapa('confirmado')
   }
 
   return (
@@ -77,17 +67,13 @@ export function SaveBookScreen({
       {children}
 
       {/* A15 — CONFIRMAÇÃO DE LIVRO SALVO */}
-      {etapa === "confirmado" && (
+      {etapa === 'confirmado' && (
         <View
           className="absolute bottom-[96px] left-4 right-4 flex-row items-center justify-between gap-2 rounded-md border border-line bg-surface-raised p-3"
           accessibilityRole="alert"
         >
           <View className="flex-row flex-1 items-center gap-2">
-            <Icon
-              name="checkCircle"
-              color="success"
-              size={19}
-            />
+            <Icon name="checkCircle" color="success" size={19} />
 
             <Text className="flex-1 text-caption text-ink">
               Salvo em Todos os salvos.
@@ -96,7 +82,7 @@ export function SaveBookScreen({
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => setEtapa("escolher-pasta")}
+            onPress={() => setEtapa('escolher-pasta')}
             className="min-h-[44px] justify-center px-1"
           >
             <Text className="text-caption-strong text-brand">
@@ -108,17 +94,17 @@ export function SaveBookScreen({
 
       {/* A16 E A17 — PAINÉIS */}
       <Modal
-        visible={etapa !== "confirmado"}
+        visible={etapa !== 'confirmado'}
         transparent
-        animationType={reducedMotion ? "none" : "slide"}
+        animationType={reducedMotion ? 'none' : 'slide'}
         statusBarTranslucent
-        onRequestClose={() => setEtapa("confirmado")}
+        onRequestClose={() => setEtapa('confirmado')}
       >
         <View className="flex-1 justify-end">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Fechar painel"
-            onPress={() => setEtapa("confirmado")}
+            onPress={() => setEtapa('confirmado')}
             className="absolute inset-0 bg-scrim"
           />
 
@@ -132,36 +118,26 @@ export function SaveBookScreen({
               <View className="h-1 w-10 rounded-pill bg-line-strong" />
             </View>
 
-            {etapa === "escolher-pasta" ? (
+            {etapa === 'escolher-pasta' ? (
               <>
                 {/* A16 — SALVAR EM */}
-                <Text className="text-title text-ink">
-                  Salvar em
-                </Text>
+                <Text className="text-title text-ink">Salvar em</Text>
 
                 <Text className="mt-2 text-body text-ink-muted">
-                  Refatoração já está em Todos os salvos.
-                  Escolha pastas, se quiser. Só você vê
-                  seus salvos.
+                  Refatoração já está em Todos os salvos. Escolha pastas, se
+                  quiser. Só você vê seus salvos.
                 </Text>
 
                 <View className="mt-5 gap-1">
                   {pastas.map((pasta, index) => {
-                    const selecionada =
-                      pastasSelecionadas.includes(pasta.id);
+                    const selecionada = pastasSelecionadas.includes(pasta.id)
 
-                    const cores = [
-                      colors.cover5,
-                      colors.cover2,
-                      colors.cover6,
-                    ];
+                    const cores = [colors.cover5, colors.cover2, colors.cover6]
 
                     return (
                       <Pressable
                         key={pasta.id}
-                        onPress={() =>
-                          alternarPasta(pasta.id)
-                        }
+                        onPress={() => alternarPasta(pasta.id)}
                         accessibilityRole="checkbox"
                         accessibilityState={{
                           checked: selecionada,
@@ -187,47 +163,33 @@ export function SaveBookScreen({
                         <View
                           className={
                             selecionada
-                              ? "h-6 w-6 items-center justify-center rounded-pill bg-brand"
-                              : "h-6 w-6 rounded-pill border-2 border-line-strong"
+                              ? 'h-6 w-6 items-center justify-center rounded-pill bg-brand'
+                              : 'h-6 w-6 rounded-pill border-2 border-line-strong'
                           }
                         >
                           {selecionada && (
-                            <Icon
-                              name="check"
-                              color="onBrand"
-                              size={14}
-                            />
+                            <Icon name="check" color="onBrand" size={14} />
                           )}
                         </View>
                       </Pressable>
-                    );
+                    )
                   })}
 
                   <Pressable
-                    onPress={() => setEtapa("nova-pasta")}
+                    onPress={() => setEtapa('nova-pasta')}
                     accessibilityRole="button"
                     className="min-h-[52px] flex-row items-center gap-3 px-2"
                   >
                     <View className="h-[36px] w-[36px] items-center justify-center rounded-md bg-brand-soft">
-                      <Icon
-                        name="plus"
-                        color="brand"
-                        size={20}
-                      />
+                      <Icon name="plus" color="brand" size={20} />
                     </View>
 
-                    <Text className="text-label text-brand">
-                      Nova pasta
-                    </Text>
+                    <Text className="text-label text-brand">Nova pasta</Text>
                   </Pressable>
                 </View>
 
                 <View className="mt-5">
-                  <Button
-                    block
-                    variant="primary"
-                    onPress={concluir}
-                  >
+                  <Button block variant="primary" onPress={concluir}>
                     Pronto
                   </Button>
                 </View>
@@ -235,13 +197,10 @@ export function SaveBookScreen({
             ) : (
               <>
                 {/* A17 — NOVA PASTA */}
-                <Text className="text-title text-ink">
-                  Nova pasta
-                </Text>
+                <Text className="text-title text-ink">Nova pasta</Text>
 
                 <Text className="mt-2 text-body text-ink-muted">
-                  Dê um nome do seu jeito. Refatoração
-                  vai direto para ela.
+                  Dê um nome do seu jeito. Refatoração vai direto para ela.
                 </Text>
 
                 <View className="mt-6 gap-2">
@@ -276,9 +235,7 @@ export function SaveBookScreen({
                   <Button
                     block
                     variant="ghost"
-                    onPress={() =>
-                      setEtapa("escolher-pasta")
-                    }
+                    onPress={() => setEtapa('escolher-pasta')}
                   >
                     Cancelar
                   </Button>
@@ -289,5 +246,5 @@ export function SaveBookScreen({
         </View>
       </Modal>
     </View>
-  );
+  )
 }

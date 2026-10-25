@@ -1,38 +1,33 @@
+import React, { useState } from 'react'
+import { ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import { TextField } from "@/shared/components/text-field";
-import { Icon } from "@/shared/components/icon";
+import { AppBar } from '@/shared/components/app-bar'
+import { Button } from '@/shared/components/button'
+import { TextField } from '@/shared/components/text-field'
+import { Icon } from '@/shared/components/icon'
 
 type RecuperarAcessoProps = {
-  onVoltar?: () => void;
-  onEnviarToken?: () => void;
-};
+  onVoltar?: () => void
+  onEnviarToken?: () => void
+}
 
 export function RecoverPasswordScreen({
   onVoltar,
   onEnviarToken,
 }: RecuperarAcessoProps) {
-  const insets = useSafeAreaInsets();
-  const [matricula, setMatricula] = useState('');
-  const [tentou, setTentou] = useState(false);
+  const insets = useSafeAreaInsets()
+  const [matricula, setMatricula] = useState('')
+  const [tentou, setTentou] = useState(false)
   function enviar() {
-    setTentou(true);
-    if (!/^\d{7}$/.test(matricula)) return;
-    onEnviarToken?.();
+    setTentou(true)
+    if (!/^\d{7}$/.test(matricula)) return
+    onEnviarToken?.()
   }
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar
-        title="Recuperar acesso"
-        back
-        onBack={onVoltar}
-      />
+      <AppBar title="Recuperar acesso" back onBack={onVoltar} />
 
       <ScrollView
         className="flex-1"
@@ -41,11 +36,7 @@ export function RecoverPasswordScreen({
       >
         {/* ÍCONE */}
         <View className="h-14 w-[80px] items-center justify-center rounded-lg bg-brand-soft">
-          <Icon
-            name="lock"
-            color="brand"
-            size={30}
-          />
+          <Icon name="lock" color="brand" size={30} />
         </View>
 
         {/* TÍTULO */}
@@ -55,9 +46,8 @@ export function RecoverPasswordScreen({
           </Text>
 
           <Text className="text-body text-ink-muted">
-            Informe sua matrícula. Enviamos um
-            token de 6 dígitos para o e-mail do
-            seu cadastro.
+            Informe sua matrícula. Enviamos um token de 6 dígitos para o e-mail
+            do seu cadastro.
           </Text>
         </View>
 
@@ -66,8 +56,12 @@ export function RecoverPasswordScreen({
           label="Matrícula"
           icon="user"
           value={matricula}
-          onChangeText={valor => setMatricula(valor.replace(/\D/g, ''))}
-          error={tentou && !/^\d{7}$/.test(matricula) ? 'Informe os 7 dígitos da matrícula.' : undefined}
+          onChangeText={(valor) => setMatricula(valor.replace(/\D/g, ''))}
+          error={
+            tentou && !/^\d{7}$/.test(matricula)
+              ? 'Informe os 7 dígitos da matrícula.'
+              : undefined
+          }
           inputMode="numeric"
           maxLength={7}
           hint="7 dígitos."
@@ -75,16 +69,11 @@ export function RecoverPasswordScreen({
 
         {/* INFORMAÇÃO */}
         <View className="flex-row items-start gap-3 rounded-md bg-brand-soft p-4">
-          <Icon
-            name="fingerprint"
-            color="brand"
-            size={20}
-          />
+          <Icon name="fingerprint" color="brand" size={20} />
 
           <Text className="flex-1 text-body text-ink">
-            Depois de criar uma nova senha, você
-            entra com ela. Se quiser, cria também
-            um passkey neste celular.
+            Depois de criar uma nova senha, você entra com ela. Se quiser, cria
+            também um passkey neste celular.
           </Text>
         </View>
       </ScrollView>
@@ -96,14 +85,10 @@ export function RecoverPasswordScreen({
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        <Button
-          block
-          variant="primary"
-          onPress={enviar}
-        >
+        <Button block variant="primary" onPress={enviar}>
           Enviar token
         </Button>
       </View>
     </View>
-  );
+  )
 }

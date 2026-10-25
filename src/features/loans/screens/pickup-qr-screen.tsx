@@ -1,53 +1,44 @@
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 import { CapaLivro } from '@/shared/components/livro'
 
-import React, { useState } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useState } from 'react'
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
-import QrIlustrativo from "@/shared/components/qrIlustrativo";
+import { AppBar } from '@/shared/components/app-bar'
+import { Button } from '@/shared/components/button'
+import { Icon } from '@/shared/components/icon'
+import QrIlustrativo from '@/shared/components/qrIlustrativo'
 
-type EstadoRetirada = "normal" | "cancelar";
+type EstadoRetirada = 'normal' | 'cancelar'
 
 type RetiradaProps = {
-  estado?: EstadoRetirada;
-  onVoltar?: () => void;
-  onCancelarPedido?: () => void;
-};
+  estado?: EstadoRetirada
+  onVoltar?: () => void
+  onCancelarPedido?: () => void
+}
 
 export function PickupQrScreen({
-  estado = "normal",
+  estado = 'normal',
   onVoltar,
   onCancelarPedido,
 }: RetiradaProps) {
   const reducedMotion = useReducedMotion()
 
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
-  const [mostrarCancelamento, setMostrarCancelamento] =
-    useState(estado === "cancelar");
+  const [mostrarCancelamento, setMostrarCancelamento] = useState(
+    estado === 'cancelar',
+  )
 
   function confirmarCancelamento() {
-    setMostrarCancelamento(false);
-    onCancelarPedido?.();
+    setMostrarCancelamento(false)
+    onCancelarPedido?.()
   }
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar
-        title="Retirada"
-        back
-        onBack={onVoltar}
-      />
+      <AppBar title="Retirada" back onBack={onVoltar} />
 
       <ScrollView
         className="flex-1"
@@ -56,33 +47,22 @@ export function PickupQrScreen({
         {/* CONFIRMAÇÃO */}
         <View className="gap-2 rounded-md bg-success-soft p-4">
           <View className="flex-row items-center gap-2">
-            <Icon
-              name="checkCircle"
-              color="success"
-              size={20}
-            />
+            <Icon name="checkCircle" color="success" size={20} />
 
-            <Text className="text-label text-ink">
-              Pedido confirmado
-            </Text>
+            <Text className="text-label text-ink">Pedido confirmado</Text>
           </View>
 
           <Text className="text-body text-ink">
-            Mostre este QR no balcão da biblioteca.
-            O empréstimo de 14 dias começa quando
-            você pegar o livro.
+            Mostre este QR no balcão da biblioteca. O empréstimo de 14 dias
+            começa quando você pegar o livro.
           </Text>
         </View>
 
         {/* PRAZO */}
         <View className="flex-row items-center justify-between gap-3">
-          <Text className="text-label text-ink">
-            Retirada no balcão
-          </Text>
+          <Text className="text-label text-ink">Retirada no balcão</Text>
 
-          <Text className="text-caption-strong text-brand">
-            até seg, 19/10
-          </Text>
+          <Text className="text-caption-strong text-brand">até seg, 19/10</Text>
         </View>
 
         {/* CARTÃO DE RETIRADA */}
@@ -92,11 +72,7 @@ export function PickupQrScreen({
               RETIRADA NA BIBLIOTECA
             </Text>
 
-            <Icon
-              name="qr"
-              color="onBrand"
-              size={20}
-            />
+            <Icon name="qr" color="onBrand" size={20} />
           </View>
 
           <View className="items-center gap-3 px-4 py-6">
@@ -104,9 +80,7 @@ export function PickupQrScreen({
             <QrIlustrativo />
 
             <View className="items-center gap-1">
-              <Text className="text-title text-ink">
-                RET-4821
-              </Text>
+              <Text className="text-title text-ink">RET-4821</Text>
 
               <Text className="text-center text-caption text-ink-muted">
                 Lucas Almeida · Matrícula 2412858
@@ -115,12 +89,10 @@ export function PickupQrScreen({
           </View>
 
           <View className="flex-row items-center gap-3 border-t border-line p-4">
-            <CapaLivro nome="Código Limpo"  cor="cover1" largura={55} />
+            <CapaLivro nome="Código Limpo" cor="cover1" largura={55} />
 
             <View className="flex-1 gap-1">
-              <Text className="text-book-title text-ink">
-                Código Limpo
-              </Text>
+              <Text className="text-book-title text-ink">Código Limpo</Text>
 
               <Text className="text-caption text-ink-muted">
                 Robert C. Martin
@@ -134,8 +106,8 @@ export function PickupQrScreen({
           <Icon name="info" color="brand" size={20} />
 
           <Text className="flex-1 text-body text-ink">
-            Sem QR? Diga sua matrícula 2412858
-            ou o código RET-4821 ao bibliotecário.
+            Sem QR? Diga sua matrícula 2412858 ou o código RET-4821 ao
+            bibliotecário.
           </Text>
         </View>
 
@@ -153,7 +125,7 @@ export function PickupQrScreen({
       <Modal
         visible={mostrarCancelamento}
         transparent
-        animationType={reducedMotion ? "none" : "slide"}
+        animationType={reducedMotion ? 'none' : 'slide'}
         statusBarTranslucent
         onRequestClose={() => setMostrarCancelamento(false)}
       >
@@ -180,26 +152,19 @@ export function PickupQrScreen({
             </Text>
 
             <Text className="mt-3 text-body text-ink-muted">
-              O exemplar volta para a estante ou
-              segue para o próximo da fila. Você
-              pode pedir de novo depois.
+              O exemplar volta para a estante ou segue para o próximo da fila.
+              Você pode pedir de novo depois.
             </Text>
 
             <View className="mt-6 gap-3">
-              <Button
-                block
-                variant="danger"
-                onPress={confirmarCancelamento}
-              >
+              <Button block variant="danger" onPress={confirmarCancelamento}>
                 Cancelar pedido
               </Button>
 
               <Button
                 block
                 variant="ghost"
-                onPress={() =>
-                  setMostrarCancelamento(false)
-                }
+                onPress={() => setMostrarCancelamento(false)}
               >
                 Manter pedido
               </Button>
@@ -208,5 +173,5 @@ export function PickupQrScreen({
         </View>
       </Modal>
     </View>
-  );
+  )
 }

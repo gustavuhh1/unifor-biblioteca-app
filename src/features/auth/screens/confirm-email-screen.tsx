@@ -1,63 +1,65 @@
+import React, { useRef, useState, type ElementRef } from 'react'
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import React, { useRef, useState, type ElementRef } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
-import { useResendCooldown } from '@/shared/utils/use-resend-cooldown';
+import { AppBar } from '@/shared/components/app-bar'
+import { Button } from '@/shared/components/button'
+import { Icon } from '@/shared/components/icon'
+import { useResendCooldown } from '@/shared/utils/use-resend-cooldown'
 
 type ConfirmarEmailProps = {
-  estado?: "normal" | "token-expirado";
-  tokenEsperado?: string;
-  onVoltar?: () => void;
-  onConfirmar?: (token: string) => void;
-  onReenviar?: () => void;
-  onCorrigirEmail?: () => void;
-};
+  estado?: 'normal' | 'token-expirado'
+  tokenEsperado?: string
+  onVoltar?: () => void
+  onConfirmar?: (token: string) => void
+  onReenviar?: () => void
+  onCorrigirEmail?: () => void
+}
 
 export function ConfirmEmailScreen({
-  estado = "normal",
+  estado = 'normal',
   tokenEsperado,
   onVoltar,
   onConfirmar,
   onReenviar,
   onCorrigirEmail,
 }: ConfirmarEmailProps) {
-  const insets = useSafeAreaInsets();
-  const inputRef = useRef<ElementRef<typeof TextInput>>(null);
+  const insets = useSafeAreaInsets()
+  const inputRef = useRef<ElementRef<typeof TextInput>>(null)
 
-  const [token, setToken] = useState("");
-  const [erroToken, setErroToken] = useState("");
+  const [token, setToken] = useState('')
+  const [erroToken, setErroToken] = useState('')
   function confirmarToken() {
-    if (token.length !== 6) { setErroToken("Digite os seis dígitos do token."); return; }
-    if (expirado) { setErroToken("Token expirado. Reenvie o token para continuar."); return; }
-    if (tokenEsperado && token !== tokenEsperado) { setErroToken("Token incorreto. Confira o código recebido."); return; }
-    setErroToken("");
-    onConfirmar?.(token);
+    if (token.length !== 6) {
+      setErroToken('Digite os seis dígitos do token.')
+      return
+    }
+    if (expirado) {
+      setErroToken('Token expirado. Reenvie o token para continuar.')
+      return
+    }
+    if (tokenEsperado && token !== tokenEsperado) {
+      setErroToken('Token incorreto. Confira o código recebido.')
+      return
+    }
+    setErroToken('')
+    onConfirmar?.(token)
   }
 
-  const [expirado, setExpirado] = useState(estado === 'token-expirado');
-  const cooldown = useResendCooldown(estado === 'token-expirado' ? 0 : 42);
+  const [expirado, setExpirado] = useState(estado === 'token-expirado')
+  const cooldown = useResendCooldown(estado === 'token-expirado' ? 0 : 42)
   function reenviar() {
-    if (cooldown.waiting) return;
-    setExpirado(false); setErroToken(''); setToken(''); cooldown.restart(); onReenviar?.();
+    if (cooldown.waiting) return
+    setExpirado(false)
+    setErroToken('')
+    setToken('')
+    cooldown.restart()
+    onReenviar?.()
   }
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar
-        title="Confirmar e-mail"
-        back
-        onBack={onVoltar}
-      />
+      <AppBar title="Confirmar e-mail" back onBack={onVoltar} />
 
       <ScrollView
         className="flex-1"
@@ -66,51 +68,42 @@ export function ConfirmEmailScreen({
       >
         {/* INDICADORES */}
         <View className="flex-row gap-2">
-          {["Dados", "E-mail", "Passkey"].map(
-            (nome, index) => (
-              <View key={nome} className="flex-1 gap-2">
-                <Text
-                  className={
-                    index < 2
-                      ? "text-caption-strong text-brand"
-                      : "text-caption text-ink-muted"
-                  }
-                >
-                  {nome}
-                </Text>
+          {['Dados', 'E-mail', 'Passkey'].map((nome, index) => (
+            <View key={nome} className="flex-1 gap-2">
+              <Text
+                className={
+                  index < 2
+                    ? 'text-caption-strong text-brand'
+                    : 'text-caption text-ink-muted'
+                }
+              >
+                {nome}
+              </Text>
 
-                <View
-                  className={
-                    index < 2
-                      ? "h-1.5 rounded-pill bg-brand"
-                      : "h-1.5 rounded-pill bg-line"
-                  }
-                />
-              </View>
-            )
-          )}
+              <View
+                className={
+                  index < 2
+                    ? 'h-1.5 rounded-pill bg-brand'
+                    : 'h-1.5 rounded-pill bg-line'
+                }
+              />
+            </View>
+          ))}
         </View>
 
         {/* INTRODUÇÃO */}
         <View className="gap-2">
-          <Text className="text-title text-ink">
-            Digite o token
-          </Text>
+          <Text className="text-title text-ink">Digite o token</Text>
 
           <Text className="text-body text-ink-muted">
-            Enviamos um token de 6 dígitos para
-            lucas.almeida@edu.unifor.br.
+            Enviamos um token de 6 dígitos para lucas.almeida@edu.unifor.br.
           </Text>
         </View>
 
         {/* A77 — TOKEN EXPIRADO */}
         {expirado && (
           <View className="flex-row items-start gap-3 rounded-md border border-warning bg-warning-soft p-4">
-            <Icon
-              name="alert"
-              color="warning"
-              size={20}
-            />
+            <Icon name="alert" color="warning" size={20} />
 
             <View className="flex-1 gap-1">
               <Text className="text-label text-ink">
@@ -118,8 +111,7 @@ export function ConfirmEmailScreen({
               </Text>
 
               <Text className="text-body text-ink">
-                Cada token vale 20 minutos e só
-                pode ser usado uma vez. Toque em
+                Cada token vale 20 minutos e só pode ser usado uma vez. Toque em
                 Reenviar token para receber outro.
               </Text>
             </View>
@@ -127,12 +119,19 @@ export function ConfirmEmailScreen({
         )}
 
         {/* CÓDIGO */}
-        {tokenEsperado ? <Text className="text-caption text-ink-muted">Demonstração: use 123456 para confirmar ou outro código para testar o erro.</Text> : null}
-        {erroToken ? <Text accessibilityRole="alert" className="text-caption text-danger">{erroToken}</Text> : null}
-        <View className="gap-3">
-          <Text className="text-caption-strong text-ink">
-            Token do e-mail
+        {tokenEsperado ? (
+          <Text className="text-caption text-ink-muted">
+            Demonstração: use 123456 para confirmar ou outro código para testar
+            o erro.
           </Text>
+        ) : null}
+        {erroToken ? (
+          <Text accessibilityRole="alert" className="text-caption text-danger">
+            {erroToken}
+          </Text>
+        ) : null}
+        <View className="gap-3">
+          <Text className="text-caption-strong text-ink">Token do e-mail</Text>
 
           <Pressable
             accessibilityRole="button"
@@ -146,7 +145,7 @@ export function ConfirmEmailScreen({
                 className="h-14 flex-1 items-center justify-center rounded-md border border-line-strong bg-surface-raised"
               >
                 <Text className="text-title text-ink">
-                  {token[index] ?? ""}
+                  {token[index] ?? ''}
                 </Text>
               </View>
             ))}
@@ -156,9 +155,7 @@ export function ConfirmEmailScreen({
             ref={inputRef}
             value={token}
             onChangeText={(valor) =>
-              setToken(
-                valor.replace(/\D/g, "").slice(0, 6)
-              )
+              setToken(valor.replace(/\D/g, '').slice(0, 6))
             }
             keyboardType="number-pad"
             maxLength={6}
@@ -182,7 +179,9 @@ export function ConfirmEmailScreen({
             className="min-h-[44px] justify-center"
           >
             <Text className="text-label text-brand">
-              {cooldown.waiting ? `Reenviar em ${cooldown.label}` : 'Reenviar token'}
+              {cooldown.waiting
+                ? `Reenviar em ${cooldown.label}`
+                : 'Reenviar token'}
             </Text>
           </Pressable>
 
@@ -191,9 +190,7 @@ export function ConfirmEmailScreen({
             accessibilityRole="button"
             className="min-h-[44px] justify-center"
           >
-            <Text className="text-label text-brand">
-              Corrigir e-mail
-            </Text>
+            <Text className="text-label text-brand">Corrigir e-mail</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -215,5 +212,5 @@ export function ConfirmEmailScreen({
         </Button>
       </View>
     </View>
-  );
+  )
 }

@@ -1,40 +1,33 @@
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 
-import React, { useState } from "react";
-import {
-  Modal,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useState } from 'react'
+import { Modal, Image, Pressable, ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { Button } from "@/shared/components/button";
-import { TextField } from "@/shared/components/text-field";
-import { Icon } from "@/shared/components/icon";
+import { Button } from '@/shared/components/button'
+import { TextField } from '@/shared/components/text-field'
+import { Icon } from '@/shared/components/icon'
 
 type EstadoLogin =
-  | "normal"
-  | "erro"
-  | "sessao-expirada"
-  | "passkey"
-  | "outras-formas"
-  | "erro-passkey";
+  | 'normal'
+  | 'erro'
+  | 'sessao-expirada'
+  | 'passkey'
+  | 'outras-formas'
+  | 'erro-passkey'
 
-type Painel = "nenhum" | "outras-formas" | "erro-passkey";
+type Painel = 'nenhum' | 'outras-formas' | 'erro-passkey'
 
 type LoginProps = {
-  estado?: EstadoLogin;
-  onEntrar?: () => void;
-  onCriarConta?: () => void;
-  onEsqueciSenha?: () => void;
-  onBibliotecario?: () => void;
-};
+  estado?: EstadoLogin
+  onEntrar?: () => void
+  onCriarConta?: () => void
+  onEsqueciSenha?: () => void
+  onBibliotecario?: () => void
+}
 
 export function StudentLoginScreen({
-  estado = "normal",
+  estado = 'normal',
   onEntrar,
   onCriarConta,
   onEsqueciSenha,
@@ -42,45 +35,47 @@ export function StudentLoginScreen({
 }: LoginProps) {
   const reducedMotion = useReducedMotion()
 
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
-  const [painel, setPainel] = useState<Painel>(estado === "outras-formas" || estado === "erro-passkey" ? estado : "nenhum");
-  const [matricula, setMatricula] = useState("2412858");
-  const [senha, setSenha] = useState("1234567890");
-  const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [erroLocal, setErroLocal] = useState(false);
-  const [usarSenha, setUsarSenha] = useState(false);
+  const [painel, setPainel] = useState<Painel>(
+    estado === 'outras-formas' || estado === 'erro-passkey' ? estado : 'nenhum',
+  )
+  const [matricula, setMatricula] = useState('2412858')
+  const [senha, setSenha] = useState('1234567890')
+  const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [erroLocal, setErroLocal] = useState(false)
+  const [usarSenha, setUsarSenha] = useState(false)
 
-  const erro = estado === "erro" || erroLocal;
-  const sessaoExpirada = estado === "sessao-expirada";
+  const erro = estado === 'erro' || erroLocal
+  const sessaoExpirada = estado === 'sessao-expirada'
 
   const loginPasskey =
-    !usarSenha &&
-    ["passkey", "outras-formas", "erro-passkey"].includes(
-      estado
-    );
+    !usarSenha && ['passkey', 'outras-formas', 'erro-passkey'].includes(estado)
 
   function fazerLogin() {
-    if (!/^\d{7}$/.test(matricula) || (!loginPasskey && senha !== "1234567890")) {
-      setErroLocal(true);
-      return;
+    if (
+      !/^\d{7}$/.test(matricula) ||
+      (!loginPasskey && senha !== '1234567890')
+    ) {
+      setErroLocal(true)
+      return
     }
-    setErroLocal(false);
-    onEntrar?.();
+    setErroLocal(false)
+    onEntrar?.()
   }
 
   function fecharPainel() {
-    setPainel("nenhum");
+    setPainel('nenhum')
   }
 
   function entrarComSenha() {
-    setUsarSenha(true);
-    fecharPainel();
+    setUsarSenha(true)
+    fecharPainel()
   }
 
   function recuperarSenha() {
-    fecharPainel();
-    onEsqueciSenha?.();
+    fecharPainel()
+    onEsqueciSenha?.()
   }
 
   return (
@@ -95,15 +90,17 @@ export function StudentLoginScreen({
       >
         {/* APRESENTAÇÃO */}
         <View className="mb-8 items-center gap-2">
-          <Image source={require("../../../assets/logo-unifor.png")} style={{ width: 73, height: 78 }} resizeMode="contain" />
-          <Text className="text-title-lg text-ink">
-            Unifor Biblioteca
-          </Text>
+          <Image
+            source={require('../../../assets/logo-unifor.png')}
+            style={{ width: 73, height: 78 }}
+            resizeMode="contain"
+          />
+          <Text className="text-title-lg text-ink">Unifor Biblioteca</Text>
 
           <Text className="text-center text-body text-ink-muted">
             {loginPasskey
-              ? "Digite sua matrícula e confirme com a digital, o rosto ou o PIN do celular."
-              : "Entre com a matrícula e a senha que você criou no cadastro."}
+              ? 'Digite sua matrícula e confirme com a digital, o rosto ou o PIN do celular.'
+              : 'Entre com a matrícula e a senha que você criou no cadastro.'}
           </Text>
         </View>
 
@@ -129,9 +126,7 @@ export function StudentLoginScreen({
             <Icon name="info" color="brand" size={20} />
 
             <View className="flex-1 gap-1">
-              <Text className="text-label text-ink">
-                Sua sessão expirou
-              </Text>
+              <Text className="text-label text-ink">Sua sessão expirou</Text>
               <Text className="text-body text-ink-muted">
                 Por segurança, entre de novo para continuar de onde parou.
               </Text>
@@ -145,9 +140,16 @@ export function StudentLoginScreen({
             label="Matrícula"
             icon="user"
             value={matricula}
-            onChangeText={(v) => { setMatricula(v.replace(/\D/g, "")); setErroLocal(false); }}
+            onChangeText={(v) => {
+              setMatricula(v.replace(/\D/g, ''))
+              setErroLocal(false)
+            }}
             hint="7 dígitos. Os dois primeiros são o ano de ingresso."
-            error={erro && !/^\d{7}$/.test(matricula) ? 'Informe os 7 dígitos da matrícula.' : undefined}
+            error={
+              erro && !/^\d{7}$/.test(matricula)
+                ? 'Informe os 7 dígitos da matrícula.'
+                : undefined
+            }
             inputMode="numeric"
             maxLength={7}
           />
@@ -157,15 +159,28 @@ export function StudentLoginScreen({
               <TextField
                 label="Senha"
                 icon="lock"
-                type={mostrarSenha ? "text" : "password"}
+                type={mostrarSenha ? 'text' : 'password'}
                 value={senha}
-                onChangeText={(v) => { setSenha(v); setErroLocal(false); }}
-                trailing={<Pressable accessibilityRole="button" accessibilityLabel={mostrarSenha ? "Ocultar senha" : "Mostrar senha"} onPress={() => setMostrarSenha(v => !v)}><Icon name={mostrarSenha ? "eyeOff" : "eye"} color="inkMuted" size={20} /></Pressable>}
-                error={
-                  erro
-                    ? "Matrícula ou senha incorretos."
-                    : undefined
+                onChangeText={(v) => {
+                  setSenha(v)
+                  setErroLocal(false)
+                }}
+                trailing={
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'
+                    }
+                    onPress={() => setMostrarSenha((v) => !v)}
+                  >
+                    <Icon
+                      name={mostrarSenha ? 'eyeOff' : 'eye'}
+                      color="inkMuted"
+                      size={20}
+                    />
+                  </Pressable>
                 }
+                error={erro ? 'Matrícula ou senha incorretos.' : undefined}
               />
 
               <Pressable
@@ -182,7 +197,7 @@ export function StudentLoginScreen({
             <Pressable
               className="min-h-[44px] items-end justify-center"
               accessibilityRole="button"
-              onPress={() => setPainel("outras-formas")}
+              onPress={() => setPainel('outras-formas')}
             >
               <Text className="text-label text-brand">
                 Outras formas de entrar
@@ -193,19 +208,11 @@ export function StudentLoginScreen({
 
         {/* BOTÕES */}
         <View className="mt-8 gap-3">
-          <Button
-            block
-            variant="primary"
-            onPress={fazerLogin}
-          >
+          <Button block variant="primary" onPress={fazerLogin}>
             Entrar
           </Button>
 
-          <Button
-            block
-            variant="secondary"
-            onPress={onCriarConta}
-          >
+          <Button block variant="secondary" onPress={onCriarConta}>
             Criar conta
           </Button>
         </View>
@@ -223,9 +230,9 @@ export function StudentLoginScreen({
 
       {/* PAINÉIS A63 E A64 */}
       <Modal
-        visible={painel !== "nenhum"}
+        visible={painel !== 'nenhum'}
         transparent
-        animationType={reducedMotion ? "none" : "slide"}
+        animationType={reducedMotion ? 'none' : 'slide'}
         statusBarTranslucent
         onRequestClose={fecharPainel}
       >
@@ -247,41 +254,28 @@ export function StudentLoginScreen({
               <View className="h-1 w-10 rounded-pill bg-line-strong" />
             </View>
 
-            {painel === "erro-passkey" ? (
+            {painel === 'erro-passkey' ? (
               <View className="gap-3">
                 <Text className="text-title text-ink">
                   Não foi possível entrar
                 </Text>
 
                 <Text className="text-body text-ink-muted">
-                  A biometria não foi reconhecida, ou este
-                  celular não tem um passkey para a
-                  matrícula 2412858. Você pode entrar
-                  com a senha.
+                  A biometria não foi reconhecida, ou este celular não tem um
+                  passkey para a matrícula 2412858. Você pode entrar com a
+                  senha.
                 </Text>
 
                 <View className="mt-5 gap-3">
-                  <Button
-                    block
-                    variant="primary"
-                    onPress={fecharPainel}
-                  >
+                  <Button block variant="primary" onPress={fecharPainel}>
                     Tentar de novo
                   </Button>
 
-                  <Button
-                    block
-                    variant="secondary"
-                    onPress={entrarComSenha}
-                  >
+                  <Button block variant="secondary" onPress={entrarComSenha}>
                     Entrar com matrícula e senha
                   </Button>
 
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={recuperarSenha}
-                  >
+                  <Button block variant="ghost" onPress={recuperarSenha}>
                     Esqueci minha senha
                   </Button>
                 </View>
@@ -293,34 +287,21 @@ export function StudentLoginScreen({
                 </Text>
 
                 <Text className="text-body text-ink-muted">
-                  Se o passkey não funcionar neste celular,
-                  entre com a senha do seu cadastro.
-                  Se esqueceu a senha, enviamos um token
-                  para o seu e-mail.
+                  Se o passkey não funcionar neste celular, entre com a senha do
+                  seu cadastro. Se esqueceu a senha, enviamos um token para o
+                  seu e-mail.
                 </Text>
 
                 <View className="mt-5 gap-3">
-                  <Button
-                    block
-                    variant="primary"
-                    onPress={entrarComSenha}
-                  >
+                  <Button block variant="primary" onPress={entrarComSenha}>
                     Entrar com matrícula e senha
                   </Button>
 
-                  <Button
-                    block
-                    variant="secondary"
-                    onPress={recuperarSenha}
-                  >
+                  <Button block variant="secondary" onPress={recuperarSenha}>
                     Esqueci minha senha
                   </Button>
 
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={fecharPainel}
-                  >
+                  <Button block variant="ghost" onPress={fecharPainel}>
                     Fechar
                   </Button>
                 </View>
@@ -330,5 +311,5 @@ export function StudentLoginScreen({
         </View>
       </Modal>
     </View>
-  );
+  )
 }

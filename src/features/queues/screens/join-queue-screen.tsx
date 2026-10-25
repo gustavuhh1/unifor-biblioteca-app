@@ -1,60 +1,54 @@
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
 
-import React, { useState, type ReactNode } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useState, type ReactNode } from 'react'
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
+import { Button } from '@/shared/components/button'
+import { Icon } from '@/shared/components/icon'
 
-type EstadoEntrada = "simples" | "multiplas-edicoes";
+type EstadoEntrada = 'simples' | 'multiplas-edicoes'
 
 type EntrarFilaProps = {
-  children: ReactNode;
-  estado?: EstadoEntrada;
-  aberto?: boolean;
-  onVoltar?: () => void;
-  onConfirmar?: (edicoes: string[]) => void;
-};
+  children: ReactNode
+  estado?: EstadoEntrada
+  aberto?: boolean
+  onVoltar?: () => void
+  onConfirmar?: (edicoes: string[]) => void
+}
 
 export function JoinQueueScreen({
   children,
-  estado = "simples",
+  estado = 'simples',
   aberto = true,
   onVoltar,
   onConfirmar,
 }: EntrarFilaProps) {
   const reducedMotion = useReducedMotion()
 
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
-  const [visivel, setVisivel] = useState(aberto);
-  const [edicoes, setEdicoes] = useState<string[]>(["4", "3"]);
+  const [visivel, setVisivel] = useState(aberto)
+  const [edicoes, setEdicoes] = useState<string[]>(['4', '3'])
 
-  const multiplas = estado === "multiplas-edicoes";
+  const multiplas = estado === 'multiplas-edicoes'
 
   function alternarEdicao(edicao: string) {
     setEdicoes((atual) =>
       atual.includes(edicao)
         ? atual.filter((item) => item !== edicao)
-        : [...atual, edicao]
-    );
+        : [...atual, edicao],
+    )
   }
 
   function fechar() {
-    setVisivel(false);
-    onVoltar?.();
+    setVisivel(false)
+    onVoltar?.()
   }
 
   function confirmar() {
-    setVisivel(false);
-    onConfirmar?.(multiplas ? edicoes : ["unica"]);
+    setVisivel(false)
+    onConfirmar?.(multiplas ? edicoes : ['unica'])
   }
 
   return (
@@ -64,7 +58,7 @@ export function JoinQueueScreen({
       <Modal
         visible={visivel}
         transparent
-        animationType={reducedMotion ? "none" : "slide"}
+        animationType={reducedMotion ? 'none' : 'slide'}
         statusBarTranslucent
         onRequestClose={fechar}
       >
@@ -86,20 +80,17 @@ export function JoinQueueScreen({
               <View className="h-1 w-10 rounded-pill bg-line-strong" />
             </View>
 
-            <ScrollView
-              className="px-4"
-              contentContainerClassName="gap-4 pb-4"
-            >
+            <ScrollView className="px-4" contentContainerClassName="gap-4 pb-4">
               <Text className="text-title text-ink">
                 {multiplas
-                  ? "Entrar na fila de Algoritmos?"
-                  : "Entrar na fila de Código Limpo?"}
+                  ? 'Entrar na fila de Algoritmos?'
+                  : 'Entrar na fila de Código Limpo?'}
               </Text>
 
               <Text className="text-body text-ink-muted">
                 {multiplas
-                  ? "Todos os exemplares estão emprestados. Escolha uma ou mais edições: a primeira que voltar fica com você."
-                  : "O livro está emprestado. A fila respeita a ordem de entrada, e você recebe um aviso quando chegar sua vez."}
+                  ? 'Todos os exemplares estão emprestados. Escolha uma ou mais edições: a primeira que voltar fica com você.'
+                  : 'O livro está emprestado. A fila respeita a ordem de entrada, e você recebe um aviso quando chegar sua vez.'}
               </Text>
 
               {!multiplas ? (
@@ -116,15 +107,15 @@ export function JoinQueueScreen({
                           key={numero}
                           className={
                             numero === 2
-                              ? "h-[36px] flex-1 items-center justify-center rounded-md bg-brand"
-                              : "h-[36px] flex-1 items-center justify-center rounded-md bg-surface-raised"
+                              ? 'h-[36px] flex-1 items-center justify-center rounded-md bg-brand'
+                              : 'h-[36px] flex-1 items-center justify-center rounded-md bg-surface-raised'
                           }
                         >
                           <Text
                             className={
                               numero === 2
-                                ? "text-label text-on-brand"
-                                : "text-label text-ink-muted"
+                                ? 'text-label text-on-brand'
+                                : 'text-label text-ink-muted'
                             }
                           >
                             {numero}º
@@ -140,19 +131,12 @@ export function JoinQueueScreen({
 
                   <View className="gap-4 py-2">
                     {[
-                      "24h para confirmar quando chegar sua vez",
-                      "2 dias úteis para retirar depois de confirmar",
-                      "Você pode sair da fila quando quiser",
+                      '24h para confirmar quando chegar sua vez',
+                      '2 dias úteis para retirar depois de confirmar',
+                      'Você pode sair da fila quando quiser',
                     ].map((texto) => (
-                      <View
-                        key={texto}
-                        className="flex-row items-center gap-3"
-                      >
-                        <Icon
-                          name="checkCircle"
-                          color="success"
-                          size={20}
-                        />
+                      <View key={texto} className="flex-row items-center gap-3">
+                        <Icon name="checkCircle" color="success" size={20} />
                         <Text className="flex-1 text-body text-ink">
                           {texto}
                         </Text>
@@ -165,21 +149,21 @@ export function JoinQueueScreen({
                   {/* A36 — EDIÇÕES DISPONÍVEIS PARA FILA */}
                   {[
                     {
-                      id: "4",
-                      titulo: "4ª edição · 2024",
+                      id: '4',
+                      titulo: '4ª edição · 2024',
                       descricao:
-                        "GEN LTC · 2 exemplares · volta prevista 22/10",
-                      fila: "2 pessoas na frente",
+                        'GEN LTC · 2 exemplares · volta prevista 22/10',
+                      fila: '2 pessoas na frente',
                     },
                     {
-                      id: "3",
-                      titulo: "3ª edição · 2012",
+                      id: '3',
+                      titulo: '3ª edição · 2012',
                       descricao:
-                        "Elsevier · 2 exemplares · volta prevista 20/10",
-                      fila: "Ninguém na frente",
+                        'Elsevier · 2 exemplares · volta prevista 20/10',
+                      fila: 'Ninguém na frente',
                     },
                   ].map((edicao) => {
-                    const selecionada = edicoes.includes(edicao.id);
+                    const selecionada = edicoes.includes(edicao.id)
 
                     return (
                       <Pressable
@@ -192,16 +176,12 @@ export function JoinQueueScreen({
                         <View
                           className={
                             selecionada
-                              ? "h-6 w-6 items-center justify-center rounded-md bg-brand"
-                              : "h-6 w-6 rounded-md border-2 border-line-strong"
+                              ? 'h-6 w-6 items-center justify-center rounded-md bg-brand'
+                              : 'h-6 w-6 rounded-md border-2 border-line-strong'
                           }
                         >
                           {selecionada && (
-                            <Icon
-                              name="check"
-                              size={16}
-                              color="onBrand"
-                            />
+                            <Icon name="check" size={16} color="onBrand" />
                           )}
                         </View>
 
@@ -219,18 +199,18 @@ export function JoinQueueScreen({
                           </Text>
                         </View>
                       </Pressable>
-                    );
+                    )
                   })}
 
                   <View className="gap-2 rounded-md bg-brand-soft p-4">
                     <Text className="text-body text-ink">
-                      Quando uma edição voltar, as outras filas
-                      deste livro são canceladas sozinhas.
+                      Quando uma edição voltar, as outras filas deste livro são
+                      canceladas sozinhas.
                     </Text>
 
                     <Text className="text-caption-strong text-brand">
-                      Usa {edicoes.length} das suas 7 filas:
-                      cada edição marcada conta como uma.
+                      Usa {edicoes.length} das suas 7 filas: cada edição marcada
+                      conta como uma.
                     </Text>
                   </View>
                 </>
@@ -246,16 +226,12 @@ export function JoinQueueScreen({
               >
                 {multiplas
                   ? `Entrar na fila de ${edicoes.length} ${
-                      edicoes.length === 1 ? "edição" : "edições"
+                      edicoes.length === 1 ? 'edição' : 'edições'
                     }`
-                  : "Entrar na fila"}
+                  : 'Entrar na fila'}
               </Button>
 
-              <Button
-                block
-                variant="ghost"
-                onPress={fechar}
-              >
+              <Button block variant="ghost" onPress={fechar}>
                 Agora não
               </Button>
             </View>
@@ -263,5 +239,5 @@ export function JoinQueueScreen({
         </View>
       </Modal>
     </View>
-  );
+  )
 }

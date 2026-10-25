@@ -1,31 +1,27 @@
 import { CapaLivro } from '@/shared/components/livro'
 
-import React from "react";
-import { ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React from 'react'
+import { ScrollView, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { AppBar } from "@/shared/components/app-bar";
-import { Button } from "@/shared/components/button";
-import { Icon } from "@/shared/components/icon";
+import { AppBar } from '@/shared/components/app-bar'
+import { Button } from '@/shared/components/button'
+import { Icon } from '@/shared/components/icon'
 
 type LimiteFilasProps = {
-  onVoltar?: () => void;
-  onVerMinhasFilas?: () => void;
-};
+  onVoltar?: () => void
+  onVerMinhasFilas?: () => void
+}
 
 export function QueueLimitScreen({
   onVoltar,
   onVerMinhasFilas,
 }: LimiteFilasProps) {
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar
-        title="Detalhe do livro"
-        back
-        onBack={onVoltar}
-      />
+      <AppBar title="Detalhe do livro" back onBack={onVoltar} />
 
       <ScrollView
         className="flex-1"
@@ -33,7 +29,12 @@ export function QueueLimitScreen({
       >
         {/* LIVRO */}
         <View className="flex-row gap-4">
-          <CapaLivro nome="Domain-Driven Design" autor="Eric Evans" cor="cover5" largura={132} />
+          <CapaLivro
+            nome="Domain-Driven Design"
+            autor="Eric Evans"
+            cor="cover5"
+            largura={132}
+          />
 
           <View className="flex-1 justify-center gap-3">
             <View className="self-start rounded-pill bg-warning-soft px-3 py-1">
@@ -66,11 +67,7 @@ export function QueueLimitScreen({
         {/* AVISO */}
         <View className="gap-3 rounded-md border border-warning bg-warning-soft p-4">
           <View className="flex-row items-start gap-3">
-            <Icon
-              name="alert"
-              color="warning"
-              size={22}
-            />
+            <Icon name="alert" color="warning" size={22} />
 
             <Text className="flex-1 text-label text-ink">
               Limite de 7 filas atingido
@@ -78,8 +75,8 @@ export function QueueLimitScreen({
           </View>
 
           <Text className="text-body text-ink">
-            Você já está na fila de 7 livros, o máximo
-            da biblioteca. Saia de uma fila para entrar nesta.
+            Você já está na fila de 7 livros, o máximo da biblioteca. Saia de
+            uma fila para entrar nesta.
           </Text>
         </View>
       </ScrollView>
@@ -91,19 +88,11 @@ export function QueueLimitScreen({
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        <Button
-          block
-          variant="primary"
-          disabled
-        >
+        <Button block variant="primary" disabled>
           Limite de 7 filas atingido
         </Button>
 
-        <Button
-          block
-          variant="ghost"
-          onPress={onVerMinhasFilas}
-        >
+        <Button block variant="ghost" onPress={onVerMinhasFilas}>
           Ver minhas filas
         </Button>
 
@@ -112,5 +101,5 @@ export function QueueLimitScreen({
         </Text>
       </View>
     </View>
-  );
+  )
 }

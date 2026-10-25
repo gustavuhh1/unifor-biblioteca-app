@@ -1,19 +1,113 @@
-import { Text, View } from 'react-native'
-import { CapaLivro } from './livro'
+import type { ReactNode } from 'react'
+import { Pressable, Text, View } from 'react-native'
+import type { PressableProps } from 'react-native'
+import { useTheme } from '../theme/theme-provider'
+import { BookCover, type CoverTone } from './book-cover'
 import { Icon } from './icon'
-import { Button } from './button'
-import type { ColorToken } from '@/shared/theme/tokens.generated'
+import { StatusBadge, type Status } from './status-badge'
 
-export interface LoanCardProps {
-  title: string; author: string; color: ColorToken; status: string; start: string; due: string;
-  progress?: number; late?: boolean; renewed?: boolean; blocked?: boolean; onRenew?: () => void; onFine?: () => void
+export interface LoanCardProps extends Omit<
+  PressableProps,
+  'children' | 'style'
+> {
+  title: string
+  author: string
+  tone?: CoverTone
+  status?: Status
+  statusLabel?: string
+  // Quanto do prazo já passou, de 0 a 1.
+  progress?: number
+  // "Retirado 10/10".
+  startLabel?: string
+  // "Devolver até 24/10": o prazo sempre concreto, nunca "em breve".
+  dueLabel?: string
+  // Prazo em destaque (DeadlineChip), quando o cartão é de um pedido.
+  deadline?: ReactNode
+  // A renovação está bloqueada: mostra o motivo no lugar do botão (RF-EMP-10).
+  renewBlocked?: boolean
+  renewReason?: string
+  // Botões do cartão (Renovar, Ver multa...).
+  actions?: ReactNode
 }
-export function LoanCard({ title, author, color, status, start, due, progress = .5, late, renewed, blocked, onRenew, onFine }: LoanCardProps) {
-  return <View className={`gap-3 rounded-lg border bg-surface-raised p-3 ${late ? 'border-danger' : 'border-line'}`}>
-    <View className="flex-row gap-3"><CapaLivro nome={title} autor={author} cor={color} largura={56} /><View className="min-w-0 flex-1 gap-1"><Text className="text-book-title text-ink">{title}</Text><Text className="text-caption text-ink-muted">{author}</Text><View className={`self-start rounded-sm px-2 py-1 ${late ? 'bg-danger-soft' : blocked ? 'bg-warning-soft' : 'bg-brand-soft'}`}><Text className={`text-overline ${late ? 'text-danger' : blocked ? 'text-warning' : 'text-brand-strong'}`}>{status}</Text></View></View></View>
-    <View accessible accessibilityLabel={`Prazo decorrido: ${Math.round(progress * 100)} por cento`} className="h-1 overflow-hidden rounded-pill bg-surface-sunken"><View style={{ width: `${Math.max(0, Math.min(1, progress)) * 100}%` }} className={`h-1 ${late ? 'bg-danger' : blocked ? 'bg-warning' : 'bg-brand'}`} /></View>
-    <View className="flex-row justify-between gap-2"><Text className="text-micro text-ink-muted">{start}</Text><Text className="text-micro-strong text-ink">{due}</Text></View>
-    {blocked ? <View className="flex-row gap-1"><Icon name="users" size={14} color="inkMuted" /><Text className="flex-1 text-caption text-ink-muted">Renovação indisponível: 2 alunos na fila deste livro.</Text></View> : null}
-    {late ? <Button block size="sm" variant="danger" icon="coin" onPress={onFine}>Ver multa</Button> : <Button block size="sm" variant={blocked ? 'ghost' : 'tonal'} icon="refresh" disabled={renewed} onPress={onRenew}>{blocked ? 'Renovar' : renewed ? 'Renovação já utilizada' : 'Renovar +14 dias'}</Button>}
-  </View>
+
+// Cor do trilho de progresso: o status define o tom (README do DS, Cor).
+function progressClass(status?: Status): string {
+  if (status === 'atrasado') return 'bg-danger'
+  if (status === 'vence') return 'bg-warning'
+  return 'bg-brand'
+}
+
+// Empréstimo ou pedido em Meus empréstimos (components.d.ts, LoanCard).
+export function LoanCard({
+  title,
+  author,
+  tone,
+  status,
+  statusLabel,
+  progress,
+  startLabel,
+  dueLabel,
+  deadline,
+  renewBlocked = false,
+  renewReason,
+  actions,
+  ...rest
+}: LoanCardProps) {
+  const { shadows } = useTheme()
+  const overdue = status === 'atrasado'
+  const percent = Math.round(Math.min(1, Math.max(0, progress ?? 0)) * 100)
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, de ${author}`}
+      className={`gap-3 rounded-lg bg-surface-raised p-4 ${
+        overdue ? 'border-[1.5px] border-danger' : 'border border-line'
+      }`}
+      style={{ boxShadow: shadows.card }}
+      {...rest}
+    >
+      <View className="flex-row items-start gap-3">
+        <BookCover title={title} author={author} tone={tone} size="sm" />
+        <View className="min-w-0 flex-1 gap-1">
+          <Text className="text-book-title text-ink" numberOfLines={2}>
+            {title}
+          </Text>
+          <Text className="text-caption text-ink-muted" numberOfLines={1}>
+            {author}
+          </Text>
+          {status ? <StatusBadge status={status} label={statusLabel} /> : null}
+        </View>
+      </View>
+      {deadline}
+      {progress !== undefined ? (
+        <View
+          accessible
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: 100, now: percent }}
+          className="h-1.5 overflow-hidden rounded-pill bg-surface-sunken"
+        >
+          <View
+            className={`h-1.5 rounded-[3px] ${progressClass(status)}`}
+            style={{ width: `${percent}%` }}
+          />
+        </View>
+      ) : null}
+      {startLabel || dueLabel ? (
+        <View className="flex-row items-center justify-between gap-2">
+          <Text className="text-caption text-ink-muted">{startLabel}</Text>
+          <Text className="text-caption-strong text-ink">{dueLabel}</Text>
+        </View>
+      ) : null}
+      {renewBlocked ? (
+        <View className="flex-row items-start gap-1.5">
+          <Icon name="users" size={16} color="inkMuted" />
+          <Text className="text-caption flex-1 text-ink-muted">
+            {renewReason}
+          </Text>
+        </View>
+      ) : null}
+      {actions ? <View className="flex-row gap-2">{actions}</View> : null}
+    </Pressable>
+  )
 }
