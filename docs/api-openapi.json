@@ -3350,6 +3350,272 @@
           "name"
         ]
       },
+      "NotificationsResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            },
+            "description": "Os avisos mais novos primeiro."
+          },
+          "unreadCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Quantos dos avisos da lista ainda não foram lidos."
+          }
+        },
+        "required": [
+          "items",
+          "unreadCount"
+        ]
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "queue_turn",
+              "queue_turn_missed",
+              "queue_moved_up",
+              "queue_position_changed",
+              "queue_added_by_librarian",
+              "queue_removed_by_librarian",
+              "queue_cancelled_other_edition",
+              "pickup_ready",
+              "pickup_expiring",
+              "pickup_expired",
+              "loan_picked_up",
+              "due_reminder",
+              "overdue",
+              "return_confirmed",
+              "fine_open",
+              "fine_paid",
+              "renewal_done"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "confirm_turn",
+              "show_qr",
+              "open_loan",
+              "open_fine",
+              "none"
+            ],
+            "description": "O botão do aviso: `confirm_turn` (Vou retirar / Desistir), `show_qr`, `open_loan`, `open_fine` ou `none`."
+          },
+          "bookId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "loanId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "queueEntryId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fineId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "readAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Nulo: ainda não lido."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "body",
+          "action",
+          "bookId",
+          "loanId",
+          "queueEntryId",
+          "fineId",
+          "readAt",
+          "createdAt"
+        ]
+      },
+      "NotificationPrefs": {
+        "type": "object",
+        "properties": {
+          "queueTurn": {
+            "type": "boolean",
+            "description": "Sempre `true`."
+          },
+          "overdueAndFines": {
+            "type": "boolean",
+            "description": "Sempre `true`."
+          },
+          "dueReminders": {
+            "type": "boolean"
+          },
+          "pickupReady": {
+            "type": "boolean"
+          },
+          "queueUpdates": {
+            "type": "boolean"
+          },
+          "returnConfirmed": {
+            "type": "boolean"
+          },
+          "channelPush": {
+            "type": "boolean"
+          },
+          "channelEmail": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "queueTurn",
+          "overdueAndFines",
+          "dueReminders",
+          "pickupReady",
+          "queueUpdates",
+          "returnConfirmed",
+          "channelPush",
+          "channelEmail"
+        ]
+      },
+      "NotificationPrefsBody": {
+        "type": "object",
+        "properties": {
+          "queueTurn": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "overdueAndFines": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "dueReminders": {
+            "type": "boolean"
+          },
+          "pickupReady": {
+            "type": "boolean"
+          },
+          "queueUpdates": {
+            "type": "boolean"
+          },
+          "returnConfirmed": {
+            "type": "boolean"
+          },
+          "channelPush": {
+            "type": "boolean"
+          },
+          "channelEmail": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ]
+          },
+          "deviceName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "appVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pushEnabled": {
+            "type": "boolean",
+            "description": "`true` quando o aparelho tem token do Expo que ainda vale (só no Android)."
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "platform",
+          "deviceName",
+          "appVersion",
+          "pushEnabled",
+          "lastSeenAt"
+        ]
+      },
+      "DeviceBody": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ]
+          },
+          "expoPushToken": {
+            "type": "string",
+            "pattern": "^Expo(nent)?PushToken\\[[^\\]\\s]+\\]$",
+            "description": "Token do Expo. Só o Android usa; no iPhone é ignorado."
+          },
+          "deviceName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "appVersion": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30
+          }
+        },
+        "required": [
+          "platform"
+        ]
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -7003,6 +7269,284 @@
           },
           "404": {
             "description": "A pasta não existe (`folder_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notifications": {
+      "get": {
+        "tags": [
+          "Avisos (aluno)"
+        ],
+        "summary": "Notificações do aluno",
+        "description": "Lista os avisos de dentro do app (sua vez, prazo, atraso, devolução, fila...), os mais novos primeiro, até 100. `unreadCount` conta os não lidos da lista, para o número do sino. Os avisos sempre aparecem aqui, mesmo que o push ou o e-mail estejam desligados ou tenham falhado (RF-AVI-01, RF-AVI-04).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Os avisos do aluno.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notifications/read-all": {
+      "post": {
+        "tags": [
+          "Avisos (aluno)"
+        ],
+        "summary": "Marca todas as notificações como lidas",
+        "description": "Preenche `readAt` nos avisos que ainda não foram lidos. Sem avisos novos, nada muda (RF-AVI-01).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Todos os avisos estão lidos."
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/notification-prefs": {
+      "patch": {
+        "tags": [
+          "Avisos (aluno)"
+        ],
+        "summary": "Liga e desliga avisos e canais",
+        "description": "Muda só as chaves enviadas. `queueTurn` (Sua vez na fila) e `overdueAndFines` (Atraso e multa) ficam sempre ligados: a API recusa `false` nelas (`validation_error`). `channelPush` e `channelEmail` ligam e desligam os canais. As preferências também vêm em `GET /me`. Os avisos dentro do app aparecem sempre; as preferências só decidem o push e o e-mail (RF-AVI-03).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationPrefsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "As preferências depois da mudança.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPrefs"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/devices/{deviceId}": {
+      "put": {
+        "tags": [
+          "Avisos (aluno)"
+        ],
+        "summary": "Registra ou atualiza o aparelho para o push",
+        "description": "O app chama ao abrir, com o ID de instalação (`deviceId`) e o token do Expo. Só o Android recebe push: no iPhone o token é ignorado e os avisos ficam dentro do app. Chamar de novo atualiza `lastSeenAt` e, se o token mudou, volta a ligar o push do aparelho (RF-AVI-02).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": true,
+            "name": "deviceId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "O aparelho registrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Avisos (aluno)"
+        ],
+        "summary": "Remove o aparelho (para de receber push)",
+        "description": "O app chama ao sair da conta. Aparelho que não estava registrado: nada muda (RF-AVI-02).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": true,
+            "name": "deviceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "O aparelho não recebe mais push."
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
             "content": {
               "application/json": {
                 "schema": {
