@@ -22,6 +22,12 @@
         "scheme": "bearer",
         "bearerFormat": "Firebase ID token",
         "description": "ID token do Firebase Authentication, no cabeçalho `Authorization: Bearer <token>`."
+      },
+      "schedulerOidc": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Google OIDC ID token",
+        "description": "Token OIDC do Google, no cabeçalho `Authorization: Bearer <token>`, emitido para a conta de serviço do Cloud Scheduler com a audiência `https://api.uni-books.app`."
       }
     },
     "schemas": {
@@ -3614,6 +3620,52 @@
         },
         "required": [
           "platform"
+        ]
+      },
+      "JobRun": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "description": "O documento em `jobRuns`."
+          },
+          "job": {
+            "type": "string",
+            "enum": [
+              "expire_pickups",
+              "advance_queues",
+              "due_reminders",
+              "accrue_fines",
+              "refresh_holidays"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          },
+          "processed": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Quantos documentos a rotina tratou nesta execução."
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "runId",
+          "job",
+          "status",
+          "processed",
+          "startedAt",
+          "finishedAt"
         ]
       },
       "HealthResponse": {
@@ -7547,6 +7599,91 @@
           },
           "403": {
             "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{job}": {
+      "post": {
+        "tags": [
+          "Rotinas (Cloud Scheduler)"
+        ],
+        "summary": "Roda uma rotina agendada",
+        "description": "Chamada só pelo **Cloud Scheduler**, com o token OIDC da conta de serviço `unibooks-scheduler` (audiência `https://api.uni-books.app`); nenhuma outra identidade serve, nem a de um bibliotecário. Cada execução é registrada em `jobRuns`. Rodar a mesma rotina duas vezes seguidas não repete o trabalho: cada documento é conferido de novo na própria transação. As rotinas:\n\n- `expire_pickups` (a cada 15 min): pedido `awaiting_pickup` com o prazo vencido vira `expired`, o exemplar vai para o 1º da fila ou volta à estante e o aluno recebe \"Seu pedido expirou\" (RF-EMP-06).\n- `advance_queues` (a cada 5 min): quem passou das 24h para confirmar a vez vira `missed` e o próximo da fila ganha a vez (RF-FIL-07).\n- `due_reminders` (todo dia, 8h): lembrete 2 dias antes e no dia do vencimento, aviso de atraso e aviso de último dia para retirar o pedido (RF-SIS-05).\n- `accrue_fines` (todo dia, 6h): cria a multa `accruing` do empréstimo que passou a ter dia útil de atraso (RF-MUL-01).\n- `refresh_holidays` (segunda, 3h): busca na FeriadosAPI os feriados do ano atual e do próximo, se faltarem (RF-SIS-01).",
+        "security": [
+          {
+            "schedulerOidc": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "expire_pickups",
+                "advance_queues",
+                "due_reminders",
+                "accrue_fines",
+                "refresh_holidays"
+              ],
+              "description": "`expire_pickups`, `advance_queues`, `due_reminders`, `accrue_fines` ou `refresh_holidays`."
+            },
+            "required": true,
+            "description": "`expire_pickups`, `advance_queues`, `due_reminders`, `accrue_fines` ou `refresh_holidays`.",
+            "name": "job",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A rotina terminou.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRun"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Rotina desconhecida (`validation_error`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem token do Google, ou token inválido (`scheduler_unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Token do Google de outra conta de serviço (`forbidden`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "A rotina falhou (`job_failed`); o erro fica em `jobRuns` e o Scheduler tenta de novo conforme a configuração dele.",
             "content": {
               "application/json": {
                 "schema": {
