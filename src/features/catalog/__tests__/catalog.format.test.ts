@@ -9,6 +9,7 @@ import {
   bookCoverTone,
   nextReturnText,
   queueText,
+  reservationsText,
 } from '../catalog.format'
 import type { BookPage, BookSummary } from '../catalog.types'
 
@@ -70,24 +71,33 @@ describe('textos do acervo', () => {
     expect(nextReturnText(makeBook({ copiesAvailable: 0 }))).toBeNull()
   })
 
-  it('monta as linhas do card com devolução, fila e pedidos pausados', () => {
-    expect(bookCardMeta(makeBook())).toBe('2 de 3 exemplares na estante')
+  it('diz quantas reservas há, para o lado da capa na página do livro', () => {
+    expect(reservationsText(0)).toBe('Nenhuma reserva')
+    expect(reservationsText(1)).toBe('1 reserva na fila')
+    expect(reservationsText(3)).toBe('3 reservas na fila')
+  })
+
+  it('monta a linha do card como no Figma (A09)', () => {
+    expect(bookCardMeta(makeBook())).toBe('2 exemplares na estante')
+    expect(bookCardMeta(makeBook({ copiesAvailable: 1 }))).toBe(
+      '1 exemplar na estante',
+    )
+    expect(bookCardMeta(makeBook({ copiesAvailable: 0, queueLength: 1 }))).toBe(
+      '1 pessoa na fila · 3 exemplares',
+    )
+    expect(bookCardMeta(makeBook({ copiesAvailable: 0 }))).toBe(
+      'Ninguém na fila: você seria o 1º',
+    )
+  })
+
+  it('avisa no card que o livro está indisponível para novos pedidos (RF-ACE-08)', () => {
     expect(
       bookCardMeta(
-        makeBook({
-          copiesAvailable: 0,
-          queueLength: 1,
-          nextReturnAt: '2026-10-24T15:00:00.000Z',
-          unavailableForNewRequests: true,
-        }),
+        makeBook({ copiesAvailable: 0, unavailableForNewRequests: true }),
       ),
-    ).toBe(
-      [
-        '0 de 3 exemplares na estante',
-        'Devolução prevista: 24/10',
-        '1 pessoa na fila',
-        'Indisponível para novos pedidos',
-      ].join('\n'),
+    ).toBe(['Ninguém na fila', 'Indisponível para novos pedidos'].join('\n'))
+    expect(bookCardMeta(makeBook({ unavailableForNewRequests: true }))).toBe(
+      ['2 exemplares na estante', 'Indisponível para novos pedidos'].join('\n'),
     )
   })
 })

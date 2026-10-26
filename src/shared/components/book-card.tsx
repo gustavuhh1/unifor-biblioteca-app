@@ -68,7 +68,8 @@ export function BookCard({
       style={{ boxShadow: shadows.card }}
       {...rest}
     >
-      <BookCover title={title} author={author} tone={tone} size="md" />
+      {/* No cartão em linha a capa só leva o título (Figma, A09). */}
+      <BookCover title={title} tone={tone} size="md" />
       <View className="min-w-0 flex-1 gap-1">
         <Text className="text-book-title text-ink" numberOfLines={3}>
           {title}

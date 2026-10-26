@@ -1,5 +1,6 @@
 import type { CopyStatus } from '@/shared/types'
 import type { BlockedReason } from '@/shared/utils/blocked-reason'
+import type { BOOK_SUGGESTED_ACTIONS } from './catalog.constants'
 
 // Tipos exclusivos do acervo: o que a API devolve em GET /books e GET /books/{id}
 // (schemas `BookSummary` e `BookPage` do Swagger). As datas chegam como texto
@@ -37,7 +38,7 @@ export interface BookCopySummary {
 }
 
 // O que o botão fixo da página do livro faz para este aluno.
-export type BookSuggestedAction = 'request' | 'join_queue'
+export type BookSuggestedAction = (typeof BOOK_SUGGESTED_ACTIONS)[number]
 
 export interface BookAction {
   suggestedAction: BookSuggestedAction

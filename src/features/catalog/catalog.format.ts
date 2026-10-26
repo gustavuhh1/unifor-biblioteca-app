@@ -41,6 +41,13 @@ export function queueText(queueLength: number): string {
     : `${pluralize(queueLength, 'pessoa', 'pessoas')} na fila`
 }
 
+// "Nenhuma reserva" ou "1 reserva na fila", ao lado da capa na página do livro.
+export function reservationsText(queueLength: number): string {
+  return queueLength === 0
+    ? 'Nenhuma reserva'
+    : `${pluralize(queueLength, 'reserva', 'reservas')} na fila`
+}
+
 // "Devolução prevista: 24/10" quando há exemplar emprestado; senão null.
 export function nextReturnText(book: BookSummary): string | null {
   return book.copiesAvailable === 0 && book.nextReturnAt
@@ -48,18 +55,23 @@ export function nextReturnText(book: BookSummary): string | null {
     : null
 }
 
-// Linhas de apoio do card: exemplares, devolução e fila (só se não há na estante).
+// Linha de apoio do card, como no Figma (A09): "2 exemplares na estante" ou,
+// sem exemplar, "1 pessoa na fila · 3 exemplares" e "Ninguém na fila: você seria
+// o 1º". Livro pausado ganha a linha "Indisponível para novos pedidos" (RF-ACE-08).
 export function bookCardMeta(book: BookSummary): string {
-  const lines = [copiesText(book)]
-  if (book.copiesAvailable === 0) {
-    const nextReturn = nextReturnText(book)
-    if (nextReturn) lines.push(nextReturn)
-    lines.push(queueText(book.queueLength))
+  let line: string
+  if (book.copiesAvailable > 0) {
+    line = `${pluralize(book.copiesAvailable, 'exemplar', 'exemplares')} na estante`
+  } else if (book.queueLength > 0) {
+    line = `${queueText(book.queueLength)} · ${pluralize(book.copiesTotal, 'exemplar', 'exemplares')}`
+  } else {
+    line = book.unavailableForNewRequests
+      ? queueText(0)
+      : `${queueText(0)}: você seria o 1º`
   }
-  if (book.unavailableForNewRequests) {
-    lines.push('Indisponível para novos pedidos')
-  }
-  return lines.join('\n')
+  return book.unavailableForNewRequests
+    ? `${line}\nIndisponível para novos pedidos`
+    : line
 }
 
 // Linha de descrição do livro, ex.: "Livro · 2. ed. · Novatec, 2020".

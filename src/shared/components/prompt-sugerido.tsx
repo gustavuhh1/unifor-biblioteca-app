@@ -15,7 +15,8 @@ export interface PromptSugeridoProps extends Omit<
 // da busca sem resultado (RF-ACE-06).
 export function PromptSugerido({
   text,
-  label = 'Pergunta pronta',
+  // No Figma o rótulo vem em caixa alta: "PERGUNTA PRONTA".
+  label = 'PERGUNTA PRONTA',
   ...rest
 }: PromptSugeridoProps) {
   return (
