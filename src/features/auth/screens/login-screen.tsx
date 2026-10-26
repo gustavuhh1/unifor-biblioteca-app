@@ -28,7 +28,7 @@ export function LoginScreen() {
   const sessionExpired = params.state === 'session-expired' || Boolean(notice)
   const form = useForm<PasswordLoginForm>({
     resolver: zodResolver(passwordLoginSchema),
-    defaultValues: { matricula: '2412858', password: 'Biblioteca1' },
+    defaultValues: { matricula: '', password: '' },
   })
 
   const busy = passwordLogin.isPending || passkeyLogin.isPending
