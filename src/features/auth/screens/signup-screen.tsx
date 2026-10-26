@@ -24,18 +24,10 @@ export function SignupScreen({
   onEntrar,
 }: CadastroProps) {
   const safe = useSafeAreaInsets()
-  const [email, setEmail] = useState(
-    estado === 'validacao'
-      ? 'lucas.almeida@gmail.com'
-      : 'lucas.almeida@edu.unifor.br',
-  )
-  const [matricula, setMatricula] = useState(
-    estado === 'validacao' ? '24128' : '2412858',
-  )
-  const [senha, setSenha] = useState('123456789012')
-  const [confirmacao, setConfirmacao] = useState(
-    estado === 'validacao' ? '1234567890' : '123456789012',
-  )
+  const [email, setEmail] = useState('')
+  const [matricula, setMatricula] = useState('')
+  const [senha, setSenha] = useState('')
+  const [confirmacao, setConfirmacao] = useState('')
   const [tentar, setTentar] = useState(estado !== 'normal')
   const [jaExiste, setJaExiste] = useState(estado === 'conta-existente')
   const erroEmail =
