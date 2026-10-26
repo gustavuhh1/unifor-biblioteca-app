@@ -1,65 +1,55 @@
-import { BookCover, coverToneOf } from '@/shared/components'
-
-import React from 'react'
-import { Pressable, ScrollView, Text, View } from 'react-native'
+import { useLocalSearchParams } from 'expo-router'
+import { useState } from 'react'
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Share,
+  Text,
+  View,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useSession } from '@/features/auth/hooks/use-session'
+import { ApiError } from '@/shared/api/errors'
+import {
+  Alert,
+  AppBar,
+  BookCover,
+  Button,
+  EmptyState,
+  Icon,
+  QueueInfo,
+  StatusBadge,
+} from '@/shared/components'
+import {
+  LOAN_PERIOD_DAYS,
+  MAX_ACTIVE_LOANS,
+  PICKUP_BUSINESS_DAYS,
+  QUEUE_CONFIRM_HOURS,
+} from '@/shared/config/library-rules'
+import { ASSISTANT_BLOCKED_REASON, COPY_STATUS } from '@/shared/types'
+import { useTheme } from '@/shared/theme/theme-provider'
+import { BLOCKED_REASON_MESSAGE } from '@/shared/utils/blocked-reason'
+import { formatDayMonth } from '@/shared/utils/dates'
+import { pluralize } from '@/shared/utils/plural'
+import { BOOK_ACTION_LABEL, COPY_STATUS_LABEL } from '../catalog.constants'
+import {
+  authorsLine,
+  bookCoverTone,
+  bookDescription,
+  bookLocationText,
+  bookStatus,
+  callNumberText,
+  copiesText,
+  publicationText,
+  reservationsText,
+  shelfText,
+} from '../catalog.format'
+import type { BookPage } from '../catalog.types'
+import { useBook } from '../hooks/use-book'
 
-import { AppBar } from '@/shared/components/app-bar'
-import { Button } from '@/shared/components/button'
-import { Icon } from '@/shared/components/icon'
-import { LoanCard } from '@/shared/components/loan-card'
-
-type EstadoLivro =
-  'disponivel' | 'emprestado' | 'pausado' | 'atrasado' | 'multiplas-edicoes'
-
-type DetalheLivroProps = {
-  estado?: EstadoLivro
-  onVoltar?: () => void
-  onSalvar?: () => void
-  onCompartilhar?: () => void
-  onSolicitar?: () => void
-  onEntrarFila?: () => void
-  onMulta?: () => void
-  salvo?: boolean
-}
-
-const dados = {
-  algoritmos: {
-    titulo: 'Algoritmos',
-    subtitulo: 'teoria e prática',
-    autor: 'Cormen et al.',
-    descricao: 'Livro impresso · 3ª e 4ª edições',
-    sinopse: 'Exemplo demonstrativo de um livro com mais de uma edição.',
-    isbn: 'Não informado nesta referência',
-    cutter: 'Não informado nesta referência',
-    edicao: '3ª / 4ª',
-    publicacao: 'Não informado nesta referência',
-  },
-  refatoracao: {
-    titulo: 'Refatoração',
-    subtitulo: 'aperfeiçoando o design de códigos existentes',
-    autor: 'Fowler, Martin',
-    descricao: 'Livro impresso · 2. ed. · Novatec, 2020',
-    sinopse:
-      'Um guia prático para reestruturar código existente sem mudar o que ele faz. O autor mostra, com exemplos passo a passo, como identificar trechos difíceis de manter e aplicar pequenas transformações seguras, apoiadas por testes, até chegar a um código mais claro.',
-    isbn: '9788575227244',
-    cutter: '005.1 F787r',
-    edicao: '2. ed.',
-    publicacao: 'São Paulo : Novatec, 2020',
-  },
-  codigoLimpo: {
-    titulo: 'Código Limpo',
-    subtitulo: 'habilidades práticas do agile software',
-    autor: 'Martin, Robert C.',
-    descricao: 'Livro impresso · ed. revisada · Alta Books, 2011',
-    sinopse:
-      'Mostra como escrever código fácil de ler e de manter: nomes que explicam a intenção, funções pequenas, tratamento de erros e testes. Traz estudos de caso em que código confuso é limpo aos poucos, explicando o porquê de cada mudança.',
-    isbn: '9788576082675',
-    cutter: '005.1 M386c',
-    edicao: 'revisada',
-    publicacao: 'Rio de Janeiro : Alta Books, 2011',
-  },
-}
+// Linhas da sinopse antes de "Ler sinopse completa".
+const SYNOPSIS_PREVIEW_LINES = 5
 
 function Secao({ titulo }: { titulo: string }) {
   return <Text className="mb-3 text-title text-ink">{titulo}</Text>
@@ -77,44 +67,81 @@ function Linha({ titulo, valor }: { titulo: string; valor: string }) {
   )
 }
 
-export function BookDetailScreen({
-  estado = 'disponivel',
-  onVoltar,
-  onSalvar,
-  onCompartilhar,
-  onSolicitar,
-  onEntrarFila,
-  onMulta,
-  salvo = false,
-}: DetalheLivroProps) {
+// Abre o menu nativo de compartilhar do celular (RF-ACE-07).
+function shareBook(book: BookPage) {
+  void Share.share({
+    message: `${book.title}, de ${authorsLine(book.authors)}. ${bookLocationText(book)}.`,
+  })
+}
+
+// Página do livro (RF-ACE-02, RF-ACE-03 e RF-ACE-08; telas A13, A14 e A76):
+// GET /books/{bookId}, com a ação que cabe a este aluno no botão fixo.
+export function BookDetailScreen() {
   const insets = useSafeAreaInsets()
-
-  const multiplasEdicoes = estado === 'multiplas-edicoes'
-  const emprestado = estado === 'emprestado' || multiplasEdicoes
-  const pausado = estado === 'pausado'
-  const atrasado = estado === 'atrasado'
-  const livro = multiplasEdicoes
-    ? dados.algoritmos
-    : emprestado
-      ? dados.codigoLimpo
-      : dados.refatoracao
-
-  const registros = emprestado
-    ? [
-        ['46122', '24/10'],
-        ['223223', '28/10'],
-        ['223323', '03/11'],
-      ]
-    : [
-        ['51734', 'Na estante'],
-        ['51735', 'Na estante'],
-        ['51736', '22/10'],
-      ]
+  const { colors } = useTheme()
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const query = useBook(id)
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Detalhe do livro" back onBack={onVoltar} />
+      <AppBar title="Detalhe do livro" back />
 
+      {query.isPending ? (
+        <View
+          accessibilityLabel="Carregando livro"
+          className="flex-1 items-center justify-center"
+        >
+          <ActivityIndicator color={colors.brand} />
+        </View>
+      ) : query.isError ? (
+        <EmptyState
+          icon="alert"
+          title="Não foi possível abrir o livro"
+          text={
+            query.error instanceof ApiError ? query.error.message : undefined
+          }
+          action={
+            <Button icon="refresh" onPress={() => void query.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        />
+      ) : (
+        <BookDetail book={query.data} bottomInset={insets.bottom} />
+      )}
+    </View>
+  )
+}
+
+function BookDetail({
+  book,
+  bottomInset,
+}: {
+  book: BookPage
+  bottomInset: number
+}) {
+  const { user } = useSession()
+  const [synopsisOpen, setSynopsisOpen] = useState(false)
+
+  const emprestado = book.copiesAvailable === 0
+  const action = book.action
+  const blocked = action?.blockedReason
+    ? BLOCKED_REASON_MESSAGE[action.blockedReason]
+    : null
+  const pausado = action?.blockedReason === ASSISTANT_BLOCKED_REASON.unavailable
+  const atrasado = action?.blockedReason === ASSISTANT_BLOCKED_REASON.overdue
+  const registro = [
+    ['Material', book.materialType],
+    ['Idioma', book.language],
+    ['ISBN', book.isbn],
+    ['CDU e Cutter', callNumberText(book)],
+    ['Edição', book.edition],
+    ['Publicação', publicationText(book)],
+    ['Série', book.series],
+  ].filter((row): row is [string, string] => Boolean(row[1]))
+
+  return (
+    <>
       <ScrollView
         className="flex-1"
         contentContainerClassName="gap-6 px-4 pb-8"
@@ -122,125 +149,48 @@ export function BookDetailScreen({
         {/* CAPA E DISPONIBILIDADE */}
         <View className="flex-row gap-4">
           <BookCover
-            title={livro.titulo}
-            author={
-              multiplasEdicoes
-                ? 'Cormen et al.'
-                : emprestado
-                  ? 'Robert C. Martin'
-                  : 'Martin Fowler'
-            }
-            tone={coverToneOf(
-              multiplasEdicoes ? 'cover4' : emprestado ? 'cover1' : 'cover2',
-            )}
+            title={book.title}
+            author={authorsLine(book.authors)}
+            tone={bookCoverTone(book)}
             size="lg"
           />
 
           <View className="flex-1 justify-center gap-3">
-            <View
-              className={
-                emprestado
-                  ? 'self-start rounded-pill bg-warning-soft px-3 py-1'
-                  : 'self-start rounded-pill bg-success-soft px-3 py-1'
-              }
-            >
-              <Text
-                className={
-                  emprestado
-                    ? 'text-caption-strong text-warning'
-                    : 'text-caption-strong text-success'
-                }
-              >
-                {emprestado ? 'Emprestado' : 'Disponível'}
-              </Text>
-            </View>
+            <StatusBadge status={bookStatus(book)} />
 
-            <Text className="text-body text-ink">
-              {multiplasEdicoes
-                ? '0 de 4 exemplares na estante'
-                : emprestado
-                  ? '0 de 3 exemplares na estante'
-                  : '2 de 3 exemplares na estante'}
-            </Text>
+            <Text className="text-body text-ink">{copiesText(book)}</Text>
 
             <Text className="text-caption text-ink-muted">
-              {emprestado ? '1 reserva na fila' : 'Nenhuma reserva'}
+              {reservationsText(book.queueLength)}
             </Text>
           </View>
         </View>
 
-        {/* A76 — PEDIDOS PAUSADOS */}
-        {pausado && (
-          <View className="gap-2 rounded-md border border-warning bg-warning-soft p-4">
-            <View className="flex-row items-center gap-2">
-              <Icon name="alert" color="warning" size={20} />
-
-              <Text className="flex-1 text-label text-ink">
-                Indisponível para novos pedidos
-              </Text>
-            </View>
-
-            <Text className="text-body text-ink">
-              A biblioteca pausou novos pedidos deste livro. Ele continua no
-              catálogo, mas não dá para solicitar nem entrar na fila agora.
-            </Text>
-          </View>
-        )}
+        {/* A76 — MOTIVO DO BLOQUEIO (pedidos pausados, atraso, limites) */}
+        {blocked ? (
+          <Alert tone={atrasado ? 'danger' : 'warning'} title={blocked.title}>
+            {blocked.text}
+          </Alert>
+        ) : null}
 
         {/* IDENTIFICAÇÃO DO LIVRO */}
         <View className="gap-2">
-          <Text className="text-book-title-lg text-ink">{livro.titulo}</Text>
+          <Text className="text-book-title-lg text-ink">{book.title}</Text>
 
-          <Text className="text-body text-ink-muted">{livro.subtitulo}</Text>
+          {book.subtitle ? (
+            <Text className="text-body text-ink-muted">{book.subtitle}</Text>
+          ) : null}
 
-          <Text className="text-caption text-ink-muted">{livro.descricao}</Text>
+          <Text className="text-caption text-ink-muted">
+            {bookDescription(book)}
+          </Text>
         </View>
 
-        {/* SALVAR E COMPARTILHAR */}
-        {atrasado ? (
-          <>
-            <View className="gap-2 rounded-lg bg-danger-soft p-4">
-              <Text className="text-label text-danger">
-                Empréstimos bloqueados
-              </Text>
-              <Text className="text-body text-ink">
-                Você tem 1 livro em atraso: Cálculo, Vol. 1 (3 dias, multa de R$
-                6,00). Devolva no balcão para voltar a solicitar livros e entrar
-                em filas.
-              </Text>
-            </View>
-            <LoanCard
-              title="Cálculo, Vol. 1"
-              author="James Stewart"
-              tone={5}
-              status="atrasado"
-              statusLabel="Atrasado · R$ 6,00"
-              startLabel="Retirado 26/09"
-              dueLabel="Venceu 10/10"
-              progress={1}
-              actions={
-                <Button
-                  block
-                  size="sm"
-                  variant="danger"
-                  icon="coin"
-                  onPress={onMulta}
-                >
-                  Ver multa
-                </Button>
-              }
-            />
-          </>
-        ) : null}
+        {/* SALVAR E COMPARTILHAR (Salvar chega na Etapa 5) */}
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Button
-              block
-              variant="secondary"
-              icon={salvo ? 'bookmarkFill' : 'bookmark'}
-              onPress={onSalvar}
-            >
-              {salvo ? 'Salvo' : 'Salvar'}
+            <Button block variant="secondary" icon="bookmark">
+              Salvar
             </Button>
           </View>
 
@@ -249,7 +199,7 @@ export function BookDetailScreen({
               block
               variant="secondary"
               icon="share"
-              onPress={onCompartilhar}
+              onPress={() => shareBook(book)}
             >
               Compartilhar
             </Button>
@@ -260,122 +210,122 @@ export function BookDetailScreen({
         <View>
           <Secao titulo="Autoria" />
 
-          <Text className="text-body text-ink">{livro.autor}</Text>
+          <Text className="text-body text-ink">
+            {authorsLine(book.authors)}
+          </Text>
 
-          {emprestado && (
-            <Text className="mt-2 text-caption text-ink-muted">
-              Chu, Leandro · Tradutor
+          {book.translators.map((translator) => (
+            <Text key={translator} className="mt-2 text-caption text-ink-muted">
+              {translator} · Tradutor
             </Text>
-          )}
+          ))}
         </View>
 
         {/* ASSUNTOS */}
-        <View>
-          <Secao titulo="Assuntos" />
+        {book.subjects.length > 0 ? (
+          <View>
+            <Secao titulo="Assuntos" />
 
-          <View className="flex-row flex-wrap gap-2">
-            <View className="rounded-pill bg-surface-sunken px-3 py-2">
-              <Text className="text-caption text-ink">
-                Desenvolvimento de software
-              </Text>
-            </View>
-
-            <View className="rounded-pill bg-surface-sunken px-3 py-2">
-              <Text className="text-caption text-ink">
-                {emprestado
-                  ? 'Linguagem de programação'
-                  : 'Engenharia de software'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* A14 — POSIÇÃO NA FILA */}
-        {emprestado && (
-          <View className="gap-3 rounded-md bg-brand-soft p-4">
-            <Text className="text-label text-brand">
-              1 pessoa na sua frente
-            </Text>
-
-            <View className="flex-row items-center gap-2">
-              {[1, 2, 3, 4].map((numero) => (
+            <View className="flex-row flex-wrap gap-2">
+              {book.subjects.map((subject) => (
                 <View
-                  key={numero}
-                  className={
-                    numero === 2
-                      ? 'h-[36px] flex-1 items-center justify-center rounded-md bg-brand'
-                      : 'h-[36px] flex-1 items-center justify-center rounded-md bg-surface-raised'
-                  }
+                  key={subject}
+                  className="rounded-pill bg-surface-sunken px-3 py-2"
                 >
-                  <Text
-                    className={
-                      numero === 2
-                        ? 'text-label text-on-brand'
-                        : 'text-label text-ink-muted'
-                    }
-                  >
-                    {numero}º
-                  </Text>
+                  <Text className="text-caption text-ink">{subject}</Text>
                 </View>
               ))}
             </View>
-
-            <Text className="text-caption text-ink">
-              Se entrar agora, você será o 2º da fila.
-            </Text>
           </View>
-        )}
+        ) : null}
+
+        {/* A14 — PESSOAS NA FILA */}
+        {emprestado ? (
+          <QueueInfo
+            ahead={book.queueLength}
+            note={
+              action?.allowed
+                ? `Se entrar agora, você será o ${book.queueLength + 1}º da fila.`
+                : undefined
+            }
+          />
+        ) : null}
 
         {/* SINOPSE */}
-        <View>
-          <Secao titulo="Sinopse" />
+        {book.synopsis ? (
+          <View>
+            <Secao titulo="Sinopse" />
 
-          <Text className="text-body text-ink">{livro.sinopse}</Text>
+            <Text
+              className="text-body text-ink"
+              numberOfLines={synopsisOpen ? undefined : SYNOPSIS_PREVIEW_LINES}
+            >
+              {book.synopsis}
+            </Text>
 
-          <Pressable
-            accessibilityRole="button"
-            className="mt-2 self-start py-2"
-          >
-            <Text className="text-label text-brand">Ler sinopse completa</Text>
-          </Pressable>
-        </View>
+            {!synopsisOpen ? (
+              <Pressable
+                accessibilityRole="button"
+                className="mt-2 min-h-[44px] justify-center self-start"
+                onPress={() => setSynopsisOpen(true)}
+              >
+                <Text className="text-label text-brand">
+                  Ler sinopse completa
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
 
         {/* DISPONIBILIDADE */}
         <View>
           <Secao titulo="Disponibilidade" />
 
           <View className="rounded-md border border-line bg-surface-raised px-3">
-            <Linha
-              titulo="Exemplares"
-              valor={emprestado ? '0 de 3 na estante' : '2 de 3 na estante'}
-            />
+            <Linha titulo="Exemplares" valor={shelfText(book)} />
 
             {emprestado ? (
               <>
-                <Linha titulo="Reservas na fila" valor="1" />
+                <Linha
+                  titulo="Reservas na fila"
+                  valor={String(book.queueLength)}
+                />
 
-                <Linha titulo="Próxima devolução" valor="24/10" />
+                {book.nextReturnAt ? (
+                  <Linha
+                    titulo="Próxima devolução"
+                    valor={formatDayMonth(book.nextReturnAt)}
+                  />
+                ) : null}
 
                 <Linha
                   titulo="Quando chegar sua vez"
-                  valor="24h para confirmar e 2 dias úteis para retirar"
+                  valor={`${QUEUE_CONFIRM_HOURS}h para confirmar e ${PICKUP_BUSINESS_DAYS} dias úteis para retirar`}
                 />
               </>
             ) : (
               <>
-                <Linha titulo="Empréstimo" valor="14 dias, domiciliar" />
+                <Linha
+                  titulo="Empréstimo"
+                  valor={`${LOAN_PERIOD_DAYS} dias, domiciliar`}
+                />
 
                 <Linha
                   titulo="Retirada"
-                  valor="Até 2 dias úteis após solicitar"
+                  valor={`Até ${PICKUP_BUSINESS_DAYS} dias úteis após solicitar`}
                 />
 
                 <Linha
                   titulo="Renovação"
-                  valor="+14 dias, se não houver atraso nem fila"
+                  valor={`+${LOAN_PERIOD_DAYS} dias, se não houver atraso nem fila`}
                 />
 
-                <Linha titulo="Seus empréstimos" valor="3 de 10" />
+                {user ? (
+                  <Linha
+                    titulo="Seus empréstimos"
+                    valor={`${user.activeLoanCount} de ${MAX_ACTIVE_LOANS}`}
+                  />
+                ) : null}
               </>
             )}
           </View>
@@ -390,11 +340,11 @@ export function BookDetailScreen({
 
             <View className="flex-1 gap-1">
               <Text className="text-label text-ink">
-                Biblioteca (Praça Central) · Estante 005.1
+                {bookLocationText(book)}
               </Text>
 
               <Text className="text-caption text-ink-muted">
-                Procure pela etiqueta {livro.cutter} na lombada.
+                Procure pela etiqueta {callNumberText(book)} na lombada.
               </Text>
             </View>
           </View>
@@ -405,12 +355,9 @@ export function BookDetailScreen({
           <Secao titulo="Registro completo" />
 
           <View className="rounded-md border border-line bg-surface-raised px-3">
-            <Linha titulo="Material" valor="Livro" />
-            <Linha titulo="Idioma" valor="Português" />
-            <Linha titulo="ISBN" valor={livro.isbn} />
-            <Linha titulo="CDU e Cutter" valor={livro.cutter} />
-            <Linha titulo="Edição" valor={livro.edicao} />
-            <Linha titulo="Publicação" valor={livro.publicacao} />
+            {registro.map(([titulo, valor]) => (
+              <Linha key={titulo} titulo={titulo} valor={valor} />
+            ))}
           </View>
         </View>
 
@@ -419,23 +366,22 @@ export function BookDetailScreen({
           <Secao titulo="Exemplares" />
 
           <Text className="mb-3 text-caption text-ink-muted">
-            {emprestado
-              ? '3 exemplares · 1 reserva'
-              : '3 exemplares · 0 reservas'}
+            {pluralize(book.copies.length, 'exemplar', 'exemplares')} ·{' '}
+            {pluralize(book.queueLength, 'reserva', 'reservas')}
           </Text>
 
           <View className="gap-3">
-            {registros.map(([numero, situacao], index) => {
-              const disponivel = !emprestado && index < 2
+            {book.copies.map((copy) => {
+              const disponivel = copy.status === COPY_STATUS.available
 
               return (
                 <View
-                  key={numero}
+                  key={copy.registration}
                   className="gap-2 rounded-md border border-line bg-surface-raised p-3"
                 >
                   <View className="flex-row justify-between gap-2">
                     <Text className="text-label text-ink">
-                      Registro {numero}
+                      Registro {copy.registration}
                     </Text>
 
                     <Text
@@ -445,91 +391,36 @@ export function BookDetailScreen({
                           : 'text-caption-strong text-warning'
                       }
                     >
-                      {disponivel ? 'Disponível' : 'Emprestado'}
+                      {COPY_STATUS_LABEL[copy.status]}
                     </Text>
                   </View>
 
                   <Text className="text-caption text-ink-muted">
-                    {emprestado ? '2011' : '2020'} · Impresso
-                  </Text>
-
-                  <Text className="text-caption text-ink-muted">
-                    {disponivel
-                      ? 'Na estante'
-                      : `Devolução prevista: ${situacao}`}
-                  </Text>
-
-                  <Text className="text-caption text-ink-muted">
-                    1163 · Biblioteca · Livros
+                    {[book.year, copy.format].filter(Boolean).join(' · ')}
                   </Text>
                 </View>
               )
             })}
           </View>
         </View>
-
-        {/* MESMO AUTOR */}
-        <View>
-          <Secao titulo="Do mesmo autor" />
-
-          <View className="flex-row gap-3">
-            {(emprestado
-              ? ['Arquitetura Limpa', 'O Codificador Limpo']
-              : [
-                  'Padrões de Arquitetura de Aplicações Corporativas',
-                  'UML Essencial',
-                ]
-            ).map((titulo, index) => (
-              <View key={titulo} className="flex-1 gap-2">
-                <BookCover
-                  title={titulo}
-                  tone={coverToneOf(index === 0 ? 'cover4' : 'cover5')}
-                  size="md"
-                />
-
-                <Text className="text-book-title-sm text-ink" numberOfLines={3}>
-                  {titulo}
-                </Text>
-
-                <Text className="text-caption text-ink-muted">
-                  {livro.autor}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
       </ScrollView>
 
-      {/* AÇÃO INFERIOR */}
-      <View
-        className="border-t border-line bg-surface-raised px-4 pt-3"
-        style={{
-          paddingBottom: Math.max(insets.bottom, 16),
-        }}
-      >
-        {atrasado ? (
-          <>
-            <Button block disabled>
-              Solicitar empréstimo
-            </Button>
-            <Button block variant="ghost" onPress={onMulta}>
-              Como devolver
-            </Button>
-          </>
-        ) : pausado ? (
-          <Button block variant="primary" disabled>
-            Indisponível para novos pedidos
+      {/* AÇÃO INFERIOR (solicitar e entrar na fila chegam na Etapa 2) */}
+      {action ? (
+        <View
+          className="border-t border-line bg-surface-raised px-4 pt-3"
+          style={{
+            paddingBottom: Math.max(bottomInset, 16),
+          }}
+        >
+          <Button block variant="primary" disabled={!action.allowed}>
+            {pausado
+              ? BLOCKED_REASON_MESSAGE[ASSISTANT_BLOCKED_REASON.unavailable]
+                  .title
+              : BOOK_ACTION_LABEL[action.suggestedAction]}
           </Button>
-        ) : emprestado ? (
-          <Button block variant="primary" onPress={onEntrarFila}>
-            Entrar na fila
-          </Button>
-        ) : (
-          <Button block variant="primary" onPress={onSolicitar}>
-            Solicitar empréstimo
-          </Button>
-        )}
-      </View>
-    </View>
+        </View>
+      ) : null}
+    </>
   )
 }

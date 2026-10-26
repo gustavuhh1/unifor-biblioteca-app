@@ -34,6 +34,11 @@ export function copiesText(book: BookSummary): string {
   return `${book.copiesAvailable} de ${pluralize(book.copiesTotal, 'exemplar', 'exemplares')} na estante`
 }
 
+// "2 de 3 na estante" para a linha Exemplares da página do livro.
+export function shelfText(book: BookSummary): string {
+  return `${book.copiesAvailable} de ${book.copiesTotal} na estante`
+}
+
 // "Ninguém na fila" ou "2 pessoas na fila".
 export function queueText(queueLength: number): string {
   return queueLength === 0
@@ -96,4 +101,9 @@ export function bookLocationText(book: BookPage): string {
   return [book.location, book.shelf && `Estante ${book.shelf}`]
     .filter(Boolean)
     .join(' · ')
+}
+
+// CDU e Cutter da etiqueta na lombada, ex.: "005.1 F787r".
+export function callNumberText(book: BookPage): string {
+  return [book.cdu, book.cutter].filter(Boolean).join(' ')
 }

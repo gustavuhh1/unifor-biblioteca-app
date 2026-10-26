@@ -10,6 +10,8 @@ import {
   nextReturnText,
   queueText,
   reservationsText,
+  shelfText,
+  callNumberText,
 } from '../catalog.format'
 import type { BookPage, BookSummary } from '../catalog.types'
 
@@ -146,6 +148,16 @@ describe('textos da página do livro', () => {
   it('monta o local com a estante', () => {
     expect(bookLocationText(page)).toBe(
       'Biblioteca (Praça Central) · Estante 005.1',
+    )
+  })
+
+  it('mostra os exemplares na estante na linha Exemplares (RF-ACE-02)', () => {
+    expect(shelfText(page)).toBe('2 de 3 na estante')
+  })
+
+  it('junta CDU e Cutter da etiqueta da lombada (RF-ACE-02)', () => {
+    expect(callNumberText({ ...page, cdu: '005.1', cutter: 'F787r' })).toBe(
+      '005.1 F787r',
     )
   })
 })
