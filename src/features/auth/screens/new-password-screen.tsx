@@ -1,33 +1,56 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import React, { useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import { ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { applyApiFieldErrors } from '@/shared/api/form-errors'
+import { Alert } from '@/shared/components/alert'
 import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
 import { TextField } from '@/shared/components/text-field'
 import { Icon } from '@/shared/components/icon'
-import { newPasswordSchema } from '@/features/auth/schemas/registration.schemas'
+import { getAuthErrorMessage } from '../auth.errors'
+import {
+  newPasswordFormSchema,
+  type NewPasswordForm,
+} from '../schemas/recovery.schemas'
 
-type NovaSenhaProps = {
-  onVoltar?: () => void
-  onRedefinir?: () => void
+// Campos do formulário, com os mesmos nomes que a API usa em `fields`.
+const NEW_PASSWORD_FIELDS = ['password', 'passwordConfirmation'] as const
+
+export interface NewPasswordScreenProps {
+  // Grava a nova senha; rejeita com o erro da API.
+  onSubmit: (values: NewPasswordForm) => Promise<unknown>
+  onBack: () => void
 }
 
-export function NewPasswordScreen({ onVoltar, onRedefinir }: NovaSenhaProps) {
+// Recuperar senha, passo Nova senha (RF-AUT-08; tela A67).
+export function NewPasswordScreen({
+  onSubmit,
+  onBack,
+}: NewPasswordScreenProps) {
   const insets = useSafeAreaInsets()
-  const [senha, setSenha] = useState('')
-  const [confirmacao, setConfirmacao] = useState('')
-  const [tentou, setTentou] = useState(false)
-  function redefinir() {
-    setTentou(true)
-    if (!newPasswordSchema.safeParse(senha).success || senha !== confirmacao)
-      return
-    onRedefinir?.()
-  }
+  const form = useForm<NewPasswordForm>({
+    resolver: zodResolver(newPasswordFormSchema),
+    defaultValues: { password: '', passwordConfirmation: '' },
+  })
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const redefinir = form.handleSubmit(async (values) => {
+    setFormError(null)
+    try {
+      await onSubmit(values)
+    } catch (error) {
+      if (!applyApiFieldErrors(error, form.setError, NEW_PASSWORD_FIELDS)) {
+        setFormError(getAuthErrorMessage(error))
+      }
+    }
+  })
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Nova senha" back onBack={onVoltar} />
+      <AppBar title="Nova senha" back onBack={onBack} />
 
       <ScrollView
         className="flex-1"
@@ -49,34 +72,46 @@ export function NewPasswordScreen({ onVoltar, onRedefinir }: NovaSenhaProps) {
         </View>
 
         {/* NOVA SENHA */}
-        <TextField
-          label="Nova senha"
-          icon="lock"
-          type="password"
-          value={senha}
-          onChangeText={setSenha}
-          error={
-            tentou && !newPasswordSchema.safeParse(senha).success
-              ? 'Use uma senha numérica de pelo menos 8 dígitos.'
-              : undefined
-          }
-          hint="Você usa a senha para entrar no app."
+        <Controller
+          control={form.control}
+          name="password"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="Nova senha"
+              icon="lock"
+              type="password"
+              inputMode="numeric"
+              keyboardType="number-pad"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+              hint="Você usa a senha para entrar no app."
+            />
+          )}
         />
 
         {/* CONFIRMAÇÃO */}
-        <TextField
-          label="Confirmar nova senha"
-          icon="lock"
-          type="password"
-          value={confirmacao}
-          onChangeText={setConfirmacao}
-          error={
-            tentou && confirmacao !== senha
-              ? 'As senhas não são iguais.'
-              : undefined
-          }
-          hint="Repita a senha."
+        <Controller
+          control={form.control}
+          name="passwordConfirmation"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="Confirmar nova senha"
+              icon="lock"
+              type="password"
+              inputMode="numeric"
+              keyboardType="number-pad"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+              hint="Repita a senha."
+            />
+          )}
         />
+
+        {formError ? <Alert tone="danger">{formError}</Alert> : null}
       </ScrollView>
 
       {/* BOTÃO */}
@@ -86,7 +121,12 @@ export function NewPasswordScreen({ onVoltar, onRedefinir }: NovaSenhaProps) {
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        <Button block variant="primary" onPress={redefinir}>
+        <Button
+          block
+          variant="primary"
+          loading={form.formState.isSubmitting}
+          onPress={() => void redefinir()}
+        >
           Redefinir senha
         </Button>
       </View>
