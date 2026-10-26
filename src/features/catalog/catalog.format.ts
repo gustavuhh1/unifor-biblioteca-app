@@ -97,10 +97,9 @@ export function publicationText(book: BookPage): string | null {
 }
 
 // Local do livro na biblioteca, ex.: "Biblioteca (Praça Central) · Estante 005.1".
+// A API já manda a estante com a palavra ("Estante 005.1"): não se repete aqui.
 export function bookLocationText(book: BookPage): string {
-  return [book.location, book.shelf && `Estante ${book.shelf}`]
-    .filter(Boolean)
-    .join(' · ')
+  return [book.location, book.shelf].filter(Boolean).join(' · ')
 }
 
 // CDU e Cutter da etiqueta na lombada, ex.: "005.1 F787r".

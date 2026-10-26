@@ -113,7 +113,7 @@ describe('textos da página do livro', () => {
     publicationPlace: 'São Paulo',
     year: 2020,
     location: 'Biblioteca (Praça Central)',
-    shelf: '005.1',
+    shelf: 'Estante 005.1',
   } as unknown as BookPage
 
   it('descreve o livro com material, edição, editora e ano', () => {

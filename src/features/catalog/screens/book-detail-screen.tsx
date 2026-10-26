@@ -122,6 +122,7 @@ function BookDetail({
 }) {
   const { user } = useSession()
   const [synopsisOpen, setSynopsisOpen] = useState(false)
+  const [synopsisTruncated, setSynopsisTruncated] = useState(false)
 
   const emprestado = book.copiesAvailable === 0
   const action = book.action
@@ -240,11 +241,11 @@ function BookDetail({
         ) : null}
 
         {/* A14 — PESSOAS NA FILA */}
-        {emprestado ? (
+        {emprestado && (!action || action.allowed) ? (
           <QueueInfo
             ahead={book.queueLength}
             note={
-              action?.allowed
+              action
                 ? `Se entrar agora, você será o ${book.queueLength + 1}º da fila.`
                 : undefined
             }
@@ -263,7 +264,25 @@ function BookDetail({
               {book.synopsis}
             </Text>
 
-            {!synopsisOpen ? (
+            {/* Cópia invisível sem limite de linhas: só serve para medir se o
+                texto passa do resumo e o link "Ler sinopse completa" fazer
+                sentido. */}
+            <Text
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              pointerEvents="none"
+              className="text-body text-ink"
+              style={{ position: 'absolute', left: 0, right: 0, opacity: 0 }}
+              onTextLayout={(event) =>
+                setSynopsisTruncated(
+                  event.nativeEvent.lines.length > SYNOPSIS_PREVIEW_LINES,
+                )
+              }
+            >
+              {book.synopsis}
+            </Text>
+
+            {synopsisTruncated && !synopsisOpen ? (
               <Pressable
                 accessibilityRole="button"
                 className="mt-2 min-h-[44px] justify-center self-start"
