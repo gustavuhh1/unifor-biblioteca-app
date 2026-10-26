@@ -4,6 +4,7 @@ import { getAuthErrorMessage, isPasskeyCancelled } from '../auth.errors'
 import { useCreatePasskey } from '../hooks/use-create-passkey'
 import { useGoToLogin } from '../hooks/use-go-to-login'
 import { usePasskeyLogin } from '../hooks/use-passkey-login'
+import { usePasswordLogin } from '../hooks/use-password-login'
 import {
   useSignupConfirm,
   useSignupResend,
@@ -29,6 +30,7 @@ export function SignupFlowScreen() {
   const signupResend = useSignupResend()
   const createPasskey = useCreatePasskey()
   const passkeyLogin = usePasskeyLogin()
+  const passwordLogin = usePasswordLogin()
 
   const [step, setStep] = useState<SignupStep>('data')
   const [data, setData] = useState<SignupForm | null>(null)
@@ -81,25 +83,29 @@ export function SignupFlowScreen() {
   }
 
   if (step === 'passkey' && data) {
-    const signInFailed =
-      passkeyLogin.error && !isPasskeyCancelled(passkeyLogin.error)
+    // Falha ao entrar, pelo passkey ou pela senha do cadastro ("Agora não").
+    const signInError = passkeyLogin.error ?? passwordLogin.error
+    const signInFailed = signInError && !isPasskeyCancelled(signInError)
     return (
       <CreatePasskeyScreen
         step={passkeyStep}
         createdAt={createPasskey.data?.createdAt}
         creating={createPasskey.isPending}
-        signingIn={passkeyLogin.isPending}
-        signInError={
-          signInFailed ? getAuthErrorMessage(passkeyLogin.error) : null
-        }
+        signingIn={passkeyLogin.isPending || passwordLogin.isPending}
+        signInError={signInFailed ? getAuthErrorMessage(signInError) : null}
         onBack={
           passkeyStep === 'error' ? () => setPasskeyStep('create') : goToLogin
         }
         onCreate={createDevicePasskey}
         onRetry={createDevicePasskey}
-        // "Agora não": volta ao login; o passkey pode ser criado depois em
-        // Meus passkeys.
-        onSkip={goToLogin}
+        // "Agora não" entra no app com a senha do cadastro (RF-AUT-04); o
+        // passkey pode ser criado depois em Meus passkeys.
+        onSkip={() =>
+          passwordLogin.mutate({
+            matricula: data.matricula,
+            password: data.password,
+          })
+        }
         // Depois do passkey criado, entra no app com ele.
         onSignIn={() => passkeyLogin.mutate({ matricula: data.matricula })}
       />

@@ -126,6 +126,8 @@ export function CreatePasskeyScreen({
             <Text className="text-center text-caption text-ink-muted">
               Se trocar de celular, você entra com a senha e cria outro.
             </Text>
+
+            {signInError ? <Alert tone="danger">{signInError}</Alert> : null}
           </>
         )}
 
@@ -224,7 +226,13 @@ export function CreatePasskeyScreen({
               Criar passkey
             </Button>
 
-            <Button block variant="ghost" disabled={creating} onPress={onSkip}>
+            <Button
+              block
+              variant="ghost"
+              loading={signingIn}
+              disabled={creating}
+              onPress={onSkip}
+            >
               Agora não
             </Button>
           </>
