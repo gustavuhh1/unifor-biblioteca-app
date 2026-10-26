@@ -3,7 +3,6 @@ import React, { type ComponentRef, useRef, useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { z } from 'zod'
 
 import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
@@ -11,10 +10,10 @@ import { Icon } from '@/shared/components/icon'
 import { useResendCooldown } from '@/shared/utils/use-resend-cooldown'
 import { EMAIL_TOKEN_LENGTH } from '../auth.constants'
 import { getAuthErrorMessage } from '../auth.errors'
-import { emailTokenSchema } from '../schemas/registration.schemas'
-
-const tokenFormSchema = z.object({ token: emailTokenSchema })
-type TokenForm = z.infer<typeof tokenFormSchema>
+import {
+  emailTokenFormSchema,
+  type EmailTokenForm,
+} from '../schemas/registration.schemas'
 
 export interface RecoveryTokenScreenProps {
   // Mensagem da API sobre o envio do token (igual exista a conta ou não).
@@ -41,8 +40,8 @@ export function RecoveryTokenScreen({
 }: RecoveryTokenScreenProps) {
   const insets = useSafeAreaInsets()
   const cooldown = useResendCooldown(resendWaitSeconds)
-  const form = useForm<TokenForm>({
-    resolver: zodResolver(tokenFormSchema),
+  const form = useForm<EmailTokenForm>({
+    resolver: zodResolver(emailTokenFormSchema),
     defaultValues: { token: '' },
   })
   const token = useWatch({ control: form.control, name: 'token' })

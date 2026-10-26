@@ -25,6 +25,10 @@ export const emailTokenSchema = z
     error: 'Digite os seis dígitos do token.',
   })
 
+// Formulário do token (confirmação do e-mail e recuperação de senha).
+export const emailTokenFormSchema = z.object({ token: emailTokenSchema })
+export type EmailTokenForm = z.infer<typeof emailTokenFormSchema>
+
 // Senha e confirmação, com os nomes de campo da API.
 export const passwordPairFields = {
   password: newPasswordSchema,

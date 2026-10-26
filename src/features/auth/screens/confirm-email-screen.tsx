@@ -3,7 +3,6 @@ import React, { useRef, useState, type ElementRef } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { z } from 'zod'
 import { applyApiFieldErrors } from '@/shared/api/form-errors'
 import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
@@ -16,10 +15,10 @@ import {
   getAuthErrorMessage,
   hasApiErrorCode,
 } from '../auth.errors'
-import { emailTokenSchema } from '../schemas/registration.schemas'
-
-const tokenFormSchema = z.object({ token: emailTokenSchema })
-type TokenForm = z.infer<typeof tokenFormSchema>
+import {
+  emailTokenFormSchema,
+  type EmailTokenForm,
+} from '../schemas/registration.schemas'
 
 // Aviso da tela A77 quando o token não vale mais.
 interface ExpiredNotice {
@@ -52,8 +51,8 @@ export function ConfirmEmailScreen({
 }: ConfirmEmailScreenProps) {
   const insets = useSafeAreaInsets()
   const inputRef = useRef<ElementRef<typeof TextInput>>(null)
-  const form = useForm<TokenForm>({
-    resolver: zodResolver(tokenFormSchema),
+  const form = useForm<EmailTokenForm>({
+    resolver: zodResolver(emailTokenFormSchema),
     defaultValues: { token: '' },
   })
   const token = useWatch({ control: form.control, name: 'token' })

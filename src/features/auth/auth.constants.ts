@@ -5,6 +5,10 @@ export const AUTH_EMAIL_DOMAIN = 'contas.uni-books.app'
 // Matrícula: 7 dígitos, os 2 primeiros são o ano de ingresso.
 export const MATRICULA_LENGTH = 7
 
+// Dica do campo Matrícula no login e no cadastro.
+export const MATRICULA_HINT =
+  '7 dígitos. Os dois primeiros são o ano de ingresso.'
+
 // Senha: só números, mínimo de 8 dígitos (decisão de 19/10).
 export const PASSWORD_MIN_LENGTH = 8
 

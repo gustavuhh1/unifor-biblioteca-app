@@ -8,7 +8,11 @@ import { Alert } from '@/shared/components/alert'
 import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
 import { TextField } from '@/shared/components/text-field'
-import { MATRICULA_LENGTH, SIGNUP_STEPS } from '../auth.constants'
+import {
+  MATRICULA_HINT,
+  MATRICULA_LENGTH,
+  SIGNUP_STEPS,
+} from '../auth.constants'
 import {
   AUTH_API_ERROR_CODE,
   getAuthErrorMessage,
@@ -124,7 +128,7 @@ export function SignupScreen({
               inputMode="numeric"
               keyboardType="number-pad"
               maxLength={MATRICULA_LENGTH}
-              hint="7 dígitos. Os dois primeiros são o ano de ingresso."
+              hint={MATRICULA_HINT}
               error={fieldState.error?.message}
             />
           )}
