@@ -1,4 +1,11 @@
-import { formatDate, formatDayMonth, toAppDate } from './dates'
+import {
+  calendarDaysFromNow,
+  formatDate,
+  formatDayMonth,
+  formatRelativeDateTime,
+  formatRelativeDay,
+  toAppDate,
+} from './dates'
 
 describe('datas no fuso de Fortaleza', () => {
   it('mostra o dia do fuso do app, e não o de UTC', () => {
@@ -17,6 +24,41 @@ describe('datas no fuso de Fortaleza', () => {
   it('devolve uma data no fuso do app', () => {
     expect(toAppDate('2026-10-24T12:00:00.000Z').timeZone).toBe(
       'America/Fortaleza',
+    )
+  })
+})
+
+describe('prazos com o dia por extenso', () => {
+  // 15/10/2026, 10:00 em Fortaleza.
+  const now = new Date('2026-10-15T13:00:00.000Z')
+
+  it('conta os dias de calendário no fuso do app', () => {
+    expect(calendarDaysFromNow('2026-10-15T20:00:00.000Z', now)).toBe(0)
+    expect(calendarDaysFromNow('2026-10-16T12:00:00.000Z', now)).toBe(1)
+    expect(calendarDaysFromNow('2026-10-14T12:00:00.000Z', now)).toBe(-1)
+    // 02:30 UTC do dia 16 ainda é dia 15 em Fortaleza.
+    expect(calendarDaysFromNow('2026-10-16T02:30:00.000Z', now)).toBe(0)
+  })
+
+  it('escreve Hoje, Amanhã ou só a data', () => {
+    expect(formatRelativeDay('2026-10-15T20:00:00.000Z', now)).toBe(
+      'Hoje, 15/10',
+    )
+    expect(formatRelativeDay('2026-10-16T12:00:00.000Z', now)).toBe(
+      'Amanhã, 16/10',
+    )
+    expect(formatRelativeDay('2026-10-20T12:00:00.000Z', now)).toBe('20/10')
+  })
+
+  it('escreve o prazo com a hora do fuso do app', () => {
+    expect(formatRelativeDateTime('2026-10-16T12:12:00.000Z', now)).toBe(
+      'amanhã, 09:12',
+    )
+    expect(formatRelativeDateTime('2026-10-15T20:30:00.000Z', now)).toBe(
+      'hoje, 17:30',
+    )
+    expect(formatRelativeDateTime('2026-10-20T12:12:00.000Z', now)).toBe(
+      '20/10, 09:12',
     )
   })
 })

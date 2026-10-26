@@ -3,25 +3,41 @@ import React, { useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSession } from '@/features/auth/hooks/use-session'
+import { nextDueLoan } from '@/features/loans/loans.format'
+import { useMyLoans } from '@/features/loans/hooks/use-my-loans'
+import { useNotifications } from '@/features/notifications/hooks/use-notifications'
+import { useMyQueues } from '@/features/queues/hooks/use-my-queues'
+import { yourTurnEntry } from '@/features/queues/queues.format'
 import { Icon } from '@/shared/components/icon'
-import {
-  MAX_ACTIVE_LOANS,
-  MAX_ACTIVE_QUEUES,
-} from '@/shared/config/library-rules'
+import { MAX_ACTIVE_LOANS } from '@/shared/config/library-rules'
 import { useTheme } from '@/shared/theme/theme-provider'
+import { formatRelativeDateTime, formatRelativeDay } from '@/shared/utils/dates'
 
-// Início do aluno (A07). Só mostra o que a API já entrega em GET /me: nome,
-// matrícula, livros com o aluno e filas ativas. O aviso "É a sua vez", a
-// próxima devolução e os Recomendados voltam nas etapas que trazem essas rotas.
+// Maior número que o sino mostra; acima disso aparece "9+".
+const BELL_BADGE_MAX = 9
+
+// Início do aluno (A07; RF-AVI-01, RF-EMP-08, RF-FIL-06). Tudo vem da API:
+// nome e contador de /me, o sino de /me/notifications, o aviso "É a sua vez" de
+// /me/queues e a próxima devolução de /me/loans. "Recomendados para você" fica
+// de fora até a API ter a rota de recomendações do Assistente (RF-ASS-03).
 export function HomeScreen() {
   const safe = useSafeAreaInsets()
   const router = useRouter()
   const { colors } = useTheme()
   const { user } = useSession()
+  const notifications = useNotifications()
+  const queues = useMyQueues()
+  const loans = useMyLoans()
   const [busca, setBusca] = useState('')
+
+  const firstName = user?.fullName?.split(' ')[0]
+  const unread = notifications.data?.unreadCount ?? 0
+  const yourTurn = yourTurnEntry(queues.data?.items ?? [])
+  const nextLoan = nextDueLoan(loans.data?.items ?? [])
 
   function buscar() {
     router.push({ pathname: '/catalog', params: { q: busca.trim() } })
+    setBusca('')
   }
 
   return (
@@ -34,7 +50,7 @@ export function HomeScreen() {
         <View className="mb-6 flex-row items-center justify-between px-4">
           <View>
             <Text className="text-title-lg text-ink">
-              Olá, {user?.fullName?.split(' ')[0] ?? 'aluno'}
+              {firstName ? `Olá, ${firstName}` : 'Olá!'}
             </Text>
             <Text className="mt-1 text-body text-ink-muted">
               Matrícula {user?.matricula}
@@ -43,10 +59,19 @@ export function HomeScreen() {
           <Pressable
             onPress={() => router.push('/notifications')}
             accessibilityRole="button"
-            accessibilityLabel="Notificações"
+            accessibilityLabel={
+              unread > 0 ? `Notificações, ${unread} não lidas` : 'Notificações'
+            }
             className="h-12 w-12 items-center justify-center"
           >
             <Icon name="bell" size={25} color="ink" />
+            {unread > 0 ? (
+              <View className="absolute right-0 top-0 h-5 w-5 items-center justify-center rounded-pill bg-danger">
+                <Text className="text-caption-strong text-on-danger">
+                  {unread > BELL_BADGE_MAX ? `${BELL_BADGE_MAX}+` : unread}
+                </Text>
+              </View>
+            ) : null}
           </Pressable>
         </View>
         <View className="mb-5 flex-row items-center gap-2 px-4">
@@ -71,6 +96,24 @@ export function HomeScreen() {
             <Icon name="search" color="ink" size={22} />
           </Pressable>
         </View>
+        {yourTurn?.confirmDeadline ? (
+          <Pressable
+            onPress={() => router.push('/loans')}
+            accessibilityRole="button"
+            className="mx-4 mb-5 flex-row gap-3 rounded-md bg-warning-soft p-4"
+          >
+            <Icon name="bell" color="ink" size={22} />
+            <View className="flex-1 gap-1">
+              <Text className="text-label text-ink">
+                É a sua vez: {yourTurn.bookTitle}
+              </Text>
+              <Text className="text-body text-ink">
+                Confirme até {formatRelativeDateTime(yourTurn.confirmDeadline)},
+                ou o livro passa para o próximo da fila.
+              </Text>
+            </View>
+          </Pressable>
+        ) : null}
         <View className="mb-6 flex-row gap-3 px-4">
           <Pressable
             onPress={() => router.push('/loans')}
@@ -88,11 +131,15 @@ export function HomeScreen() {
             accessibilityRole="button"
             className="min-h-[110px] flex-1 rounded-md border border-line bg-surface-raised p-4"
           >
-            <Text className="text-caption-strong text-ink-muted">NA FILA</Text>
-            <Text className="mt-1 text-title-lg text-ink">
-              {user?.activeQueueCount ?? 0} de {MAX_ACTIVE_QUEUES}
+            <Text className="text-caption-strong text-ink-muted">
+              PRÓXIMA DEVOLUÇÃO
             </Text>
-            <Text className="text-body text-ink-muted">filas</Text>
+            <Text className="mt-1 text-title text-ink">
+              {nextLoan?.dueAt ? formatRelativeDay(nextLoan.dueAt) : 'Nenhuma'}
+            </Text>
+            <Text className="text-body text-ink-muted" numberOfLines={2}>
+              {nextLoan?.bookTitle ?? 'Sem empréstimos ativos'}
+            </Text>
           </Pressable>
         </View>
       </ScrollView>
