@@ -1,65 +1,109 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import React, { useRef, useState, type ElementRef } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-
+import { z } from 'zod'
+import { applyApiFieldErrors } from '@/shared/api/form-errors'
 import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
 import { Icon } from '@/shared/components/icon'
 import { useResendCooldown } from '@/shared/utils/use-resend-cooldown'
+import { EMAIL_TOKEN_LENGTH, SIGNUP_STEPS } from '../auth.constants'
+import {
+  AUTH_API_ERROR_CODE,
+  TOKEN_GONE_ERROR_CODES,
+  getAuthErrorMessage,
+  hasApiErrorCode,
+} from '../auth.errors'
+import { emailTokenSchema } from '../schemas/registration.schemas'
 
-type ConfirmarEmailProps = {
-  estado?: 'normal' | 'token-expirado'
-  tokenEsperado?: string
-  onVoltar?: () => void
-  onConfirmar?: (token: string) => void
-  onReenviar?: () => void
-  onCorrigirEmail?: () => void
+const tokenFormSchema = z.object({ token: emailTokenSchema })
+type TokenForm = z.infer<typeof tokenFormSchema>
+
+// Aviso da tela A77 quando o token não vale mais.
+interface ExpiredNotice {
+  title: string | null
+  text: string
 }
 
+export interface ConfirmEmailScreenProps {
+  // E-mail para onde o token foi enviado.
+  email: string
+  // Espera, em segundos, antes de poder pedir outro token.
+  resendWaitSeconds: number
+  // Confere o token; rejeita com o erro da API.
+  onConfirm: (token: string) => Promise<unknown>
+  // Pede outro token e devolve a nova espera, em segundos.
+  onResend: () => Promise<number>
+  onCorrectEmail: () => void
+  onBack: () => void
+}
+
+// Cadastro, passo E-mail (RF-AUT-03; telas A58 e A77): o aluno digita o token
+// de 6 dígitos, pede outro ou volta para corrigir o e-mail.
 export function ConfirmEmailScreen({
-  estado = 'normal',
-  tokenEsperado,
-  onVoltar,
-  onConfirmar,
-  onReenviar,
-  onCorrigirEmail,
-}: ConfirmarEmailProps) {
+  email,
+  resendWaitSeconds,
+  onConfirm,
+  onResend,
+  onCorrectEmail,
+  onBack,
+}: ConfirmEmailScreenProps) {
   const insets = useSafeAreaInsets()
   const inputRef = useRef<ElementRef<typeof TextInput>>(null)
+  const form = useForm<TokenForm>({
+    resolver: zodResolver(tokenFormSchema),
+    defaultValues: { token: '' },
+  })
+  const token = useWatch({ control: form.control, name: 'token' })
+  const erroToken = form.formState.errors.token?.message
 
-  const [token, setToken] = useState('')
-  const [erroToken, setErroToken] = useState('')
-  function confirmarToken() {
-    if (token.length !== 6) {
-      setErroToken('Digite os seis dígitos do token.')
-      return
-    }
-    if (expirado) {
-      setErroToken('Token expirado. Reenvie o token para continuar.')
-      return
-    }
-    if (tokenEsperado && token !== tokenEsperado) {
-      setErroToken('Token incorreto. Confira o código recebido.')
-      return
-    }
-    setErroToken('')
-    onConfirmar?.(token)
-  }
+  const [expirado, setExpirado] = useState<ExpiredNotice | null>(null)
+  const [reenviando, setReenviando] = useState(false)
+  const cooldown = useResendCooldown(resendWaitSeconds)
 
-  const [expirado, setExpirado] = useState(estado === 'token-expirado')
-  const cooldown = useResendCooldown(estado === 'token-expirado' ? 0 : 42)
-  function reenviar() {
-    if (cooldown.waiting) return
-    setExpirado(false)
-    setErroToken('')
-    setToken('')
-    cooldown.restart()
-    onReenviar?.()
+  const confirmarToken = form.handleSubmit(async (values) => {
+    try {
+      await onConfirm(values.token)
+    } catch (error) {
+      if (hasApiErrorCode(error, TOKEN_GONE_ERROR_CODES)) {
+        setExpirado({
+          title:
+            error.code === AUTH_API_ERROR_CODE.tokenExpiredOrUsed
+              ? 'Token expirado ou já usado'
+              : null,
+          text: error.message,
+        })
+        return
+      }
+      if (!applyApiFieldErrors(error, form.setError, ['token'])) {
+        form.setError('token', { message: getAuthErrorMessage(error) })
+      }
+    }
+  })
+
+  async function reenviar() {
+    if (cooldown.waiting || reenviando) return
+    setReenviando(true)
+    try {
+      const espera = await onResend()
+      setExpirado(null)
+      form.reset({ token: '' })
+      cooldown.restart(espera)
+    } catch (error) {
+      if (hasApiErrorCode(error, [AUTH_API_ERROR_CODE.tokenResendTooSoon])) {
+        cooldown.restart(error.retryAfterSeconds ?? resendWaitSeconds)
+      }
+      form.setError('token', { message: getAuthErrorMessage(error) })
+    } finally {
+      setReenviando(false)
+    }
   }
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Confirmar e-mail" back onBack={onVoltar} />
+      <AppBar title="Confirmar e-mail" back onBack={onBack} />
 
       <ScrollView
         className="flex-1"
@@ -68,7 +112,7 @@ export function ConfirmEmailScreen({
       >
         {/* INDICADORES */}
         <View className="flex-row gap-2">
-          {['Dados', 'E-mail', 'Passkey'].map((nome, index) => (
+          {SIGNUP_STEPS.map((nome, index) => (
             <View key={nome} className="flex-1 gap-2">
               <Text
                 className={
@@ -96,7 +140,7 @@ export function ConfirmEmailScreen({
           <Text className="text-title text-ink">Digite o token</Text>
 
           <Text className="text-body text-ink-muted">
-            Enviamos um token de 6 dígitos para lucas.almeida@edu.unifor.br.
+            Enviamos um token de 6 dígitos para {email}.
           </Text>
         </View>
 
@@ -106,25 +150,16 @@ export function ConfirmEmailScreen({
             <Icon name="alert" color="warning" size={20} />
 
             <View className="flex-1 gap-1">
-              <Text className="text-label text-ink">
-                Token expirado ou já usado
-              </Text>
+              {expirado.title ? (
+                <Text className="text-label text-ink">{expirado.title}</Text>
+              ) : null}
 
-              <Text className="text-body text-ink">
-                Cada token vale 20 minutos e só pode ser usado uma vez. Toque em
-                Reenviar token para receber outro.
-              </Text>
+              <Text className="text-body text-ink">{expirado.text}</Text>
             </View>
           </View>
         )}
 
         {/* CÓDIGO */}
-        {tokenEsperado ? (
-          <Text className="text-caption text-ink-muted">
-            Demonstração: use 123456 para confirmar ou outro código para testar
-            o erro.
-          </Text>
-        ) : null}
         {erroToken ? (
           <Text accessibilityRole="alert" className="text-caption text-danger">
             {erroToken}
@@ -139,7 +174,7 @@ export function ConfirmEmailScreen({
             onPress={() => inputRef.current?.focus()}
             className="flex-row gap-2"
           >
-            {Array.from({ length: 6 }, (_, index) => (
+            {Array.from({ length: EMAIL_TOKEN_LENGTH }, (_, index) => (
               <View
                 key={index}
                 className="h-14 flex-1 items-center justify-center rounded-md border border-line-strong bg-surface-raised"
@@ -151,17 +186,25 @@ export function ConfirmEmailScreen({
             ))}
           </Pressable>
 
-          <TextInput
-            ref={inputRef}
-            value={token}
-            onChangeText={(valor) =>
-              setToken(valor.replace(/\D/g, '').slice(0, 6))
-            }
-            keyboardType="number-pad"
-            maxLength={6}
-            autoComplete="one-time-code"
-            accessibilityLabel="Token de seis dígitos"
-            className="h-0 w-0 opacity-0"
+          <Controller
+            control={form.control}
+            name="token"
+            render={({ field }) => (
+              <TextInput
+                ref={inputRef}
+                value={field.value}
+                onChangeText={(valor) =>
+                  field.onChange(
+                    valor.replace(/\D/g, '').slice(0, EMAIL_TOKEN_LENGTH),
+                  )
+                }
+                keyboardType="number-pad"
+                maxLength={EMAIL_TOKEN_LENGTH}
+                autoComplete="one-time-code"
+                accessibilityLabel="Token de seis dígitos"
+                className="h-0 w-0 opacity-0"
+              />
+            )}
           />
 
           <Text className="text-caption text-ink-muted">
@@ -172,9 +215,9 @@ export function ConfirmEmailScreen({
         {/* LINKS */}
         <View className="flex-row justify-between gap-3">
           <Pressable
-            onPress={reenviar}
-            disabled={cooldown.waiting}
-            accessibilityState={{ disabled: cooldown.waiting }}
+            onPress={() => void reenviar()}
+            disabled={cooldown.waiting || reenviando}
+            accessibilityState={{ disabled: cooldown.waiting || reenviando }}
             accessibilityRole="button"
             className="min-h-[44px] justify-center"
           >
@@ -186,7 +229,7 @@ export function ConfirmEmailScreen({
           </Pressable>
 
           <Pressable
-            onPress={onCorrigirEmail}
+            onPress={onCorrectEmail}
             accessibilityRole="button"
             className="min-h-[44px] justify-center"
           >
@@ -205,8 +248,9 @@ export function ConfirmEmailScreen({
         <Button
           block
           variant="primary"
-          disabled={token.length !== 6}
-          onPress={confirmarToken}
+          disabled={token.length !== EMAIL_TOKEN_LENGTH}
+          loading={form.formState.isSubmitting}
+          onPress={() => void confirmarToken()}
         >
           Confirmar e-mail
         </Button>

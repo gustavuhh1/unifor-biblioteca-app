@@ -13,3 +13,14 @@ export const PASSKEY_DEVICE_NAME_MAX_LENGTH = 60
 
 // Chave do TanStack Query para os dados de quem está logado (GET /me).
 export const ME_QUERY_KEY = ['me'] as const
+
+// Token de e-mail (confirmação e recuperação): 6 dígitos, vale 20 minutos.
+export const EMAIL_TOKEN_LENGTH = 6
+
+// Espera entre dois envios do token (decisão de 19/10). A API manda o valor de
+// cada vez (`resendAvailableInSeconds` ou `retryAfterSeconds`); este é o padrão
+// quando ela não informa, como na recuperação de senha.
+export const TOKEN_RESEND_COOLDOWN_SECONDS = 60
+
+// Etapas do cadastro mostradas no topo das telas A56 a A59.
+export const SIGNUP_STEPS = ['Dados', 'E-mail', 'Passkey'] as const
