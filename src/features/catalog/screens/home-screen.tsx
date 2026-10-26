@@ -2,6 +2,7 @@ import { BookCover, coverToneOf } from '@/shared/components'
 import React, { useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useSession } from '@/features/auth/hooks/use-session'
 import { Icon } from '@/shared/components/icon'
 import { useTheme } from '@/shared/theme/theme-provider'
 
@@ -49,6 +50,7 @@ export function HomeScreen({
 }: HomeAlunoProps) {
   const safe = useSafeAreaInsets()
   const { colors } = useTheme()
+  const { user } = useSession()
   const [busca, setBusca] = useState('')
 
   return (
@@ -60,9 +62,11 @@ export function HomeScreen({
       >
         <View className="mb-6 flex-row items-center justify-between px-4">
           <View>
-            <Text className="text-title-lg text-ink">Olá, Lucas</Text>
+            <Text className="text-title-lg text-ink">
+              Olá, {user?.fullName?.split(' ')[0] ?? 'aluno'}
+            </Text>
             <Text className="mt-1 text-body text-ink-muted">
-              Matrícula 2412858
+              Matrícula {user?.matricula}
             </Text>
           </View>
           <Pressable

@@ -25,6 +25,17 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-font", "./plugins/with-dev-signing"]
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "./plugins/with-dev-signing",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O Unifor Biblioteca usa a câmera para ler o QR de retirada do aluno no balcão.",
+          "recordAudioAndroid": false
+        }
+      ]
+    ]
   }
 }
