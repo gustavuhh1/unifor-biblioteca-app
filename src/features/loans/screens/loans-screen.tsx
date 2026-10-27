@@ -148,8 +148,7 @@ export function LoansScreen() {
           <>
             {overdueLoan ? (
               <Alert tone="danger" title="Empréstimos bloqueados">
-                Devolva {overdueLoan.bookTitle} para voltar a pegar livros e
-                entrar em filas. A multa é paga só no balcão da biblioteca.
+                {`Devolva ${overdueLoan.bookTitle} para voltar a pegar livros e entrar em filas. A multa é paga só no balcão da biblioteca.`}
               </Alert>
             ) : null}
             {items.map((loan) =>

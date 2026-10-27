@@ -76,9 +76,9 @@ export function PickupQrScreen() {
           className="flex-1"
           contentContainerClassName="gap-4 px-4 pb-8 pt-1"
         >
+          {/* O Alert só embrulha em Text quando o filho é uma string única. */}
           <Alert tone="success" title="Pedido confirmado">
-            Mostre este QR no balcão da biblioteca. O empréstimo de{' '}
-            {LOAN_PERIOD_DAYS} dias começa quando você pegar o livro.
+            {`Mostre este QR no balcão da biblioteca. O empréstimo de ${LOAN_PERIOD_DAYS} dias começa quando você pegar o livro.`}
           </Alert>
 
           <QRPass
