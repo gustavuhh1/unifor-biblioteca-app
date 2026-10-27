@@ -83,7 +83,7 @@ export function isPickupBlocked(record: DeskLookupResponse): boolean {
 
 // Quantos livros com o aluno estão em atraso (têm multa acumulada).
 export function overdueCount(record: DeskLookupResponse): number {
-  return record.withStudent.filter((loan) => loan.fine !== undefined).length
+  return record.withStudent.filter((loan) => Boolean(loan.fine)).length
 }
 
 // "1 livro em atraso" / "2 livros em atraso".

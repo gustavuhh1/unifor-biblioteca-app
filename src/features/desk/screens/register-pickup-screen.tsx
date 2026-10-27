@@ -137,7 +137,7 @@ export function RegisterPickupScreen() {
                     {pickup.bookTitle}
                   </Text>
                   <Text className="text-caption text-ink-muted">
-                    Estante {pickup.bookShelf}
+                    {pickup.bookShelf}
                   </Text>
                   <View className="flex-row">
                     <DeadlineChip

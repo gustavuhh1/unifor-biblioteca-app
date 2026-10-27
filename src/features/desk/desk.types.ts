@@ -50,9 +50,10 @@ export interface DeskPickup extends DeskLoan {
   scanned: boolean
 }
 
-// Livro com o aluno na ficha; `fine` só vem nos atrasados (multa já acumulada).
+// Livro com o aluno na ficha; `fine` só traz valor nos atrasados (multa já
+// acumulada) e vem nulo nos demais.
 export interface DeskWithStudent extends DeskLoan {
-  fine?: { businessDaysLate: number; amountCents: number }
+  fine?: { businessDaysLate: number; amountCents: number } | null
 }
 
 // O aluno na ficha ("3 de 10 livros").

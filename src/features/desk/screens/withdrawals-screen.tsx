@@ -158,7 +158,7 @@ export function WithdrawalsScreen() {
                     {item.bookTitle}
                   </Text>
                   <Text className="text-caption text-ink-muted">
-                    Estante {item.bookShelf} · {item.pickupCode}
+                    {item.bookShelf} · {item.pickupCode}
                   </Text>
                   <Text className="text-caption text-ink-muted">
                     {item.studentName} · {item.matricula}

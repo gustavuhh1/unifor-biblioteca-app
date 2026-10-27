@@ -121,6 +121,8 @@ describe('textos da ficha do aluno', () => {
       withStudent: [
         { ...loan, fine: { businessDaysLate: 3, amountCents: 600 } },
         { ...loan, id: 'l2', state: 'in_progress' as const },
+        // A API manda `fine: null` nos livros que não estão atrasados.
+        { ...loan, id: 'l3', state: 'due_soon' as const, fine: null },
       ],
     })
     expect(isPickupBlocked(record)).toBe(true)

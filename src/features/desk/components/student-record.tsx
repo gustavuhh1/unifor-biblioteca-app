@@ -86,7 +86,7 @@ export function StudentRecord({
                   {pickup.bookTitle}
                 </Text>
                 <Text className="text-caption text-ink-muted">
-                  Estante {pickup.bookShelf}
+                  {pickup.bookShelf}
                   {pickup.pickupCode ? ` · ${pickup.pickupCode}` : ''}
                 </Text>
                 {pickup.scanned ? (
