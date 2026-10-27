@@ -32,7 +32,12 @@ import { useTheme } from '@/shared/theme/theme-provider'
 import { BLOCKED_REASON_MESSAGE } from '@/shared/utils/blocked-reason'
 import { formatDayMonth } from '@/shared/utils/dates'
 import { pluralize } from '@/shared/utils/plural'
-import { BOOK_ACTION_LABEL, COPY_STATUS_LABEL } from '../catalog.constants'
+import { RequestLoanSheet } from '@/features/loans/components/request-loan-sheet'
+import {
+  BOOK_ACTION_LABEL,
+  BOOK_SUGGESTED_ACTION,
+  COPY_STATUS_LABEL,
+} from '../catalog.constants'
 import {
   authorsLine,
   bookCoverTone,
@@ -123,6 +128,7 @@ function BookDetail({
   const { user } = useSession()
   const [synopsisOpen, setSynopsisOpen] = useState(false)
   const [synopsisTruncated, setSynopsisTruncated] = useState(false)
+  const [requesting, setRequesting] = useState(false)
 
   const emprestado = book.copiesAvailable === 0
   const action = book.action
@@ -424,7 +430,8 @@ function BookDetail({
         </View>
       </ScrollView>
 
-      {/* AÇÃO INFERIOR (solicitar e entrar na fila chegam na Etapa 2) */}
+      {/* AÇÃO INFERIOR: Solicitar empréstimo abre a confirmação (A23, RF-EMP-01);
+          Entrar na fila chega com o bloco da fila */}
       {action ? (
         <View
           className="border-t border-line bg-surface-raised px-4 pt-3"
@@ -432,7 +439,16 @@ function BookDetail({
             paddingBottom: Math.max(bottomInset, 16),
           }}
         >
-          <Button block variant="primary" disabled={!action.allowed}>
+          <Button
+            block
+            variant="primary"
+            disabled={!action.allowed}
+            onPress={
+              action.suggestedAction === BOOK_SUGGESTED_ACTION.request
+                ? () => setRequesting(true)
+                : undefined
+            }
+          >
             {pausado
               ? BLOCKED_REASON_MESSAGE[ASSISTANT_BLOCKED_REASON.unavailable]
                   .title
@@ -440,6 +456,12 @@ function BookDetail({
           </Button>
         </View>
       ) : null}
+      <RequestLoanSheet
+        visible={requesting}
+        bookId={book.id}
+        bookTitle={book.title}
+        onClose={() => setRequesting(false)}
+      />
     </>
   )
 }
