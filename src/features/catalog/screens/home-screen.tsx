@@ -8,18 +8,22 @@ import { useMyLoans } from '@/features/loans/hooks/use-my-loans'
 import { useNotifications } from '@/features/notifications/hooks/use-notifications'
 import { useMyQueues } from '@/features/queues/hooks/use-my-queues'
 import { yourTurnEntry } from '@/features/queues/queues.format'
+import { BookCard } from '@/shared/components'
 import { Icon } from '@/shared/components/icon'
 import { MAX_ACTIVE_LOANS } from '@/shared/config/library-rules'
 import { useTheme } from '@/shared/theme/theme-provider'
 import { formatRelativeDateTime, formatRelativeDay } from '@/shared/utils/dates'
+import { authorsLine, bookCoverTone, bookStatus } from '../catalog.format'
+import { useRecommendations } from '../hooks/use-recommendations'
+import { HOME_RECOMMENDATIONS_LIMIT } from '../recommendations.constants'
 
 // Maior número que o sino mostra; acima disso aparece "9+".
 const BELL_BADGE_MAX = 9
 
 // Início do aluno (A07; RF-AVI-01, RF-EMP-08, RF-FIL-06). Tudo vem da API:
 // nome e contador de /me, o sino de /me/notifications, o aviso "É a sua vez" de
-// /me/queues e a próxima devolução de /me/loans. "Recomendados para você" fica
-// de fora até a API ter a rota de recomendações do Assistente (RF-ASS-03).
+// /me/queues, a próxima devolução de /me/loans e "Recomendados para você" de
+// /me/recommendations (RF-ASS-03; a seção some se não houver recomendação).
 export function HomeScreen() {
   const safe = useSafeAreaInsets()
   const router = useRouter()
@@ -28,12 +32,17 @@ export function HomeScreen() {
   const notifications = useNotifications()
   const queues = useMyQueues()
   const loans = useMyLoans()
+  const recommendations = useRecommendations()
   const [busca, setBusca] = useState('')
 
   const firstName = user?.fullName?.split(' ')[0]
   const unread = notifications.data?.unreadCount ?? 0
   const yourTurn = yourTurnEntry(queues.data?.items ?? [])
   const nextLoan = nextDueLoan(loans.data?.items ?? [])
+  const recommended = (recommendations.data?.items ?? []).slice(
+    0,
+    HOME_RECOMMENDATIONS_LIMIT,
+  )
 
   function buscar() {
     router.push({ pathname: '/catalog', params: { q: busca.trim() } })
@@ -147,6 +156,36 @@ export function HomeScreen() {
             </Text>
           </Pressable>
         </View>
+        {recommended.length > 0 ? (
+          <View className="gap-3 px-4">
+            <View className="gap-1">
+              <Text className="text-title text-ink">
+                Recomendados para você
+              </Text>
+              {recommendations.data?.reasonText ? (
+                <Text className="text-caption text-ink-muted">
+                  {recommendations.data.reasonText}
+                </Text>
+              ) : null}
+            </View>
+            {recommended.map(({ book, reasonText }) => (
+              <BookCard
+                key={book.id}
+                title={book.title}
+                author={authorsLine(book.authors)}
+                tone={bookCoverTone(book)}
+                status={bookStatus(book)}
+                meta={reasonText}
+                onPress={() =>
+                  router.push({
+                    pathname: '/book-details',
+                    params: { id: book.id },
+                  })
+                }
+              />
+            ))}
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   )

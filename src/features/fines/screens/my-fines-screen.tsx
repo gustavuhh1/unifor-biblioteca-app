@@ -1,111 +1,148 @@
-import { Text, View } from 'react-native'
-import TelaBase from '@/shared/components/tela-base'
-import { FineCard, Button, Icon } from '@/shared/components'
-import { Caixa, Linha } from '@/shared/components/blocos'
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
+import { useLibraryInfo } from '@/features/profile/hooks/use-library-info'
+import { contactLines } from '@/features/profile/library-info.format'
+import { ApiError } from '@/shared/api/errors'
+import {
+  Alert,
+  AppBar,
+  Button,
+  EmptyState,
+  FineCard,
+} from '@/shared/components'
+import { useTheme } from '@/shared/theme/theme-provider'
+import { formatCents } from '@/shared/utils/money'
+import { useMyFines } from '../hooks/use-my-fines'
+import {
+  fineBookLine,
+  fineStateText,
+  finesNotice,
+  groupFines,
+  paidFineLine,
+} from '../my-fines.format'
 
-export function MyFinesScreen({
-  estado = 'atraso',
-  onVoltar,
-  onDetalhar,
-}: {
-  estado?: 'atraso' | 'detalhes' | 'congelada'
-  onVoltar?: () => void
-  onDetalhar?: () => void
-}) {
-  const frozen = estado === 'congelada'
-  const detail = estado === 'detalhes'
+// Minhas multas (A45, A46 e A71; RF-MUL-03 e RF-MUL-04): as multas de
+// GET /me/fines, contando (livro com o aluno), congeladas (já devolvido) e pagas.
+// O app só consulta: a multa se paga no balcão e o bibliotecário registra.
+export function MyFinesScreen() {
+  const { colors } = useTheme()
+  const fines = useMyFines()
+  const library = useLibraryInfo()
+
   return (
-    <TelaBase
-      titulo={
-        frozen ? 'Multa em aberto' : detail ? 'Multa' : 'Multa por atraso'
-      }
-      interna
-      onVoltar={onVoltar}
-    >
-      <FineCard
-        amount="R$ 6,00"
-        daysLate={3}
-        tag={frozen ? 'Congelada' : undefined}
-        book={
-          frozen
-            ? 'Cálculo, Vol. 1 · devolvido em 15/10'
-            : 'Cálculo, Vol. 1 · venceu em 10/10'
-        }
-      />
-      {detail ? (
-        <>
-          <Text className="text-title-sm text-ink">
-            Como a multa é calculada
-          </Text>
-          <Caixa>
-            <Linha esquerda="Venceu em" direita="10/10" />
-            <Linha esquerda="Dias úteis de atraso" direita="3 dias" />
-            <Linha esquerda="Valor por dia útil" direita="R$ 2,00" />
-            <Linha esquerda="Total até hoje" direita="R$ 6,00" />
-          </Caixa>
-          <Text className="text-caption text-ink-muted">
-            Fim de semana, feriado e recesso não contam. A multa para de crescer
-            quando o livro é devolvido.
-          </Text>
-        </>
-      ) : (
-        <>
-          <Caixa tom={frozen ? 'brand' : 'aviso'}>
-            <View className="flex-row gap-2">
-              <Icon
-                name={frozen ? 'info' : 'alert'}
-                color={frozen ? 'brand' : 'warning'}
-              />
-              <Text className="flex-1 text-label text-ink">
-                {frozen
-                  ? 'A multa parou de contar'
-                  : 'A multa sobe R$ 2,00 por dia útil'}
-              </Text>
-            </View>
-            <Text className="text-body text-ink">
-              {frozen
-                ? 'Você devolveu o livro, então o valor não sobe mais. Você já pode pegar livros e entrar em filas.'
-                : 'Amanhã (sex) passa para R$ 8,00. A contagem para quando você devolver o livro.'}
-            </Text>
-          </Caixa>
-          <Text className="text-overline text-ink-muted">Como resolver</Text>
-          <Caixa>
-            {!frozen ? (
-              <>
-                <Text className="text-label text-ink">
-                  1 · Devolva Cálculo, Vol. 1 no balcão
-                </Text>
-                <Text className="text-body text-ink-muted">
-                  A multa para de contar e o bloqueio para novos empréstimos
-                  termina na hora.
-                </Text>
-              </>
-            ) : null}
-            <Text className="text-label text-ink">
-              {frozen ? '1' : '2'} · Pague R$ 6,00 na biblioteca
-            </Text>
-            <Text className="text-body text-ink-muted">
-              Só presencialmente, no balcão. O bibliotecário registra o
-              pagamento.
-            </Text>
-          </Caixa>
-          {!frozen ? (
-            <Button block variant="secondary" onPress={onDetalhar}>
-              Como a multa é calculada
+    <View className="flex-1 bg-surface">
+      <AppBar title="Minhas multas" back />
+      {fines.isPending ? (
+        <View
+          accessibilityLabel="Carregando as multas"
+          className="flex-1 items-center justify-center"
+        >
+          <ActivityIndicator color={colors.brand} />
+        </View>
+      ) : fines.isError ? (
+        <EmptyState
+          icon="alert"
+          title="Não foi possível abrir as multas"
+          text={
+            fines.error instanceof ApiError ? fines.error.message : undefined
+          }
+          action={
+            <Button icon="refresh" onPress={() => void fines.refetch()}>
+              Tentar de novo
             </Button>
-          ) : null}
-        </>
+          }
+        />
+      ) : (
+        <FinesContent
+          data={fines.data}
+          attendance={library.data ? contactLines(library.data) : []}
+        />
       )}
-      <Text className="text-overline text-ink-muted">Atendimento</Text>
-      <Caixa>
-        <Text className="text-body text-ink">Biblioteca (Praça Central)</Text>
-        <Text className="text-body text-ink-muted">
-          Seg a sex, 7h às 21h55 · sáb, 8h às 14h10
+    </View>
+  )
+}
+
+function FinesContent({
+  data,
+  attendance,
+}: {
+  data: NonNullable<ReturnType<typeof useMyFines>['data']>
+  attendance: string[]
+}) {
+  const grouped = groupFines(data.items)
+  const toPay = [...grouped.accruing, ...grouped.open]
+  const notice = finesNotice(data)
+
+  if (data.items.length === 0) {
+    return (
+      <EmptyState
+        icon="checkCircle"
+        title="Nenhuma pendência"
+        text="Você não tem multas. Pode pegar livros e entrar em filas."
+      />
+    )
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+      {notice ? (
+        <Alert
+          tone={data.blocksNewLoans ? 'danger' : 'info'}
+          title={notice.title}
+        >
+          {notice.text}
+        </Alert>
+      ) : null}
+      {toPay.map((fine) => (
+        <View key={fine.id} className="gap-2">
+          <FineCard
+            amount={formatCents(fine.amountCents)}
+            daysLate={fine.businessDaysLate}
+            rate={formatCents(fine.ratePerBusinessDayCents)}
+            book={fineBookLine(fine)}
+            tag={fine.status === 'open' ? 'Congelada' : undefined}
+          />
+          <Text className="text-caption text-ink-muted">
+            {fineStateText(fine)}
+          </Text>
+        </View>
+      ))}
+      {data.openTotalCents > 0 ? (
+        <Text className="text-label text-ink">
+          {`Total a pagar no balcão: ${formatCents(data.openTotalCents)}`}
         </Text>
-        <Text className="text-body text-ink-muted">
-          BiblioZap (85) 3477-3257
-        </Text>
-      </Caixa>
-    </TelaBase>
+      ) : null}
+      {grouped.paid.length > 0 ? (
+        <View className="gap-2">
+          <Text className="text-overline text-ink-muted">Pagas</Text>
+          <View className="overflow-hidden rounded-lg border border-line bg-surface-raised">
+            {grouped.paid.map((fine) => (
+              <View
+                key={fine.id}
+                className="flex-row items-center justify-between gap-3 border-b border-line p-4"
+              >
+                <Text className="min-w-0 flex-1 text-body text-ink-muted">
+                  {paidFineLine(fine)}
+                </Text>
+                <Text className="text-label text-ink">
+                  {formatCents(fine.amountCents)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
+      {attendance.length > 0 ? (
+        <View className="gap-2">
+          <Text className="text-overline text-ink-muted">Atendimento</Text>
+          <View className="gap-1 rounded-lg border border-line bg-surface-raised p-4">
+            {attendance.map((line) => (
+              <Text key={line} className="text-body text-ink-muted">
+                {line}
+              </Text>
+            ))}
+          </View>
+        </View>
+      ) : null}
+    </ScrollView>
   )
 }

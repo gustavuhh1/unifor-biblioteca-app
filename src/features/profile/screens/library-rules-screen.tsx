@@ -1,73 +1,92 @@
 import { useState } from 'react'
-import { Linking, Text } from 'react-native'
-import TelaBase from '@/shared/components/tela-base'
-import { Button } from '@/shared/components'
-import { Caixa } from '@/shared/components/blocos'
+import {
+  ActivityIndicator,
+  Linking,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native'
+import { ApiError } from '@/shared/api/errors'
+import { Alert, AppBar, Button, EmptyState } from '@/shared/components'
+import { useTheme } from '@/shared/theme/theme-provider'
+import { buildRulesSections, contactLines } from '../library-info.format'
+import { useLibraryInfo } from '../hooks/use-library-info'
 
-const secoes = [
-  [
-    'Empréstimo',
-    'Até 10 livros ao mesmo tempo.\n14 dias para devolver cada livro.\nNão dá para pegar dois exemplares do mesmo título, nem outra edição dele.',
-  ],
-  [
-    'Retirada',
-    'Pedido feito: retire no balcão em até 2 dias úteis.\nMostre o QR do pedido. Sem celular? Informe a matrícula ou o código do pedido.',
-  ],
-  [
-    'Fila (reserva)',
-    'Só abre quando todos os exemplares da edição estão emprestados.\nAté 7 filas ao mesmo tempo. Cada edição marcada conta como uma.\nNa sua vez: 24h para confirmar e 2 dias úteis para retirar. Se perder um prazo, você sai da fila e o próximo é avisado.',
-  ],
-  [
-    'Renovação',
-    'Uma única vez por empréstimo, por mais 14 dias, dentro do prazo, se o livro não estiver atrasado e ninguém estiver na fila.\nPelo app, pelo Unifor Online ou no balcão.',
-  ],
-  [
-    'Atraso e multa',
-    'R$ 2,00 por dia útil de atraso, por livro.\nCom livro atrasado, você não pode pedir, entrar em fila nem retirar até devolver.\nNa devolução a multa para de contar e fica em aberto até ser paga.\nPagamento só presencial, no balcão da biblioteca. O app não recebe pagamentos.',
-  ],
-  [
-    'Perda ou dano',
-    'Você repõe o livro e ainda paga a multa do atraso, se houver. O app só informa esta regra. A reposição é combinada no balcão.',
-  ],
-  [
-    'Fins de semana e feriados',
-    'Prazos em dias úteis não contam fins de semana, feriados (nacionais, do Ceará e de Fortaleza) nem dias de recesso da Unifor.\nSe o prazo cair num feriado, ele passa para o próximo dia útil.',
-  ],
-  [
-    'Atendimento',
-    'Biblioteca (Praça Central).\nSeg a sex, 7h às 21h55 · sáb, 8h às 14h10.\nBiblioZap (85) 3477-3257 · Empréstimo (85) 3477-3162.\nbibemprestimo@unifor.br',
-  ],
-]
-export function LibraryRulesScreen({ onVoltar }: { onVoltar?: () => void }) {
-  const [erro, setErro] = useState('')
+// Regras da biblioteca (A52, RF-PER-02): resumo das regras com os números de
+// GET /library/info, o atendimento, o botão da página oficial e o aviso de perda
+// ou dano (o app só informa; não controla a reposição).
+export function LibraryRulesScreen() {
+  const { colors } = useTheme()
+  const info = useLibraryInfo()
+  const [linkError, setLinkError] = useState(false)
+
+  function openOfficialPage(url: string) {
+    setLinkError(false)
+    Linking.openURL(url).catch(() => setLinkError(true))
+  }
+
   return (
-    <TelaBase titulo="Regras da biblioteca" interna onVoltar={onVoltar}>
-      <Text className="text-body text-ink-muted">Para alunos de graduação</Text>
-      {secoes.map(([title, text]) => (
-        <Caixa key={title}>
-          <Text className="text-label text-ink">{title}</Text>
-          <Text className="text-body text-ink-muted">{text}</Text>
-        </Caixa>
-      ))}
-      <Button
-        block
-        variant="secondary"
-        icon="externalLink"
-        onPress={() => {
-          Linking.openURL(
-            'https://unifor.br/cesta-de-servicos/biblioteca',
-          ).catch(() =>
-            setErro('Não foi possível abrir a página. Confira sua conexão.'),
-          )
-        }}
-      >
-        Abrir página oficial da biblioteca
-      </Button>
-      {erro ? (
-        <Text accessibilityRole="alert" className="text-caption text-danger">
-          {erro}
-        </Text>
-      ) : null}
-    </TelaBase>
+    <View className="flex-1 bg-surface">
+      <AppBar title="Regras da biblioteca" back />
+      {info.isPending ? (
+        <View
+          accessibilityLabel="Carregando as regras"
+          className="flex-1 items-center justify-center"
+        >
+          <ActivityIndicator color={colors.brand} />
+        </View>
+      ) : info.isError ? (
+        <EmptyState
+          icon="alert"
+          title="Não foi possível abrir as regras"
+          text={info.error instanceof ApiError ? info.error.message : undefined}
+          action={
+            <Button icon="refresh" onPress={() => void info.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        />
+      ) : (
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+          <Text className="text-body text-ink-muted">
+            Para alunos de graduação
+          </Text>
+          {buildRulesSections(info.data).map((section) => (
+            <View
+              key={section.title}
+              className="gap-2 rounded-lg border border-line bg-surface-raised p-4"
+            >
+              <Text className="text-label text-ink">{section.title}</Text>
+              {section.lines.map((line) => (
+                <Text key={line} className="text-body text-ink-muted">
+                  {line}
+                </Text>
+              ))}
+            </View>
+          ))}
+          <View className="gap-2 rounded-lg border border-line bg-surface-raised p-4">
+            <Text className="text-label text-ink">Atendimento</Text>
+            {contactLines(info.data).map((line) => (
+              <Text key={line} className="text-body text-ink-muted">
+                {line}
+              </Text>
+            ))}
+          </View>
+          <Button
+            block
+            variant="secondary"
+            icon="externalLink"
+            onPress={() => openOfficialPage(info.data.officialRulesUrl)}
+          >
+            Abrir página oficial da biblioteca
+          </Button>
+          {linkError ? (
+            <Alert tone="danger">
+              Não foi possível abrir a página. Confira sua conexão.
+            </Alert>
+          ) : null}
+        </ScrollView>
+      )}
+    </View>
   )
 }
