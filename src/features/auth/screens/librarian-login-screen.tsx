@@ -1,33 +1,18 @@
-import React, { useState } from 'react'
+import { useRouter } from 'expo-router'
+import { Controller } from 'react-hook-form'
 import { Image, Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from '@/shared/components/button'
 import { TextField } from '@/shared/components/text-field'
+import { usePasswordLoginForm } from '../hooks/use-password-login-form'
 
-export interface LoginBibliotecarioProps {
-  erro?: boolean
-  onEntrar?: () => void
-  onAluno?: () => void
-  onEsqueciSenha?: () => void
-}
-export function LibrarianLoginScreen({
-  erro = false,
-  onEntrar,
-  onAluno,
-  onEsqueciSenha,
-}: LoginBibliotecarioProps) {
+// Login do bibliotecário (B19, RF-AUT-07): matrícula e senha pelo Firebase, sem
+// passkey e sem cadastro. O app abre o Painel pelo perfil que vem de GET /me.
+export function LibrarianLoginScreen() {
+  const router = useRouter()
   const safe = useSafeAreaInsets()
-  const [matricula, setMatricula] = useState('')
-  const [senha, setSenha] = useState('')
-  const [erroCampo, setErroCampo] = useState(false)
-  function enviar() {
-    if (!/^\d{7}$/.test(matricula) || !senha) {
-      setErroCampo(true)
-      return
-    }
-    setErroCampo(false)
-    onEntrar?.()
-  }
+  const { form, passwordLogin, errorMessage, submit } = usePasswordLoginForm()
+
   return (
     <View className="flex-1 bg-surface">
       <ScrollView
@@ -52,43 +37,61 @@ export function LibrarianLoginScreen({
             Acesso do bibliotecário
           </Text>
         </View>
-        {erro || erroCampo ? (
+        {errorMessage ? (
           <View className="rounded-md border border-danger bg-danger-soft p-3">
-            <Text className="text-label text-danger">
-              Não foi possível entrar. Confira a matrícula e a senha.
-            </Text>
+            <Text className="text-label text-danger">{errorMessage}</Text>
           </View>
         ) : null}
-        <TextField
-          label="Matrícula"
-          icon="user"
-          value={matricula}
-          onChangeText={(v) => setMatricula(v.replace(/\D/g, ''))}
-          inputMode="numeric"
-          maxLength={7}
-          autoCapitalize="none"
-          error={
-            erroCampo && !/^\d{7}$/.test(matricula)
-              ? 'Informe os 7 dígitos da matrícula.'
-              : undefined
-          }
+        <Controller
+          control={form.control}
+          name="matricula"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="Matrícula"
+              icon="user"
+              inputMode="numeric"
+              keyboardType="number-pad"
+              maxLength={7}
+              autoCapitalize="none"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        <TextField
-          label="Senha"
-          icon="lock"
-          type="password"
-          value={senha}
-          onChangeText={setSenha}
-          error={erroCampo && !senha ? 'Informe a senha.' : undefined}
+        <Controller
+          control={form.control}
+          name="password"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="Senha"
+              icon="lock"
+              type="password"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        <Button block variant="ghost" onPress={onEsqueciSenha}>
+        <Button
+          block
+          variant="ghost"
+          onPress={() => router.push('/forgot-password')}
+        >
           Esqueci minha senha
         </Button>
-        <Button block onPress={enviar}>
+        <Button
+          block
+          loading={passwordLogin.isPending}
+          onPress={() => submit()}
+        >
           Entrar
         </Button>
         <Pressable
-          onPress={onAluno}
+          accessibilityRole="button"
+          onPress={() => router.back()}
           className="min-h-[44px] items-center justify-center"
         >
           <Text className="text-label text-brand">Acessar como aluno</Text>
