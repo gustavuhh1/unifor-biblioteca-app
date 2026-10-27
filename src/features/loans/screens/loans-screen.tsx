@@ -1,8 +1,8 @@
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
 import { useSession } from '@/features/auth/hooks/use-session'
-import { MyQueuesScreen } from '@/features/queues/screens/my-queues-screen'
+import { MyQueuesList } from '@/features/queues/components/my-queues-list'
 import { ApiError } from '@/shared/api/errors'
 import {
   Alert,
@@ -27,18 +27,25 @@ import {
   RENEWAL_DENIAL_MESSAGE,
   type LoansTab,
 } from '../loans.constants'
-import { renewedNotice } from '../loans.format'
+import { loansTabFromParam, renewedNotice } from '../loans.format'
 import type { MyLoan } from '../loans.types'
 
 // Meus empréstimos (A39 a A42, A69 e A70; RF-EMP-05, RF-EMP-08, RF-EMP-09 e
 // RF-EMP-10): os pedidos e empréstimos ativos (GET /me/loans?view=active), o
-// histórico (view=history), a renovação e o cancelamento. A aba "Na fila" é do
-// bloco da fila e segue como está.
+// histórico (view=history), a renovação e o cancelamento. A aba "Na fila" mostra
+// Minhas filas (A32; RF-FIL-08) e abre também por /loans?tab=queue.
 export function LoansScreen() {
   const router = useRouter()
   const { colors } = useTheme()
   const { user } = useSession()
-  const [tab, setTab] = useState<LoansTab>(LOANS_TAB.active)
+  const params = useLocalSearchParams<{ tab?: string }>()
+  const [tab, setTab] = useState<LoansTab>(loansTabFromParam(params.tab))
+  // A aba também muda quando a rota chega com outro `tab` (a tela já está aberta).
+  const [seenTabParam, setSeenTabParam] = useState(params.tab)
+  if (params.tab !== seenTabParam) {
+    setSeenTabParam(params.tab)
+    setTab(loansTabFromParam(params.tab))
+  }
   const active = useMyLoans(LOAN_VIEW.active)
   const history = useMyLoans(LOAN_VIEW.history, {
     enabled: tab === LOANS_TAB.history,
@@ -51,15 +58,6 @@ export function LoansScreen() {
   function changeTab(next: LoansTab) {
     setNotice(null)
     setTab(next)
-  }
-
-  if (tab === LOANS_TAB.queue) {
-    return (
-      <MyQueuesScreen
-        onAtivos={() => changeTab(LOANS_TAB.active)}
-        onHistorico={() => changeTab(LOANS_TAB.history)}
-      />
-    )
   }
 
   const showingHistory = tab === LOANS_TAB.history
@@ -105,7 +103,9 @@ export function LoansScreen() {
           </Alert>
         ) : null}
 
-        {query.isPending ? (
+        {tab === LOANS_TAB.queue ? (
+          <MyQueuesList onNotice={setNotice} />
+        ) : query.isPending ? (
           <View
             accessibilityLabel="Carregando empréstimos"
             className="items-center py-12"

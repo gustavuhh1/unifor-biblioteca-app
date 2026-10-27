@@ -1,90 +1,153 @@
-import { BookCover, coverToneOf } from '@/shared/components'
-import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
-import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
-
-import React, { useState } from 'react'
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useState } from 'react'
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { ApiError } from '@/shared/api/errors'
+import {
+  Alert,
+  AppBar,
+  BookCover,
+  Button,
+  ConfirmationSheet,
+  EmptyState,
+  Icon,
+  type IconName,
+} from '@/shared/components'
+import {
+  LOAN_PERIOD_DAYS,
+  PICKUP_BUSINESS_DAYS,
+  QUEUE_CONFIRM_HOURS,
+} from '@/shared/config/library-rules'
+import { useTheme } from '@/shared/theme/theme-provider'
+import { QUEUE_ENTRY_STATUS } from '@/shared/types'
+import { formatRelativeDateTime } from '@/shared/utils/dates'
+import { LeaveQueueSheet } from '../components/leave-queue-sheet'
+import { useConfirmQueueTurn } from '../hooks/use-queue-actions'
+import { useMyQueues } from '../hooks/use-my-queues'
+import { useNow } from '../hooks/use-now'
+import { describeConfirmTurnError } from '../queues.errors'
+import { confirmRemainingText } from '../queues.format'
 
-import { AppBar } from '@/shared/components/app-bar'
-import { Button } from '@/shared/components/button'
-import { Icon } from '@/shared/components/icon'
-
-type EstadoSuaVez = 'normal' | 'desistir' | 'edicao-liberada'
-
-type SuaVezProps = {
-  estado?: EstadoSuaVez
-  onVoltar?: () => void
-  onConfirmarRetirada?: () => void
-  onDesistir?: () => void
+// Um passo do que acontece depois de confirmar a vez.
+function Step({
+  icon,
+  title,
+  text,
+}: {
+  icon: IconName
+  title: string
+  text: string
+}) {
+  return (
+    <View className="flex-row items-start gap-3">
+      <View className="size-[32px] items-center justify-center rounded-pill bg-brand-soft">
+        <Icon name={icon} color="brand" size={18} />
+      </View>
+      <View className="flex-1 gap-1 border-b border-line pb-4">
+        <Text className="text-label text-ink">{title}</Text>
+        <Text className="text-caption text-ink-muted">{text}</Text>
+      </View>
+    </View>
+  )
 }
 
-export function YourTurnScreen({
-  estado = 'normal',
-  onVoltar,
-  onConfirmarRetirada,
-  onDesistir,
-}: SuaVezProps) {
-  const reducedMotion = useReducedMotion()
-
+// Sua vez chegou (A29 e A30; RF-FIL-06 e RNF-USA-05): o livro voltou e está
+// separado para o aluno, que tem 24 horas para confirmar. Confirmar chama POST
+// /queues/{id}/confirm e leva à tela "Pedido feito"; desistir chama POST
+// /queues/{id}/leave. O lugar vem de GET /me/queues, pelo `entryId` da rota.
+export function YourTurnScreen() {
+  const router = useRouter()
   const insets = useSafeAreaInsets()
-  const [confirmarRetirada, setConfirmarRetirada] = useState(false)
+  const { colors } = useTheme()
+  const { entryId } = useLocalSearchParams<{ entryId?: string }>()
+  const queues = useMyQueues()
+  const now = useNow()
+  const confirmTurn = useConfirmQueueTurn()
+  const [confirming, setConfirming] = useState(false)
+  const [giving, setGiving] = useState(false)
 
-  const [mostrarDesistencia, setMostrarDesistencia] = useState(
-    estado === 'desistir',
-  )
+  const entry = queues.data?.items.find((item) => item.id === entryId)
+  const deadline = entry?.confirmDeadline ?? null
+  const remaining = deadline ? confirmRemainingText(deadline, now) : null
+  const turnError = confirmTurn.error
+    ? describeConfirmTurnError(confirmTurn.error)
+    : null
 
-  const edicaoLiberada = estado === 'edicao-liberada'
+  function showMyQueues() {
+    router.replace({ pathname: '/loans', params: { tab: 'queue' } })
+  }
 
-  const titulo = edicaoLiberada
-    ? 'Algoritmos: teoria e prática'
-    : 'Código Limpo'
+  function closeConfirmation() {
+    confirmTurn.reset()
+    setConfirming(false)
+  }
 
-  const eventos = edicaoLiberada
-    ? [
-        {
-          titulo: 'Entrou na fila de 2 edições',
-          descricao: '08/10 · 3ª e 4ª edição',
-        },
-        {
-          titulo: '3ª edição liberada para você',
-          descricao: 'Hoje, 15/10, às 09:12',
-        },
-        {
-          titulo: 'Confirme que vai retirar',
-          descricao: 'Até 16/10 às 09:12 (24h)',
-        },
-        {
-          titulo: 'Retire no balcão',
-          descricao: 'Até 2 dias úteis depois de confirmar',
-        },
-      ]
-    : [
-        {
-          titulo: 'Entrou na fila',
-          descricao: '02/10 · você era o 2º',
-        },
-        {
-          titulo: 'Livro liberado para você',
-          descricao: 'Hoje, 15/10, às 09:12',
-        },
-        {
-          titulo: 'Confirme que vai retirar',
-          descricao: 'Até 16/10 às 09:12 (24h)',
-        },
-        {
-          titulo: 'Retire no balcão',
-          descricao: 'Até 2 dias úteis depois de confirmar',
-        },
-        {
-          titulo: 'Empréstimo de 14 dias',
-          descricao: 'Começa na retirada',
-        },
-      ]
+  function confirm() {
+    if (!entry || confirmTurn.isPending) return
+    confirmTurn.mutate(entry.id, {
+      onSuccess: ({ loan }) => {
+        setConfirming(false)
+        router.replace({
+          pathname: '/loan-requested',
+          params: { loanId: loan.id },
+        })
+      },
+    })
+  }
+
+  if (queues.isPending) {
+    return (
+      <View className="flex-1 bg-surface">
+        <AppBar title="Sua vez chegou" back />
+        <View
+          accessibilityLabel="Carregando sua vez"
+          className="flex-1 items-center justify-center"
+        >
+          <ActivityIndicator color={colors.brand} />
+        </View>
+      </View>
+    )
+  }
+
+  if (queues.isError) {
+    return (
+      <View className="flex-1 bg-surface">
+        <AppBar title="Sua vez chegou" back />
+        <EmptyState
+          icon="alert"
+          title="Não foi possível carregar sua vez"
+          text={
+            queues.error instanceof ApiError ? queues.error.message : undefined
+          }
+          action={
+            <Button icon="refresh" onPress={() => void queues.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        />
+      </View>
+    )
+  }
+
+  if (!entry || entry.status !== QUEUE_ENTRY_STATUS.yourTurn) {
+    return (
+      <View className="flex-1 bg-surface">
+        <AppBar title="Sua vez chegou" back />
+        <EmptyState
+          icon="clock"
+          title="Esta vez já passou"
+          text="Você pode ter confirmado, desistido ou perdido o prazo. Veja suas filas e seus pedidos."
+          action={<Button onPress={showMyQueues}>Ver minhas filas</Button>}
+        />
+      </View>
+    )
+  }
+
+  const until = deadline ? formatRelativeDateTime(deadline, now) : ''
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Sua vez chegou" back onBack={onVoltar} />
+      <AppBar title="Sua vez chegou" back />
 
       <ScrollView
         className="flex-1"
@@ -92,179 +155,94 @@ export function YourTurnScreen({
       >
         {/* LIVRO */}
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <BookCover
-            title={edicaoLiberada ? 'Algoritmos' : 'Código Limpo'}
-            tone={coverToneOf(edicaoLiberada ? 'cover4' : 'cover1')}
-            size="md"
-          />
-
+          <BookCover title={entry.bookTitle} size="md" />
           <View className="flex-1 justify-center gap-2">
-            <Text className="text-book-title text-ink">{titulo}</Text>
-
+            <Text className="text-book-title text-ink">{entry.bookTitle}</Text>
             <Text className="text-body text-ink-muted">
-              {edicaoLiberada
-                ? 'A 3ª edição (2012) voltou e está separada para você.'
-                : 'Foi devolvido e está separado para você.'}
+              Foi devolvido e está separado para você.
             </Text>
           </View>
         </View>
 
-        {/* PRAZO */}
+        {/* PRAZO PARA CONFIRMAR */}
         <View className="gap-2 rounded-md bg-warning-soft p-4">
           <Text className="text-caption-strong text-ink">
             Tempo para confirmar
           </Text>
-
-          <Text className="text-title-lg text-warning">18h 40min</Text>
-
+          <Text className="text-title-lg text-warning">
+            {remaining ?? 'Prazo encerrado'}
+          </Text>
           <Text className="text-caption text-ink">
-            Até amanhã, sex 16/10, às 09:12
+            {remaining ? `Até ${until}` : 'Passou das 24 horas para confirmar.'}
           </Text>
         </View>
 
-        {/* A38 — CANCELAMENTO DA OUTRA EDIÇÃO */}
-        {edicaoLiberada && (
-          <View className="gap-2 rounded-md bg-brand-soft p-4">
-            <View className="flex-row items-center gap-2">
-              <Icon name="info" color="brand" size={20} />
-              <Text className="flex-1 text-label text-ink">
-                Fila da 4ª edição cancelada
-              </Text>
-            </View>
+        {/* OUTRAS EDIÇÕES MARCADAS (A38) */}
+        {entry.editionGroupId ? (
+          <Alert tone="info" title="Outras edições marcadas">
+            Ao confirmar, as filas das outras edições que você marcou saem
+            sozinhas e quem estava atrás de você sobe uma posição.
+          </Alert>
+        ) : null}
 
-            <Text className="text-body text-ink">
-              Saiu sozinha, porque a 3ª voltou primeiro. Quem estava atrás de
-              você lá subiu uma posição.
-            </Text>
-          </View>
-        )}
-
-        {/* HISTÓRICO DA FILA */}
+        {/* O QUE ACONTECE DEPOIS */}
         <View className="gap-4">
-          {eventos.map((evento, index) => (
-            <View key={evento.titulo} className="flex-row items-start gap-3">
-              <View
-                className={
-                  index < 2
-                    ? 'h-8 w-8 items-center justify-center rounded-pill bg-success-soft'
-                    : 'h-8 w-8 items-center justify-center rounded-pill bg-brand-soft'
-                }
-              >
-                <Icon
-                  name={index < 2 ? 'check' : 'clock'}
-                  color={index < 2 ? 'success' : 'brand'}
-                  size={18}
-                />
-              </View>
-
-              <View className="flex-1 gap-1 border-b border-line pb-4">
-                <Text className="text-label text-ink">{evento.titulo}</Text>
-
-                <Text className="text-caption text-ink-muted">
-                  {evento.descricao}
-                </Text>
-              </View>
-            </View>
-          ))}
+          <Step
+            icon="check"
+            title="Confirme que vai retirar"
+            text={`Até ${until} (${QUEUE_CONFIRM_HOURS}h corridas)`}
+          />
+          <Step
+            icon="clock"
+            title="Retire no balcão"
+            text={`Até ${PICKUP_BUSINESS_DAYS} dias úteis depois de confirmar`}
+          />
+          <Step
+            icon="book"
+            title={`Empréstimo de ${LOAN_PERIOD_DAYS} dias`}
+            text="Começa na retirada"
+          />
         </View>
       </ScrollView>
 
       {/* AÇÕES */}
       <View
         className="gap-2 border-t border-line bg-surface-raised px-4 pt-3"
-        style={{
-          paddingBottom: Math.max(insets.bottom, 16),
-        }}
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
       >
         <Button
           block
-          variant="primary"
-          onPress={() => setConfirmarRetirada(true)}
+          icon="check"
+          disabled={remaining === null}
+          onPress={() => setConfirming(true)}
         >
-          Vou retirar
+          Confirmar retirada
         </Button>
-
-        <Button
-          block
-          variant="ghost"
-          onPress={() => setMostrarDesistencia(true)}
-        >
-          Desistir e sair da fila
+        <Button block variant="ghost" onPress={() => setGiving(true)}>
+          Desistir da vez
         </Button>
-
-        <Text className="text-center text-caption text-ink-muted">
-          Sem confirmação até o fim do prazo, você sai da fila e o próximo é
-          avisado.
-        </Text>
       </View>
 
-      {/* A30 — DESISTIR DA FILA */}
       <ConfirmationSheet
-        visible={confirmarRetirada}
+        visible={confirming}
         title="Confirmar que vai retirar?"
-        description="Você terá 2 dias úteis para retirar o livro no balcão. Esta operação é demonstrativa."
-        onCancel={() => setConfirmarRetirada(false)}
-        onConfirm={() => {
-          setConfirmarRetirada(false)
-          onConfirmarRetirada?.()
-        }}
-      />
-      <Modal
-        visible={mostrarDesistencia}
-        transparent
-        animationType={reducedMotion ? 'none' : 'slide'}
-        statusBarTranslucent
-        onRequestClose={() => setMostrarDesistencia(false)}
+        description={`Você terá ${PICKUP_BUSINESS_DAYS} dias úteis para retirar ${entry.bookTitle} no balcão. Fim de semana, feriado e recesso não contam.`}
+        confirmText="Confirmar retirada"
+        cancelText="Agora não"
+        onCancel={closeConfirmation}
+        onConfirm={confirm}
       >
-        <View className="flex-1 justify-end">
-          <Pressable
-            className="absolute inset-0 bg-scrim"
-            accessibilityRole="button"
-            accessibilityLabel="Fechar confirmação"
-            onPress={() => setMostrarDesistencia(false)}
-          />
-
-          <View
-            className="gap-4 rounded-t-sheet bg-surface-raised px-4 pt-6"
-            style={{
-              paddingBottom: Math.max(insets.bottom, 20),
-            }}
-          >
-            <Text className="text-title text-ink">Desistir de {titulo}?</Text>
-
-            <Text className="text-body text-ink-muted">
-              Você sai da fila e o livro vai na hora para o próximo. Para pegar
-              depois, terá que entrar na fila de novo, no fim.
-            </Text>
-
-            <View className="gap-2 rounded-md bg-warning-soft p-4">
-              <Text className="text-label text-ink">Não dá para desfazer</Text>
-              <Text className="text-body text-ink">
-                O próximo da fila é avisado assim que você confirmar.
-              </Text>
-            </View>
-
-            <Button
-              block
-              variant="danger"
-              onPress={() => {
-                setMostrarDesistencia(false)
-                onDesistir?.()
-              }}
-            >
-              Desistir e sair da fila
-            </Button>
-
-            <Button
-              block
-              variant="ghost"
-              onPress={() => setMostrarDesistencia(false)}
-            >
-              Voltar
-            </Button>
-          </View>
-        </View>
-      </Modal>
+        {turnError ? (
+          <Alert tone="danger" title={turnError.title}>
+            {turnError.text}
+          </Alert>
+        ) : null}
+      </ConfirmationSheet>
+      <LeaveQueueSheet
+        entry={giving ? entry : null}
+        onClose={() => setGiving(false)}
+        onLeft={showMyQueues}
+      />
     </View>
   )
 }

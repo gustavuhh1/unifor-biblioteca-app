@@ -6,8 +6,19 @@ import {
   formatDayMonth,
   toAppDate,
 } from '@/shared/utils/dates'
-import { LOAN_STATE } from './loans.constants'
+import {
+  LOAN_STATE,
+  LOANS_TAB,
+  LOANS_TABS,
+  type LoansTab,
+} from './loans.constants'
 import type { MyLoan } from './loans.types'
+
+// Aba pedida pelo parâmetro `tab` da rota (ex.: "Ver minhas filas" abre
+// /loans?tab=queue); sem parâmetro, ou com um valor desconhecido, são os Ativos.
+export function loansTabFromParam(param: string | undefined): LoansTab {
+  return LOANS_TABS.find((tab) => tab === param) ?? LOANS_TAB.active
+}
 
 // Dias da semana abreviados, de domingo a sábado (a abreviação do date-fns em
 // pt-BR sai por extenso).

@@ -26,7 +26,8 @@ const NO_COPY_AVAILABLE_MESSAGE: LoanErrorMessage = {
 // Erro de uma chamada sem corpo de API (queda de rede, tempo esgotado).
 const GENERIC_REQUEST_TITLE = 'Não foi possível solicitar'
 
-function isBlockedReason(code: string): code is BlockedReason {
+// Diz se o código da API é um dos motivos de bloqueio (pedido e fila).
+export function isBlockedReason(code: string): code is BlockedReason {
   return (ASSISTANT_BLOCKED_REASONS as readonly string[]).includes(code)
 }
 
