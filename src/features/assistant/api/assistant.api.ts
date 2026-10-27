@@ -1,4 +1,5 @@
 import { apiRequest } from '@/shared/api/client'
+import { ASSISTANT_REQUEST_TIMEOUT_MS } from '../assistant.constants'
 import type {
   AssistantActionCancelled,
   AssistantActionConfirmed,
@@ -17,6 +18,7 @@ export function postAssistantMessage(text: string) {
   return apiRequest<AssistantReply>('/me/assistant/messages', {
     method: 'POST',
     body: { text },
+    timeoutMs: ASSISTANT_REQUEST_TIMEOUT_MS,
   })
 }
 

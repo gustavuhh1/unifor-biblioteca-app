@@ -4,6 +4,11 @@ export const ASSISTANT_QUERY_KEY = ['assistant', 'messages'] as const
 // Tamanho máximo de uma pergunta (AssistantMessageBody do Swagger).
 export const ASSISTANT_MESSAGE_MAX_LENGTH = 500
 
+// Prazo de uma pergunta ao Assistente (ms). A resposta chega a levar 22 s quando
+// ele prepara uma ação (Gemini e regras); o Firebase Hosting corta em 60 s, então
+// 45 s dá margem sem estourar o corte.
+export const ASSISTANT_REQUEST_TIMEOUT_MS = 45_000
+
 // Quanto tempo o cartão de uma ação espera antes de conferir se venceu (ms).
 export const ASSISTANT_NOW_INTERVAL_MS = 30_000
 
