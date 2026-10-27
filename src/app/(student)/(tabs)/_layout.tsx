@@ -13,10 +13,6 @@ export default function StudentTabsLayout() {
       <Tabs.Screen name="loans" />
       <Tabs.Screen name="assistant" />
       <Tabs.Screen name="profile" />
-      <Tabs.Screen name="fine" options={{ href: null }} />
-      <Tabs.Screen name="passkeys" options={{ href: null }} />
-      <Tabs.Screen name="appearance" options={{ href: null }} />
-      <Tabs.Screen name="saved" options={{ href: null }} />
     </Tabs>
   )
 }

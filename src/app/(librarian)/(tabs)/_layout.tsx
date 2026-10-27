@@ -13,7 +13,6 @@ export default function LibrarianLayout() {
       <Tabs.Screen name="scan" />
       <Tabs.Screen name="queues" />
       <Tabs.Screen name="fines" />
-      <Tabs.Screen name="collection-management" options={{ href: null }} />
     </Tabs>
   )
 }
