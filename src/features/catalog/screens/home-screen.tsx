@@ -98,7 +98,12 @@ export function HomeScreen() {
         </View>
         {yourTurn?.confirmDeadline ? (
           <Pressable
-            onPress={() => router.push('/loans')}
+            onPress={() =>
+              router.push({
+                pathname: '/your-turn',
+                params: { entryId: yourTurn.id },
+              })
+            }
             accessibilityRole="button"
             className="mx-4 mb-5 flex-row gap-3 rounded-md bg-warning-soft p-4"
           >
