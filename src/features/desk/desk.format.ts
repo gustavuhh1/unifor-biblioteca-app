@@ -23,11 +23,11 @@ export function lookupBodyFromInput(input: string): DeskLookupBody | null {
   return null
 }
 
-// Tom da capa (1 a 6) a partir do id do livro: a lista do balcão não traz a cor
+// Tom da capa (1 a 6) a partir do título do livro: a lista do balcão não traz a cor
 // da capa, então o mesmo livro sempre cai no mesmo tom.
-export function coverToneOfBook(bookId: string): CoverTone {
+export function coverToneOfTitle(title: string): CoverTone {
   let sum = 0
-  for (const char of bookId) sum += char.charCodeAt(0)
+  for (const char of title) sum += char.charCodeAt(0)
   return ((sum % 6) + 1) as CoverTone
 }
 

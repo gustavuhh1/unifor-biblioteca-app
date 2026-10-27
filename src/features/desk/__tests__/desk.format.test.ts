@@ -1,5 +1,5 @@
 import {
-  coverToneOfBook,
+  coverToneOfTitle,
   dueLabel,
   firstName,
   isLastPickupDay,
@@ -128,13 +128,13 @@ describe('textos da ficha do aluno', () => {
   })
 })
 
-describe('coverToneOfBook (capa sem cor na lista do balcão)', () => {
-  it('sempre devolve um tom de 1 a 6 e o mesmo para o mesmo livro', () => {
-    for (const id of ['a', 'book_1', 'zzzzzzzz', '']) {
-      const tone = coverToneOfBook(id)
+describe('coverToneOfTitle (capa sem cor na lista do balcão)', () => {
+  it('sempre devolve um tom de 1 a 6 e o mesmo para o mesmo título', () => {
+    for (const title of ['a', 'Código Limpo', 'zzzzzzzz', '']) {
+      const tone = coverToneOfTitle(title)
       expect(tone).toBeGreaterThanOrEqual(1)
       expect(tone).toBeLessThanOrEqual(6)
-      expect(coverToneOfBook(id)).toBe(tone)
+      expect(coverToneOfTitle(title)).toBe(tone)
     }
   })
 })
