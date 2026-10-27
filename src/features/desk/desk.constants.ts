@@ -44,6 +44,7 @@ export const DESK_API_ERROR_CODE = constantsOf(DESK_API_ERROR_CODES)
 export const DESK_MESSAGE = {
   invalidSearch:
     'Informe uma matrícula de 7 dígitos ou um código de pedido como RET-4821.',
+  cameraNeeded: 'Para ler o QR do pedido, o app precisa usar a câmera.',
   cameraDenied:
     'Sem acesso à câmera. Permita o uso nas configurações ou digite a matrícula ou o código do pedido.',
   cameraUnavailable:
