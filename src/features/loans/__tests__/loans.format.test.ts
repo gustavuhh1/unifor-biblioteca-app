@@ -6,6 +6,7 @@ import {
   loanBadge,
   loanDueText,
   loanStartText,
+  loansTabFromParam,
   nextDueLoan,
   pickupDeadlineText,
   renewedNotice,
@@ -204,5 +205,17 @@ describe('historyDetailText (A42)', () => {
         }),
       ),
     ).toBe('Pedido cancelado em 12/08')
+  })
+})
+
+describe('loansTabFromParam (Ver minhas filas abre a aba Na fila)', () => {
+  it('abre a aba pedida pelo parâmetro da rota', () => {
+    expect(loansTabFromParam('queue')).toBe('queue')
+    expect(loansTabFromParam('history')).toBe('history')
+  })
+
+  it('cai nos Ativos sem parâmetro ou com um valor desconhecido', () => {
+    expect(loansTabFromParam(undefined)).toBe('active')
+    expect(loansTabFromParam('outra')).toBe('active')
   })
 })
