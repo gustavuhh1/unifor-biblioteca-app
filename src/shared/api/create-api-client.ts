@@ -7,7 +7,7 @@ import {
 
 export const REQUEST_TIMEOUT_MS = 15_000
 
-export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 export interface RequestOptions {
   method?: HttpMethod

@@ -1,138 +1,103 @@
-import React from 'react'
-import { Pressable, ScrollView, Text, View } from 'react-native'
-
-import { AppBar } from '@/shared/components/app-bar'
+import { useRouter } from 'expo-router'
+import { useState } from 'react'
+import { ActivityIndicator, ScrollView, View } from 'react-native'
+import { AppBar, Button, EmptyState } from '@/shared/components'
 import { useTheme } from '@/shared/theme/theme-provider'
-import type { ColorToken } from '@/shared/theme/tokens.generated'
-import { Icon } from '@/shared/components/icon'
+import { FolderNameSheet } from '../components/folder-name-sheet'
+import { FolderRow } from '../components/folder-row'
+import { useCreateFolder } from '../hooks/use-saved-actions'
+import { useFolders } from '../hooks/use-saved'
+import { ALL_SAVED_ID } from '../saved.constants'
+import { savedErrorMessage } from '../saved.format'
 
-type Pasta = {
-  id: string
-  nome: string
-  quantidade: number
-  cores: [ColorToken, ColorToken, ColorToken, ColorToken]
-}
-
-type SalvosProps = {
-  onVoltar?: () => void
-  onAbrirPasta?: (id: string) => void
-  onNovaPasta?: () => void
-}
-
-const pastas: Pasta[] = [
-  {
-    id: 'todos',
-    nome: 'Todos os salvos',
-    quantidade: 6,
-    cores: ['cover1', 'cover2', 'cover3', 'cover4'],
-  },
-  {
-    id: 'ler-depois',
-    nome: 'Ler depois',
-    quantidade: 2,
-    cores: ['cover5', 'cover6', 'cover5', 'cover6'],
-  },
-  {
-    id: 'amei',
-    nome: 'Amei!!!',
-    quantidade: 3,
-    cores: ['cover2', 'cover6', 'cover1', 'cover3'],
-  },
-  {
-    id: 'tcc',
-    nome: 'TCC',
-    quantidade: 4,
-    cores: ['cover4', 'cover1', 'cover6', 'cover3'],
-  },
-]
-
-export function SavedScreen({
-  onVoltar,
-  onAbrirPasta,
-  onNovaPasta,
-}: SalvosProps) {
+// Salvos (A18; RF-SAL-01 e RF-SAL-02): "Todos os salvos" e as pastas do aluno,
+// vindos de GET /me/folders. Tocar numa linha abre a pasta; "Nova pasta" cria.
+export function SavedScreen() {
+  const router = useRouter()
   const { colors } = useTheme()
+  const folders = useFolders()
+  const createFolder = useCreateFolder()
+  const [creating, setCreating] = useState(false)
+
+  function openFolder(id: string) {
+    router.push({ pathname: '/folder', params: { id } })
+  }
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Salvos" back onBack={onVoltar} />
-
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="gap-6 px-4 pb-8"
-      >
-        {/* INTRODUÇÃO */}
-        <Text className="text-body text-ink-muted">
-          Só você vê seus salvos. Um livro pode estar em mais de uma pasta.
-        </Text>
-
-        {/* GRADE DE PASTAS */}
-        <View className="flex-row flex-wrap gap-3">
-          {pastas.map((pasta) => (
-            <Pressable
-              key={pasta.id}
-              accessibilityRole="button"
-              accessibilityLabel={`${pasta.nome}, ${pasta.quantidade} livros`}
-              onPress={() => onAbrirPasta?.(pasta.id)}
-              className="w-[48%] gap-2"
-            >
-              {/* CAPA DA PASTA */}
-              <View className="h-[144px] overflow-hidden rounded-md bg-surface-sunken">
-                <View className="flex-1 flex-row">
-                  <View
-                    className="flex-1"
-                    style={{
-                      backgroundColor: colors[pasta.cores[0]],
-                    }}
-                  />
-                  <View
-                    className="flex-1"
-                    style={{
-                      backgroundColor: colors[pasta.cores[1]],
-                    }}
-                  />
-                </View>
-
-                <View className="flex-1 flex-row">
-                  <View
-                    className="flex-1"
-                    style={{
-                      backgroundColor: colors[pasta.cores[2]],
-                    }}
-                  />
-                  <View
-                    className="flex-1"
-                    style={{
-                      backgroundColor: colors[pasta.cores[3]],
-                    }}
-                  />
-                </View>
-              </View>
-
-              <Text className="text-label text-ink" numberOfLines={1}>
-                {pasta.nome}
-              </Text>
-
-              <Text className="text-caption text-ink-muted">
-                {pasta.quantidade} livros
-              </Text>
-            </Pressable>
-          ))}
-
-          {/* CRIAR NOVA PASTA */}
-          <Pressable
-            onPress={onNovaPasta}
-            accessibilityRole="button"
-            className="w-[48%] gap-2"
-          >
-            <View className="h-[144px] items-center justify-center gap-3 rounded-md border-2 border-dashed border-line-strong bg-surface-raised">
-              <Icon name="plus" color="brand" size={30} />
-
-              <Text className="text-label text-brand">Nova pasta</Text>
-            </View>
-          </Pressable>
+      <AppBar title="Salvos" back />
+      {folders.isPending ? (
+        <View
+          accessibilityLabel="Carregando salvos"
+          className="flex-1 items-center justify-center"
+        >
+          <ActivityIndicator color={colors.brand} />
         </View>
-      </ScrollView>
+      ) : folders.isError ? (
+        <EmptyState
+          icon="alert"
+          title="Não foi possível carregar os salvos"
+          text={savedErrorMessage(folders.error)}
+          action={
+            <Button icon="refresh" onPress={() => void folders.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        />
+      ) : (
+        <ScrollView
+          contentContainerClassName="gap-4 px-4 pb-6 pt-2"
+          keyboardShouldPersistTaps="handled"
+        >
+          {folders.data.savedCount === 0 && folders.data.items.length === 0 ? (
+            <EmptyState
+              icon="bookmark"
+              title="Você ainda não salvou nenhum livro"
+              text="Toque em Salvar na página de um livro para guardá-lo aqui."
+              action={
+                <Button icon="search" onPress={() => router.push('/catalog')}>
+                  Explorar acervo
+                </Button>
+              }
+            />
+          ) : (
+            <View className="overflow-hidden rounded-lg border border-line bg-surface-raised">
+              <FolderRow
+                name="Todos os salvos"
+                icon="bookmark"
+                count={folders.data.savedCount}
+                last={folders.data.items.length === 0}
+                onPress={() => openFolder(ALL_SAVED_ID)}
+              />
+              {folders.data.items.map((folder, index) => (
+                <FolderRow
+                  key={folder.id}
+                  name={folder.name}
+                  count={folder.bookCount}
+                  last={index === folders.data.items.length - 1}
+                  onPress={() => openFolder(folder.id)}
+                />
+              ))}
+            </View>
+          )}
+          <Button
+            block
+            variant="secondary"
+            icon="plus"
+            onPress={() => setCreating(true)}
+          >
+            Nova pasta
+          </Button>
+        </ScrollView>
+      )}
+      {creating ? (
+        <FolderNameSheet
+          title="Nova pasta"
+          submitLabel="Criar pasta"
+          onClose={() => setCreating(false)}
+          onSubmit={(name) => createFolder.mutateAsync(name)}
+        />
+      ) : null}
     </View>
   )
 }
