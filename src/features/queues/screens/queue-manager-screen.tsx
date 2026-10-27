@@ -1,540 +1,365 @@
-import { BookCover } from '@/shared/components'
-import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
-import React, { useState } from 'react'
+import { useLocalSearchParams } from 'expo-router'
+import { useState } from 'react'
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
+import { ApiError } from '@/shared/api/errors'
 import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { AppBar } from '@/shared/components/app-bar'
-import { Icon } from '@/shared/components/icon'
-import { Button } from '@/shared/components/button'
+  Alert,
+  AppBar,
+  BookCover,
+  Button,
+  EmptyState,
+  Icon,
+  QueueManagerRow,
+  StatusBadge,
+} from '@/shared/components'
+import { bookCoverTone } from '@/features/catalog/catalog.format'
 import { useTheme } from '@/shared/theme/theme-provider'
+import { QueueChangeSheet } from '../components/queue-change-sheet'
+import { QueueCutSheet } from '../components/queue-cut-sheet'
+import { QueueEntrySheet } from '../components/queue-entry-sheet'
+import { QueueRemoveSheet } from '../components/queue-remove-sheet'
+import {
+  useBookQueue,
+  useQueueActions,
+  useQueueBooks,
+} from '../hooks/use-librarian-queue'
+import {
+  QUEUE_NOTICE,
+  buildAddBody,
+  buildMoveBody,
+  entryBadge,
+  entrySince,
+  queueSubtitle,
+} from '../librarian-queues.format'
+import type {
+  AddToQueueBody,
+  LibrarianQueueEntry,
+  QueueMovedDown,
+} from '../librarian-queues.types'
 
-export type EstadoFilaLivro =
-  | 'normal'
-  | 'gerenciar'
-  | 'adicionar'
-  | 'confirmar-posicao'
-  | 'posicao-atualizada'
-  | 'remover'
-export type AlunoDaFila = {
-  id: string
-  nome: string
-  matricula: string
-  iniciais: string
-  data: string
-}
-export interface FilaLivroProps {
-  estado?: EstadoFilaLivro
-  onVoltar?: () => void
-  onAdicionarAluno?: (
-    matricula: string,
-    posicao: number,
-    motivo: string,
-  ) => void
-  onMoverAluno?: (id: string, posicao: number) => void
-  onRemoverAluno?: (id: string, motivo: string) => void
-}
-const iniciais: AlunoDaFila[] = [
-  {
-    id: 'ana',
-    nome: 'Ana Beatriz Lima',
-    matricula: '2311047',
-    iniciais: 'AB',
-    data: 'desde 02/10',
-  },
-  {
-    id: 'lucas',
-    nome: 'Lucas Almeida',
-    matricula: '2412858',
-    iniciais: 'LA',
-    data: 'desde 08/10',
-  },
-  {
-    id: 'carlos',
-    nome: 'Carlos Eduardo Sá',
-    matricula: '2210933',
-    iniciais: 'CS',
-    data: 'desde 10/10',
-  },
-  {
-    id: 'marina',
-    nome: 'Marina Castro',
-    matricula: '2513320',
-    iniciais: 'MC',
-    data: 'desde 09/10',
-  },
-]
-const paula: AlunoDaFila = {
-  id: 'paula',
-  nome: 'Paula Ribeiro',
-  matricula: '2311998',
-  iniciais: 'PR',
-  data: 'desde hoje',
+// O que a tela está mostrando por cima da lista: a folha de ações, a de adicionar
+// ou mover, a de remover ou a confirmação de passar à frente de outros.
+type Sheet =
+  | { kind: 'entry'; entry: LibrarianQueueEntry }
+  | { kind: 'add' }
+  | { kind: 'move'; entry: LibrarianQueueEntry }
+  | { kind: 'remove'; entry: LibrarianQueueEntry }
+  | {
+      kind: 'cut'
+      movedDown: QueueMovedDown[]
+      pending:
+        | { type: 'add'; body: AddToQueueBody }
+        | { type: 'move'; entry: LibrarianQueueEntry; position: number }
+    }
+
+// Texto de erro da API (já em português) ou um aviso genérico.
+function errorText(error: unknown): string | undefined {
+  if (!error) return undefined
+  return error instanceof ApiError
+    ? error.message
+    : 'Algo deu errado. Tente de novo.'
 }
 
-export function QueueManagerScreen({
-  estado = 'normal',
-  onVoltar,
-  onAdicionarAluno,
-  onMoverAluno,
-  onRemoverAluno,
-}: FilaLivroProps) {
-  const reducedMotion = useReducedMotion()
-
-  const safe = useSafeAreaInsets()
+// Fila de um livro para o bibliotecário (B08 a B12, RF-BAL-06 e RF-BAL-07): lê
+// GET /librarian/books/{id}/queue e deixa mover, reenviar o aviso, remover e
+// adicionar alunos. Mexer no fim não pergunta nada; passar à frente de outros
+// mostra quem desce e exige o motivo.
+export function QueueManagerScreen() {
   const { colors } = useTheme()
-  const [painel, setPainel] = useState<EstadoFilaLivro>(estado)
-  const [alunos, setAlunos] = useState<AlunoDaFila[]>(
-    estado === 'posicao-atualizada' ? [...iniciais, paula] : iniciais,
-  )
-  const [selecionado, setSelecionado] = useState<AlunoDaFila>(iniciais[2])
-  const [matricula, setMatricula] = useState(paula.matricula)
-  const [posicao, setPosicao] = useState(estado === 'confirmar-posicao' ? 1 : 5)
-  const [tipoAlteracao, setTipoAlteracao] = useState<'incluir' | 'mover'>(
-    'incluir',
-  )
-  const [motivo, setMotivo] = useState('Pedido no balcão, sem acesso ao app')
-  const [mensagem, setMensagem] = useState(
-    estado === 'posicao-atualizada' ? 'Paula entrou em 5º e foi avisada.' : '',
-  )
-  const modal = [
-    'gerenciar',
-    'adicionar',
-    'confirmar-posicao',
-    'remover',
-  ].includes(painel)
+  const { bookId } = useLocalSearchParams<{ bookId: string }>()
+  const query = useBookQueue(bookId)
+  const books = useQueueBooks()
+  const { add, move, remove, resend } = useQueueActions(bookId)
+  const [sheet, setSheet] = useState<Sheet | null>(null)
+  const [notice, setNotice] = useState('')
 
-  const [erro, setErro] = useState('')
-  const prevista = (() => {
-    const aluno = tipoAlteracao === 'mover' ? selecionado : paula
-    const copia = alunos.filter((a) => a.id !== aluno.id)
-    copia.splice(posicao - 1, 0, aluno)
-    return copia
-  })()
-  function voltar() {
-    setPainel('normal')
+  const queue = query.data
+  const entries = queue?.items ?? []
+  const coverTone = bookCoverTone({
+    coverTone: books.data?.find((book) => book.id === bookId)?.coverTone ?? 1,
+  })
+
+  function openSheet(next: Sheet | null) {
+    add.reset()
+    move.reset()
+    remove.reset()
+    resend.reset()
+    setSheet(next)
   }
-  function adicionar() {
-    if (!/^\d{7}$/.test(matricula.trim()) || !motivo.trim()) {
-      setErro('Informe matrícula de 7 dígitos e motivo.')
-      return
-    }
-    if (
-      alunos.some((a) => a.matricula === matricula.trim() || a.id === 'paula')
-    ) {
-      setErro('Este aluno já está na fila.')
-      return
-    }
-    if (matricula.trim() !== paula.matricula) {
-      setErro('Aluno não encontrado nesta demonstração.')
-      return
-    }
-    setErro('')
-    const destino = Math.max(1, Math.min(alunos.length + 1, posicao))
-    if (destino < alunos.length + 1) {
-      setTipoAlteracao('incluir')
-      setPainel('confirmar-posicao')
-      return
-    }
-    const novo = { ...paula, matricula: matricula.trim() }
-    setAlunos((lista) => [...lista.filter((a) => a.id !== 'paula'), novo])
-    setMensagem(`${novo.nome} entrou em ${destino}º na fila`)
-    onAdicionarAluno?.(novo.matricula, destino, motivo)
-    voltar()
+
+  // Aviso de resultado e fecha a folha.
+  function done(message: string) {
+    setNotice(message)
+    setSheet(null)
   }
-  function confirmarMover() {
-    if (!motivo.trim()) {
-      setErro('Informe o motivo da alteração.')
-      return
-    }
-    const destino = Math.max(
-      1,
-      Math.min(alunos.length + (tipoAlteracao === 'incluir' ? 1 : 0), posicao),
-    )
-    const aluno =
-      tipoAlteracao === 'mover'
-        ? selecionado
-        : { ...paula, matricula: matricula.trim() }
-    setAlunos((lista) => {
-      const copia = lista.filter((a) => a.id !== aluno.id)
-      copia.splice(destino - 1, 0, aluno)
-      return copia
+
+  function submitAdd(input: {
+    matricula: string
+    position: number
+    reason: string
+  }) {
+    const body = buildAddBody({ ...input, queueLength: entries.length })
+    add.mutate(body, {
+      onSuccess: (result) => {
+        if (result.applied) {
+          const name =
+            result.queue?.items.find(
+              (item) => item.matricula === body.matricula,
+            )?.studentName ?? 'Aluno'
+          done(QUEUE_NOTICE.added(name, input.position))
+        } else {
+          setSheet({
+            kind: 'cut',
+            movedDown: result.movedDown,
+            pending: { type: 'add', body },
+          })
+        }
+      },
     })
-    setMensagem(`${aluno.nome} está em ${destino}º na fila`)
-    if (tipoAlteracao === 'mover') onMoverAluno?.(aluno.id, destino)
-    else onAdicionarAluno?.(aluno.matricula, destino, motivo)
-    voltar()
   }
-  function remover() {
-    if (!motivo.trim()) return
-    setAlunos((lista) => lista.filter((a) => a.id !== selecionado.id))
-    onRemoverAluno?.(selecionado.id, motivo)
-    setMensagem('Aluno removido da fila (simulação)')
-    voltar()
+
+  function submitMove(entry: LibrarianQueueEntry, position: number) {
+    move.mutate(
+      { entryId: entry.id, body: buildMoveBody(position) },
+      {
+        onSuccess: (result) => {
+          if (result.applied) {
+            done(QUEUE_NOTICE.moved(entry.studentName, position))
+          } else {
+            setSheet({
+              kind: 'cut',
+              movedDown: result.movedDown,
+              pending: { type: 'move', entry, position },
+            })
+          }
+        },
+      },
+    )
   }
+
+  function confirmCut(
+    pending: Extract<Sheet, { kind: 'cut' }>['pending'],
+    reason: string,
+  ) {
+    if (pending.type === 'add') {
+      const position = pending.body.position ?? entries.length + 1
+      add.mutate(
+        { ...pending.body, reason: reason.trim(), confirmed: true },
+        {
+          onSuccess: (result) => {
+            if (!result.applied) return
+            const name =
+              result.queue?.items.find(
+                (item) => item.matricula === pending.body.matricula,
+              )?.studentName ?? 'Aluno'
+            done(QUEUE_NOTICE.added(name, position))
+          },
+        },
+      )
+      return
+    }
+    move.mutate(
+      {
+        entryId: pending.entry.id,
+        body: {
+          position: pending.position,
+          reason: reason.trim(),
+          confirmed: true,
+        },
+      },
+      {
+        onSuccess: (result) => {
+          if (result.applied) {
+            done(
+              QUEUE_NOTICE.moved(pending.entry.studentName, pending.position),
+            )
+          }
+        },
+      },
+    )
+  }
+
   return (
     <View className="flex-1 bg-surface">
       <AppBar
         title="Fila do livro"
-        subtitle={`${alunos.length} alunos aguardando`}
+        subtitle={queue ? queueSubtitle(entries) : undefined}
         back
-        onBack={onVoltar}
       />
-      <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}
-      >
-        <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <BookCover title="Arquitetura Limpa" tone={6} size="md" />
-          <View className="flex-1 gap-2">
-            <Text className="text-label text-ink">Arquitetura Limpa</Text>
-            <Text className="text-caption text-ink-muted">
-              Robert C. Martin · devolve 21/10
-            </Text>
-            <View className="self-start rounded-pill bg-warning-soft px-2 py-1">
-              <Text className="text-caption text-warning">Emprestado</Text>
-            </View>
-          </View>
+      {query.isPending ? (
+        <View
+          accessibilityLabel="Carregando a fila"
+          className="flex-1 items-center justify-center"
+        >
+          <ActivityIndicator color={colors.brand} />
         </View>
-        <View className="flex-row gap-3 rounded-md bg-brand-soft p-4">
-          <Icon name="info" color="brand" size={19} />
-          <Text className="flex-1 text-body text-ink">
-            Fila automática. Quando o livro volta, o 1º da fila é avisado e tem
-            24h para confirmar. Mais de um exemplar pode atender alunos
-            diferentes.
-          </Text>
-        </View>
-        <View className="overflow-hidden rounded-md border border-line bg-surface-raised">
-          {alunos.map((aluno, i) => (
-            <Pressable
-              key={aluno.id}
-              onPress={() => {
-                setSelecionado(aluno)
-                setPosicao(i + 1)
-                setTipoAlteracao('mover')
-                setPainel('gerenciar')
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={`Gerenciar ${aluno.nome}, posição ${i + 1}`}
-              className="flex-row items-center gap-2 border-b border-line p-3"
+      ) : query.isError ? (
+        <EmptyState
+          icon="alert"
+          title="Não foi possível abrir a fila"
+          text={errorText(query.error)}
+          action={
+            <Button icon="refresh" onPress={() => void query.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        />
+      ) : (
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}
+        >
+          {notice ? (
+            <Alert
+              tone="success"
+              icon="checkCircle"
+              action="Fechar"
+              onAction={() => setNotice('')}
             >
-              <Text className="w-4 text-center text-caption text-ink-muted">
-                {i + 1}
+              {notice}
+            </Alert>
+          ) : null}
+          <View className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-3">
+            <BookCover
+              title={query.data.book.title}
+              tone={coverTone}
+              size="md"
+            />
+            <View className="min-w-0 flex-1 gap-2">
+              <Text className="text-label text-ink">
+                {query.data.book.title}
               </Text>
-              <View className="h-10 w-10 items-center justify-center rounded-pill bg-brand-soft">
-                <Text className="text-caption-strong text-brand">
-                  {aluno.iniciais}
-                </Text>
-              </View>
-              <View className="flex-1 gap-1">
-                <Text className="text-label text-ink">{aluno.nome}</Text>
-                <Text className="text-caption text-ink-muted">
-                  {aluno.matricula} · {aluno.data}
-                </Text>
-              </View>
-              <Text className="text-title text-ink-muted">⋮</Text>
-            </Pressable>
-          ))}
-        </View>
-        <Button
-          block
-          variant="secondary"
-          icon="plus"
-          onPress={() => {
-            setTipoAlteracao('incluir')
-            setPosicao(alunos.length + 1)
-            setPainel('adicionar')
-          }}
-        >
-          Adicionar aluno à fila
-        </Button>
-      </ScrollView>
-      {mensagem && !modal ? (
-        <Pressable
-          onPress={() => setMensagem('')}
-          className="absolute bottom-[80px] left-4 right-4 flex-row items-center gap-2 rounded-md bg-ink p-4"
-        >
-          <Icon name="check" color="surface" size={18} />
-          <Text className="flex-1 text-caption-strong text-surface">
-            {mensagem}
-          </Text>
-          <Icon name="x" color="onCover" size={15} />
-        </Pressable>
-      ) : null}
-      <Modal
-        transparent
-        visible={modal}
-        animationType={reducedMotion ? 'none' : 'slide'}
-        onRequestClose={voltar}
-      >
-        <View className="flex-1 justify-end">
-          <Pressable
-            className="absolute inset-0"
-            style={{ backgroundColor: colors.scrim }}
-            onPress={voltar}
-            accessibilityLabel="Fechar"
-          />
-          <View
-            className="max-h-[88%] rounded-t-sheet bg-surface-raised p-4"
-            style={{ paddingBottom: Math.max(safe.bottom, 16) }}
-          >
-            <View className="mb-4 items-center">
-              <View className="h-1 w-[36px] rounded-pill bg-line-strong" />
+              <Text className="text-caption text-ink-muted">
+                {`${query.data.book.copiesAvailable} de ${query.data.book.copiesTotal} exemplares na estante`}
+              </Text>
+              <StatusBadge
+                status={
+                  query.data.book.copiesAvailable === 0
+                    ? 'emprestado'
+                    : 'disponivel'
+                }
+              />
             </View>
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ gap: 15, paddingBottom: 4 }}
-            >
-              {erro ? (
-                <Text
-                  accessibilityRole="alert"
-                  className="text-caption text-danger"
-                >
-                  {erro}
-                </Text>
-              ) : null}
-              {painel === 'remover' ? (
-                <>
-                  <Text className="text-title text-ink">
-                    Remover {selecionado.nome} da fila?
-                  </Text>
-                  <Text className="text-body text-ink-muted">
-                    Motivo: {motivo || 'Informe o motivo antes de confirmar.'}
-                  </Text>
-                  <Button
-                    block
-                    variant="danger"
-                    disabled={!motivo.trim()}
-                    onPress={remover}
-                  >
-                    Confirmar remoção
-                  </Button>
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={() => setPainel('gerenciar')}
-                  >
-                    Cancelar
-                  </Button>
-                </>
-              ) : painel === 'gerenciar' ? (
-                <>
-                  <Text className="text-title text-ink">
-                    {selecionado.nome}
-                  </Text>
-                  <Text className="text-body text-ink-muted">
-                    {alunos.findIndex((a) => a.id === selecionado.id) + 1}º na
-                    fila · matrícula {selecionado.matricula}
-                  </Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {alunos.map((a, i) => (
-                      <Pressable
-                        key={a.id}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Mover para ${i + 1}`}
-                        onPress={() => setPosicao(i + 1)}
-                        className={`min-h-[44px] justify-center rounded-pill border px-3 ${posicao === i + 1 ? 'border-brand bg-brand-soft' : 'border-line bg-surface'}`}
-                      >
-                        <Text className="text-caption-strong text-ink">
-                          {i + 1}º
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                  <Button
-                    block
-                    variant="secondary"
-                    onPress={() => {
-                      setTipoAlteracao('mover')
-                      setMatricula(selecionado.matricula)
-                      setPainel('confirmar-posicao')
-                    }}
-                  >
-                    Mudar posição
-                  </Button>
-                  <Button
-                    block
-                    variant="secondary"
-                    onPress={() => {
-                      setMensagem('Aviso reenviado (simulação)')
-                      voltar()
-                    }}
-                  >
-                    Reenviar aviso
-                  </Button>
-                  <Text className="text-label text-ink">
-                    Motivo para remoção
-                  </Text>
-                  <TextInput
-                    value={motivo}
-                    onChangeText={setMotivo}
-                    multiline
-                    className="min-h-[64px] rounded-md border border-line bg-surface p-3 text-body text-ink"
-                  />
-                  <Button
-                    block
-                    variant="danger"
-                    onPress={() => setPainel('remover')}
-                  >
-                    Remover da fila
-                  </Button>
-                  <Button block variant="ghost" onPress={voltar}>
-                    Fechar
-                  </Button>
-                </>
-              ) : painel === 'adicionar' ? (
-                <>
-                  <Text className="text-title text-ink">
-                    Adicionar aluno à fila
-                  </Text>
-                  <Text className="text-caption text-ink-muted">
-                    Arquitetura Limpa · {alunos.length} alunos aguardando
-                  </Text>
-                  <Text className="text-label text-ink">Matrícula</Text>
-                  <TextInput
-                    value={matricula}
-                    onChangeText={setMatricula}
-                    maxLength={7}
-                    keyboardType="number-pad"
-                    className="min-h-12 rounded-md border border-line bg-surface px-3 text-body text-ink"
-                  />
-                  <View className="flex-row items-center gap-3 rounded-md bg-surface-sunken p-3">
-                    <View className="h-10 w-10 items-center justify-center rounded-pill bg-brand-soft">
-                      <Text className="text-caption-strong text-brand">PR</Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-label text-ink">Paula Ribeiro</Text>
-                      <Text className="text-caption text-ink-muted">
-                        Aluno encontrado · demonstrativo
-                      </Text>
-                    </View>
-                    <Icon name="checkCircle" color="success" />
-                  </View>
-                  <Text className="text-label text-ink">Posição</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {Array.from(
-                      { length: alunos.length + 1 },
-                      (_, i) => i + 1,
-                    ).map((n) => (
-                      <Pressable
-                        key={n}
-                        onPress={() => setPosicao(n)}
-                        className={`min-h-10 justify-center rounded-pill border px-3 ${n === posicao ? 'border-brand bg-brand-soft' : 'border-line bg-surface'}`}
-                      >
-                        <Text
-                          className={
-                            n === posicao
-                              ? 'text-caption-strong text-brand'
-                              : 'text-caption text-ink'
-                          }
-                        >
-                          {n === alunos.length + 1 ? `No fim (${n}º)` : `${n}º`}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                  <Text className="text-label text-ink">
-                    Motivo (obrigatório)
-                  </Text>
-                  <TextInput
-                    multiline
-                    value={motivo}
-                    onChangeText={setMotivo}
-                    className="min-h-[64px] rounded-md border border-line bg-surface p-3 text-body text-ink"
-                  />
-                  <Button
-                    block
-                    disabled={
-                      !/^\d{7}$/.test(matricula.trim()) || !motivo.trim()
-                    }
-                    onPress={adicionar}
-                  >
-                    Adicionar na fila
-                  </Button>
-                  <Button block variant="ghost" onPress={voltar}>
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Text className="text-title text-ink">
-                    {tipoAlteracao === 'mover'
-                      ? `Mover ${selecionado.nome} para o início da fila?`
-                      : `Adicionar ${paula.nome} à frente da fila?`}
-                  </Text>
-                  <Text className="text-body text-ink-muted">
-                    A nova posição será {posicao}º. Os demais alunos poderão
-                    descer uma posição e serão avisados pelo sistema.
-                  </Text>
-                  <View className="gap-2 rounded-md border border-line bg-surface p-4">
-                    <Text className="text-label text-ink">
-                      Impacto na ordem
-                    </Text>
-                    {alunos
-                      .filter(
-                        (a) =>
-                          prevista.findIndex((p) => p.id === a.id) !==
-                          alunos.findIndex((p) => p.id === a.id),
-                      )
-                      .map((a) => (
-                        <View key={a.id} className="flex-row justify-between">
-                          <Text className="text-caption text-ink">
-                            {a.nome}
-                          </Text>
-                          <Text className="text-caption-strong text-danger">
-                            {alunos.findIndex((p) => p.id === a.id) + 1}º →{' '}
-                            {prevista.findIndex((p) => p.id === a.id) + 1}º
-                          </Text>
-                        </View>
-                      ))}
-                  </View>
-                  <View className="flex-row gap-2 rounded-md bg-danger-soft p-4">
-                    <Icon name="alert" color="danger" />
-                    <Text className="flex-1 text-body text-ink">
-                      Alterar a ordem da fila afeta os demais alunos. Confirme
-                      apenas quando houver justificativa.
-                    </Text>
-                  </View>
-                  <Text className="text-label text-ink">
-                    Motivo obrigatório
-                  </Text>
-                  <TextInput
-                    accessibilityLabel="Motivo da alteração"
-                    value={motivo}
-                    onChangeText={setMotivo}
-                    multiline
-                    className="min-h-[64px] rounded-md border border-line bg-surface p-3 text-body text-ink"
-                  />
-                  <Button
-                    block
-                    variant="danger"
-                    disabled={!motivo.trim()}
-                    onPress={confirmarMover}
-                  >
-                    Colocar à frente mesmo assim
-                  </Button>
-                  <Button
-                    block
-                    variant="ghost"
-                    onPress={() => {
-                      setTipoAlteracao('incluir')
-                      setPosicao(alunos.length + 1)
-                      setPainel('adicionar')
-                    }}
-                  >
-                    Voltar e colocar no fim
-                  </Button>
-                </>
-              )}
-            </ScrollView>
           </View>
-        </View>
-      </Modal>
+          <View className="flex-row gap-3 rounded-lg bg-brand-soft p-4">
+            <Icon name="info" color="brand" size={20} />
+            <Text className="flex-1 text-body text-ink">
+              Fila automática. Quando o livro volta, o 1º da fila é avisado e
+              tem 24h para confirmar.
+            </Text>
+          </View>
+          {entries.length === 0 ? (
+            <EmptyState icon="users" title="Ninguém na fila" />
+          ) : (
+            <View className="overflow-hidden rounded-lg border border-line">
+              {entries.map((entry) => {
+                const badge = entryBadge(entry)
+                return (
+                  <QueueManagerRow
+                    key={entry.id}
+                    position={entry.position}
+                    name={entry.studentName}
+                    matricula={entry.matricula}
+                    since={entrySince(entry)}
+                    status={badge.status}
+                    statusLabel={badge.label}
+                    reorder={false}
+                    onMore={() => openSheet({ kind: 'entry', entry })}
+                  />
+                )
+              })}
+            </View>
+          )}
+          <Button
+            block
+            variant="secondary"
+            icon="plus"
+            onPress={() => openSheet({ kind: 'add' })}
+          >
+            Adicionar aluno à fila
+          </Button>
+        </ScrollView>
+      )}
+
+      {sheet?.kind === 'entry' ? (
+        <QueueEntrySheet
+          entry={sheet.entry}
+          onClose={() => openSheet(null)}
+          onMove={() => openSheet({ kind: 'move', entry: sheet.entry })}
+          onRemove={() => openSheet({ kind: 'remove', entry: sheet.entry })}
+          onResend={() =>
+            resend.mutate(sheet.entry.id, {
+              onSuccess: () =>
+                done(QUEUE_NOTICE.resent(sheet.entry.studentName)),
+            })
+          }
+          resending={resend.isPending}
+          error={errorText(resend.error)}
+        />
+      ) : null}
+      {sheet?.kind === 'add' ? (
+        <QueueChangeSheet
+          entries={entries}
+          bookTitle={queue?.book.title ?? ''}
+          onClose={() => openSheet(null)}
+          onSubmit={submitAdd}
+          loading={add.isPending}
+          error={errorText(add.error)}
+        />
+      ) : null}
+      {sheet?.kind === 'move' ? (
+        <QueueChangeSheet
+          entries={entries}
+          entry={sheet.entry}
+          bookTitle={queue?.book.title ?? ''}
+          onClose={() => openSheet(null)}
+          onSubmit={({ position }) => submitMove(sheet.entry, position)}
+          loading={move.isPending}
+          error={errorText(move.error)}
+        />
+      ) : null}
+      {sheet?.kind === 'remove' ? (
+        <QueueRemoveSheet
+          entry={sheet.entry}
+          onCancel={() => openSheet(null)}
+          onConfirm={(reason) =>
+            remove.mutate(
+              { entryId: sheet.entry.id, reason },
+              {
+                onSuccess: () =>
+                  done(QUEUE_NOTICE.removed(sheet.entry.studentName)),
+              },
+            )
+          }
+          loading={remove.isPending}
+          error={errorText(remove.error)}
+        />
+      ) : null}
+      {sheet?.kind === 'cut' ? (
+        <QueueCutSheet
+          title={
+            sheet.pending.type === 'add'
+              ? 'Colocar o aluno à frente da fila?'
+              : `Mover ${sheet.pending.entry.studentName} à frente?`
+          }
+          movedDown={sheet.movedDown}
+          initialReason={
+            sheet.pending.type === 'add'
+              ? (sheet.pending.body.reason ?? '')
+              : ''
+          }
+          onCancel={() =>
+            openSheet(
+              sheet.pending.type === 'add'
+                ? { kind: 'add' }
+                : { kind: 'move', entry: sheet.pending.entry },
+            )
+          }
+          onConfirm={(reason) => confirmCut(sheet.pending, reason)}
+          loading={add.isPending || move.isPending}
+          error={errorText(add.error) ?? errorText(move.error)}
+        />
+      ) : null}
     </View>
   )
 }
