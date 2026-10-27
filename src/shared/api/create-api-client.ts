@@ -14,6 +14,9 @@ export interface RequestOptions {
   body?: unknown
   // false nas rotas públicas (login, cadastro): não manda o ID token.
   authenticated?: boolean
+  // Prazo desta chamada, no lugar do padrão do cliente (ex.: o Assistente, que
+  // leva mais de 15 s quando prepara uma ação).
+  timeoutMs?: number
 }
 
 export interface ApiClientOptions {
@@ -62,13 +65,18 @@ export function createApiClient({
 
   async function request<T>(
     path: string,
-    { method = 'GET', body, authenticated = true }: RequestOptions = {},
+    {
+      method = 'GET',
+      body,
+      authenticated = true,
+      timeoutMs: callTimeoutMs = timeoutMs,
+    }: RequestOptions = {},
   ): Promise<T> {
     const token = authenticated ? await getIdToken() : null
     const hasBody = body !== undefined
 
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    const timer = setTimeout(() => controller.abort(), callTimeoutMs)
 
     let response: Response
     try {

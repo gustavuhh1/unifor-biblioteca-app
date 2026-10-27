@@ -1,279 +1,221 @@
-import { useRef, useState, type ComponentRef } from 'react'
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useEffect, useRef, useState, type ComponentRef } from 'react'
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Button, Icon, BookCover, coverToneOf } from '@/shared/components'
-import { Caixa, Linha } from '@/shared/components/blocos'
+import { ApiError } from '@/shared/api/errors'
+import {
+  Alert,
+  Button,
+  ChatBubble,
+  ChatComposer,
+  EmptyState,
+  Icon,
+  PromptSugerido,
+} from '@/shared/components'
 import { useTheme } from '@/shared/theme/theme-provider'
 import { useReducedMotion } from '@/shared/theme/use-reduced-motion'
+import {
+  ASSISTANT_DISCLAIMER_FALLBACK,
+  ASSISTANT_MESSAGE,
+  ASSISTANT_MESSAGE_MAX_LENGTH,
+  ASSISTANT_NOW_INTERVAL_MS,
+  ASSISTANT_QUICK_QUESTIONS,
+} from '../assistant.constants'
+import { errorText, fitMessage, previousQuestion } from '../assistant.format'
+import { AssistantMessageItem } from '../components/assistant-message-item'
+import {
+  useCancelAssistantAction,
+  useConfirmAssistantAction,
+} from '../hooks/use-assistant-action'
+import { useAssistantConversation } from '../hooks/use-assistant-conversation'
+import { useNow } from '../hooks/use-now'
+import { useSendAssistantMessage } from '../hooks/use-send-assistant-message'
 
-type EstadoAssistente =
-  'busca' | 'conversa' | 'erro' | 'confirmar' | 'bloqueado'
-type Mensagem = { texto: string; usuario?: boolean }
-type AssistenteProps = {
-  estado?: EstadoAssistente
-  onVerParecidos?: () => void
-  onBuscarOutroTermo?: () => void
-  onAbrirLivro?: () => void
-  onConfirmarSolicitacao?: () => void
-}
-function Bolha({ texto, usuario }: Mensagem) {
-  return (
-    <View className={`gap-2 ${usuario ? 'items-end' : ''}`}>
-      {!usuario ? (
-        <View className="flex-row items-center gap-2">
-          <Icon name="sparkle" color="brand" size={16} />
-          <Text className="text-caption-strong text-brand">Assistente</Text>
-        </View>
-      ) : null}
-      <View
-        className={`rounded-lg p-4 ${usuario ? 'max-w-[280px] rounded-br-sm bg-brand' : 'border border-line bg-surface-raised'}`}
-      >
-        <Text className={`text-body ${usuario ? 'text-on-brand' : 'text-ink'}`}>
-          {texto}
-        </Text>
-      </View>
-      <Text className="text-micro text-ink-muted">19:44</Text>
-    </View>
-  )
-}
-export function AssistantScreen({
-  estado = 'busca',
-  onVerParecidos,
-  onBuscarOutroTermo,
-  onAbrirLivro,
-  onConfirmarSolicitacao,
-}: AssistenteProps) {
-  const safe = useSafeAreaInsets()
+// Assistente (A48 a A49, A72 e A81; RF-ASS-01 a RF-ASS-06): a conversa vem de
+// GET /me/assistant/messages, cada pergunta vai por POST /me/assistant/messages
+// e a ação que ele propõe só acontece depois do Confirmar. A rota aceita
+// `?q=` com uma pergunta pronta (ex.: da busca sem resultado, RF-ACE-06).
+export function AssistantScreen() {
+  const insets = useSafeAreaInsets()
+  const router = useRouter()
   const { colors } = useTheme()
   const reducedMotion = useReducedMotion()
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null)
-  const [texto, setTexto] = useState('')
-  const [mensagens, setMensagens] = useState<Mensagem[]>([])
-  const [erro, setErro] = useState(estado === 'erro')
-  const [confirmar, setConfirmar] = useState(estado === 'confirmar')
-  const [cancelado, setCancelado] = useState(false)
-  const bloqueado = estado === 'bloqueado'
-  const pedir = estado === 'confirmar' || bloqueado
-  const busca = estado === 'busca'
-  function enviar() {
-    if (!texto.trim()) return
-    const pedido = /pegar|solicitar|emprestar/i.test(texto)
-    setMensagens((current) => [
-      ...current,
-      { texto: texto.trim(), usuario: true },
-      {
-        texto: bloqueado
-          ? 'Não consigo solicitar agora: você está com Cálculo, Vol. 1 em atraso. Devolva no balcão para voltar a pedir livros e entrar em filas.'
-          : pedido
-            ? 'Posso solicitar este empréstimo para você. Confira antes de eu fazer. Só solicito depois da sua confirmação.'
-            : 'Resposta demonstrativa: consulte o Acervo para buscar livros. Os prazos e pedidos aparecem em Meus empréstimos. Nenhuma solicitação foi enviada.',
-      },
-    ])
-    if (pedido && !bloqueado) {
-      setConfirmar(true)
-      setCancelado(false)
-    }
-    setTexto('')
+  const { q } = useLocalSearchParams<{ q?: string }>()
+
+  const conversation = useAssistantConversation()
+  const send = useSendAssistantMessage()
+  const confirm = useConfirmAssistantAction()
+  const cancel = useCancelAssistantAction()
+  const now = useNow(ASSISTANT_NOW_INTERVAL_MS)
+  const [text, setText] = useState('')
+
+  const { mutate: sendMessage } = send
+  const loaded = conversation.isSuccess
+  const items = conversation.data?.items ?? []
+  const askedFromRoute = useRef(false)
+
+  // Pergunta pronta que veio pela rota: manda uma vez, depois da conversa abrir.
+  useEffect(() => {
+    if (!q || askedFromRoute.current || !loaded) return
+    askedFromRoute.current = true
+    sendMessage(fitMessage(q))
+    router.setParams({ q: '' })
+  }, [q, loaded, sendMessage, router])
+
+  function ask(raw: string) {
+    const value = fitMessage(raw)
+    if (!value || !loaded || send.isPending) return
+    sendMessage(value)
+    setText('')
   }
+
+  // Estado dos botões e o erro do cartão da ação que está na vez.
+  function actionState(actionId: string): {
+    busy: 'confirm' | 'cancel' | null
+    error: string | null
+  } {
+    const confirming = confirm.isPending && confirm.variables === actionId
+    const cancelling = cancel.isPending && cancel.variables === actionId
+    const confirmError =
+      confirm.isError && confirm.variables === actionId
+        ? errorText(confirm.error)
+        : null
+    const cancelError =
+      cancel.isError && cancel.variables === actionId
+        ? errorText(cancel.error)
+        : null
+    return {
+      busy: confirming ? 'confirm' : cancelling ? 'cancel' : null,
+      error: confirmError ?? cancelError,
+    }
+  }
+
+  const waiting = send.isPending
+  const sendFailed = send.isError
+
   return (
-    <View className="flex-1 bg-surface">
-      <View
-        className="flex-row items-center gap-3 border-b border-line px-4 pb-3"
-        style={{ paddingTop: safe.top + 12 }}
-      >
-        <View className="flex-1 gap-1">
+    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-surface">
+      <View style={{ paddingTop: insets.top }}>
+        <View className="gap-1 border-b border-line px-4 pb-3 pt-3">
           <Text className="text-title-lg text-ink">Assistente</Text>
           <Text className="text-caption text-ink-muted">
             Dúvidas sobre o app e sugestões de leitura
           </Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Nova conversa"
-          onPress={() => {
-            setMensagens([])
-            setTexto('')
-            setConfirmar(false)
-            setErro(false)
-            setCancelado(false)
-          }}
-          className="min-h-[44px] min-w-[44px] items-center justify-center"
-        >
-          <Icon name="refresh" color="inkMuted" />
-        </Pressable>
       </View>
+
       <ScrollView
         ref={scroll}
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() =>
           scroll.current?.scrollToEnd({ animated: !reducedMotion })
         }
-        contentContainerStyle={{ padding: 16, gap: 16 }}
+        contentContainerClassName="gap-4 p-4"
       >
-        {!busca && !pedir ? (
-          <>
-            <Bolha usuario texto="Como funciona a fila?" />
-            <Bolha texto="Se o livro estiver emprestado, você entra na fila e vê quantas pessoas estão na frente. Quando chegar sua vez, tem 24h para confirmar e 2 dias úteis para retirar." />
-          </>
-        ) : null}
-        <Bolha
-          usuario
-          texto={
-            busca
-              ? 'Procure livros sobre programação quântica. Se não tiver, sugira parecidos.'
-              : pedir
-                ? 'Quero pegar o Refatoração'
-                : 'Me indica algo parecido com Código Limpo'
-          }
-        />
-        <Bolha
-          texto={
-            erro
-              ? 'Não consegui responder agora. Confira sua conexão e tente de novo.'
-              : bloqueado
-                ? 'Não consigo solicitar agora: você está com Cálculo, Vol. 1 em atraso desde 10/10 (multa de R$ 6,00). Devolva no balcão da biblioteca para voltar a pedir livros e entrar em filas.'
-                : pedir
-                  ? 'Posso solicitar este empréstimo para você. Confira antes de eu fazer. Só solicito depois da sua confirmação.'
-                  : busca
-                    ? 'Não achei esse tema no acervo. Estes estão na estante e são a base dele:'
-                    : 'Você tem lido bastante sobre boas práticas. Este está disponível agora:'
-          }
-        />
-        {erro ? (
-          <Button
-            variant="secondary"
-            icon="refresh"
-            onPress={() => setErro(false)}
+        {conversation.isPending ? (
+          <View
+            accessibilityLabel="Abrindo a conversa"
+            className="items-center py-8"
           >
-            Tentar de novo
-          </Button>
-        ) : !pedir ? (
+            <ActivityIndicator color={colors.brand} />
+          </View>
+        ) : conversation.isError ? (
+          <EmptyState
+            icon="alert"
+            title={ASSISTANT_MESSAGE.loadFailed}
+            text={
+              conversation.error instanceof ApiError
+                ? conversation.error.message
+                : undefined
+            }
+            action={
+              <Button
+                icon="refresh"
+                onPress={() => void conversation.refetch()}
+              >
+                Tentar de novo
+              </Button>
+            }
+          />
+        ) : (
           <>
-            <Pressable
-              accessibilityRole="button"
-              onPress={onAbrirLivro}
-              className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-3"
-            >
-              <BookCover
-                title={busca ? 'Física Quântica' : 'Refatoração'}
-                author={busca ? 'Eisberg, Resnick' : 'Martin Fowler'}
-                tone={coverToneOf(busca ? 'cover1' : 'cover2')}
-                size="md"
-              />
-              <View className="min-w-0 flex-1 gap-2">
-                <Text className="text-book-title text-ink">
-                  {busca ? 'Física Quântica' : 'Refatoração'}
-                </Text>
-                <Text className="text-caption text-ink-muted">
-                  {busca ? 'Eisberg, Resnick' : 'Martin Fowler'}
-                </Text>
-                <Text className="text-caption text-ink-muted">
-                  {busca ? 'Base de física quântica' : 'Pelo que você leu'}
-                </Text>
-                <Text className="text-overline text-success">Disponível</Text>
-              </View>
-            </Pressable>
-            {busca ? (
-              <View className="flex-row gap-2">
-                <View className="flex-1">
-                  <Button
-                    block
-                    size="sm"
-                    variant="secondary"
-                    onPress={onVerParecidos}
-                  >
-                    Ver mais parecidos
-                  </Button>
-                </View>
-                <View className="flex-1">
-                  <Button
-                    block
-                    size="sm"
-                    variant="secondary"
-                    onPress={onBuscarOutroTermo}
-                  >
-                    Buscar outro termo
-                  </Button>
-                </View>
+            {items.length === 0 && !waiting && !sendFailed ? (
+              <View className="gap-3">
+                <ChatBubble>{ASSISTANT_MESSAGE.welcome}</ChatBubble>
+                {ASSISTANT_QUICK_QUESTIONS.map((question) => (
+                  <PromptSugerido
+                    key={question}
+                    text={question}
+                    onPress={() => ask(question)}
+                  />
+                ))}
               </View>
             ) : null}
+
+            {items.map((message, index) => {
+              const state = message.action
+                ? actionState(message.action.id)
+                : { busy: null, error: null }
+              return (
+                <AssistantMessageItem
+                  key={message.id}
+                  message={message}
+                  now={now}
+                  retryText={previousQuestion(items, index)}
+                  busy={state.busy}
+                  actionError={state.error}
+                  onRetry={ask}
+                  onOpenBook={(id) =>
+                    router.push({ pathname: '/book-details', params: { id } })
+                  }
+                  onConfirm={(id) => confirm.mutate(id)}
+                  onCancel={(id) => cancel.mutate(id)}
+                  onSeeLoans={() => router.push('/loans')}
+                />
+              )
+            })}
+
+            {(waiting || sendFailed) && send.variables ? (
+              <ChatBubble from="user">{send.variables}</ChatBubble>
+            ) : null}
+            {waiting ? <ChatBubble typing /> : null}
+            {sendFailed ? (
+              <Alert
+                tone="danger"
+                title={ASSISTANT_MESSAGE.sendFailed}
+                action="Tentar de novo"
+                onAction={() => ask(send.variables ?? '')}
+              >
+                {errorText(send.error)}
+              </Alert>
+            ) : null}
           </>
-        ) : null}
-        {mensagens.map((mensagem, index) => (
-          <Bolha key={index} {...mensagem} />
-        ))}
-        {confirmar && !bloqueado ? (
-          <View className="gap-4 rounded-lg border border-brand bg-surface-raised p-4">
-            <Text className="text-book-title text-ink">Refatoração</Text>
-            <Text className="text-caption text-ink-muted">Martin Fowler</Text>
-            <Caixa>
-              <Linha
-                esquerda="Retirar até"
-                direita="seg, 19/10 (2 dias úteis)"
-              />
-              <Linha esquerda="Seus empréstimos" direita="passa a 4 de 10" />
-            </Caixa>
-            <Button
-              block
-              icon="check"
-              onPress={() => {
-                setConfirmar(false)
-                onConfirmarSolicitacao?.()
-              }}
-            >
-              Confirmar solicitação
-            </Button>
-            <Button
-              block
-              variant="ghost"
-              onPress={() => {
-                setConfirmar(false)
-                setCancelado(true)
-              }}
-            >
-              Cancelar
-            </Button>
-          </View>
-        ) : null}
-        {cancelado ? (
-          <Text
-            accessibilityLiveRegion="polite"
-            className="text-caption text-ink-muted"
-          >
-            Solicitação cancelada. Nenhum pedido foi enviado.
-          </Text>
-        ) : null}
-        <View className="flex-row gap-2">
+        )}
+      </ScrollView>
+
+      <View className="bg-surface">
+        <View className="flex-row gap-2 px-4 pb-2 pt-2">
           <Icon name="info" color="inkMuted" size={14} />
           <Text className="flex-1 text-caption text-ink-muted">
-            Conversa demonstrativa, sem conexão com IA. O Assistente usa IA e
-            pode errar. Confira prazos e regras na página do livro e em Meus
-            empréstimos.
+            {conversation.data?.disclaimer ?? ASSISTANT_DISCLAIMER_FALLBACK}
           </Text>
         </View>
-      </ScrollView>
-      <View className="flex-row items-center gap-2 border-t border-line bg-surface-raised px-4 py-3">
-        <TextInput
-          value={texto}
-          onChangeText={setTexto}
-          onSubmitEditing={enviar}
-          returnKeyType="send"
-          placeholder="Pergunte sobre livros ou empréstimos"
-          placeholderTextColor={colors.inkMuted}
-          className="min-h-12 min-w-0 flex-1 rounded-pill border border-line bg-surface-sunken px-4 text-body text-ink"
-          accessibilityLabel="Mensagem ao Assistente"
+        <ChatComposer
+          value={text}
+          onChangeText={(value) =>
+            setText(value.slice(0, ASSISTANT_MESSAGE_MAX_LENGTH))
+          }
+          onSend={() => ask(text)}
+          disabled={!loaded || waiting}
         />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Enviar mensagem"
-          accessibilityState={{ disabled: !texto.trim() }}
-          disabled={!texto.trim()}
-          onPress={enviar}
-          className="h-[44px] w-[44px] items-center justify-center rounded-pill bg-brand"
-        >
-          <Icon name="send" color="onBrand" />
-        </Pressable>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   )
 }

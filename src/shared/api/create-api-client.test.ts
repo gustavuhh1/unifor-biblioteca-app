@@ -161,4 +161,16 @@ describe('createApiClient', () => {
       code: 'timeout',
     })
   })
+
+  it('usa o prazo da chamada no lugar do padrão do cliente', async () => {
+    // O padrão do cliente é 50 ms; a chamada pede 300 ms e a resposta leva 120 ms.
+    const client = makeClient((async () => {
+      await new Promise((resolve) => setTimeout(resolve, 120))
+      return jsonResponse(200, { ok: true })
+    }) as unknown as typeof fetch)
+
+    await expect(client.request('/lento', { timeoutMs: 300 })).resolves.toEqual(
+      { ok: true },
+    )
+  })
 })
