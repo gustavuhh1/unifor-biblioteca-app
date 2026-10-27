@@ -1,154 +1,153 @@
-import React, { useState } from 'react'
-import { Pressable, ScrollView, Text, View } from 'react-native'
-import { AppBar } from '@/shared/components/app-bar'
-import { Button } from '@/shared/components/button'
-import { Icon, type IconName } from '@/shared/components/icon'
+import { useRouter } from 'expo-router'
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
+import { ApiError } from '@/shared/api/errors'
+import {
+  Alert,
+  AppBar,
+  Button,
+  EmptyState,
+  NotificationItem as NotificationRow,
+} from '@/shared/components'
+import { useTheme } from '@/shared/theme/theme-provider'
+import { useMarkNotificationsRead } from '../hooks/use-mark-notifications-read'
+import { useNotifications } from '../hooks/use-notifications'
+import {
+  NOTICE_STYLE,
+  groupNotifications,
+  hasTurnButtons,
+  noticeTarget,
+  noticeTime,
+} from '../notifications.format'
+import type { NotificationItem } from '../notifications.types'
 
-export interface NotificacoesProps {
-  onVoltar?: () => void
-  onVouRetirar?: () => void
-  onDesistir?: () => void
-  onEmprestimos?: () => void
-  onMinhasFilas?: () => void
-}
+// Notificações do aluno (A08, RF-AVI-01): a lista de GET /me/notifications em Hoje,
+// Esta semana e Antes, com o ponto de "não lida", o botão do aviso (sua vez, QR,
+// empréstimo, multa) e "Marcar todas como lidas" (POST /me/notifications/read-all).
+export function NotificationsScreen() {
+  const router = useRouter()
+  const { colors } = useTheme()
+  const query = useNotifications()
+  const markRead = useMarkNotificationsRead()
 
-const recentes: {
-  id: number
-  icone: IconName
-  titulo: string
-  descricao: string
-  data: string
-}[] = [
-  {
-    id: 1,
-    icone: 'clock',
-    titulo: 'A 3ª edição de Algoritmos voltou',
-    descricao:
-      'Confirme até sex, 16/10, 09:12. A fila da 4ª edição foi cancelada.',
-    data: '09:12',
-  },
-  {
-    id: 2,
-    icone: 'bell',
-    titulo: 'É a sua vez: Código Limpo',
-    descricao: 'Confirme até amanhã, 09:12, que vai retirar.',
-    data: '09:12',
-  },
-]
-const antigas: {
-  id: number
-  icone: IconName
-  titulo: string
-  descricao: string
-  data: string
-}[] = [
-  {
-    id: 3,
-    icone: 'clock',
-    titulo: 'Engenharia de Software vence em 2 dias',
-    descricao: 'Há alunos na fila, então não dá para renovar.',
-    data: 'ontem',
-  },
-  {
-    id: 4,
-    icone: 'users',
-    titulo: 'Você subiu na fila',
-    descricao: 'Arquitetura Limpa: agora é a 1 pessoa na sua frente.',
-    data: 'ontem',
-  },
-  {
-    id: 5,
-    icone: 'x',
-    titulo: 'Você saiu da fila de Sistemas de Banco de Dados',
-    descricao:
-      'O prazo de 24h para confirmar terminou e o livro foi para o próximo.',
-    data: 'seg',
-  },
-]
+  const items = query.data?.items ?? []
+  const unread = query.data?.unreadCount ?? 0
+  const now = new Date()
 
-function Lista({
-  itens,
-  onVouRetirar,
-  onDesistir,
-  onEmprestimos,
-  onMinhasFilas,
-}: NotificacoesProps & { itens: typeof recentes }) {
-  return (
-    <View className="overflow-hidden rounded-md border border-line bg-surface-raised">
-      {itens.map((n, i) => (
-        <Pressable
-          key={n.id}
-          onPress={
-            n.id === 2
-              ? undefined
-              : n.id === 1
-                ? onVouRetirar
-                : n.id === 3
-                  ? onEmprestimos
-                  : onMinhasFilas
-          }
-          className={`flex-row gap-3 p-3 ${i < itens.length - 1 ? 'border-b border-line' : ''}`}
-          accessibilityRole={n.id === 2 ? undefined : 'button'}
-        >
-          <View className="h-[36px] w-[36px] items-center justify-center rounded-md bg-brand-soft">
-            <Icon name={n.icone} color="brand" size={18} />
-          </View>
-          <View className="flex-1 gap-1">
-            <Text className="text-label text-ink">{n.titulo}</Text>
-            <Text className="text-caption text-ink-muted">{n.descricao}</Text>
-            {n.id === 2 ? (
-              <View className="flex-row gap-2 pt-1">
-                <Button size="sm" onPress={onVouRetirar}>
-                  Vou retirar
-                </Button>
-                <Button size="sm" variant="ghost" onPress={onDesistir}>
-                  Desistir
-                </Button>
-              </View>
-            ) : null}
-          </View>
-          <Text className="text-micro text-ink-muted">{n.data}</Text>
-        </Pressable>
-      ))}
-    </View>
-  )
-}
-export function NotificationsScreen({
-  onVoltar,
-  ...actions
-}: NotificacoesProps) {
-  const [lidas, setLidas] = useState(false)
+  function open(item: NotificationItem) {
+    const target = noticeTarget(item)
+    if (target) router.push(target)
+  }
+
   return (
     <View className="flex-1 bg-surface">
       <AppBar
         title="Notificações"
         back
-        onBack={onVoltar}
-        actions={[
-          {
-            icon: 'check',
-            label: 'Marcar como lidas',
-            onPress: () => setLidas(true),
-          },
-        ]}
+        actions={
+          unread > 0
+            ? [
+                {
+                  icon: 'check',
+                  label: 'Marcar todas como lidas',
+                  onPress: () => markRead.mutate(),
+                },
+              ]
+            : undefined
+        }
       />
-      <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 30, gap: 12 }}
-      >
-        {lidas ? (
-          <View className="rounded-md bg-success-soft p-3">
-            <Text className="text-label text-success">
-              Notificações marcadas como lidas.
-            </Text>
-          </View>
-        ) : null}
-        <Text className="text-caption-strong text-ink-muted">HOJE</Text>
-        <Lista itens={recentes} {...actions} />
-        <Text className="mt-3 text-caption-strong text-ink-muted">
-          ESTA SEMANA
-        </Text>
-        <Lista itens={antigas} {...actions} />
-      </ScrollView>
+      {query.isPending ? (
+        <View
+          accessibilityLabel="Carregando notificações"
+          className="flex-1 items-center justify-center"
+        >
+          <ActivityIndicator color={colors.brand} />
+        </View>
+      ) : query.isError ? (
+        <EmptyState
+          icon="alert"
+          title="Não foi possível carregar as notificações"
+          text={
+            query.error instanceof ApiError ? query.error.message : undefined
+          }
+          action={
+            <Button icon="refresh" onPress={() => void query.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon="bell"
+          title="Nenhuma notificação"
+          text="Quando algo acontecer com seus livros ou filas, avisamos aqui."
+        />
+      ) : (
+        <ScrollView
+          contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 16 }}
+        >
+          {markRead.isSuccess ? (
+            <Alert tone="success">
+              Todas as notificações foram marcadas como lidas.
+            </Alert>
+          ) : null}
+          {markRead.isError ? (
+            <Alert tone="danger" title="Não foi possível marcar como lidas">
+              {markRead.error instanceof ApiError
+                ? markRead.error.message
+                : 'Tente de novo em instantes.'}
+            </Alert>
+          ) : null}
+          {groupNotifications(items, now).map((group) => (
+            <View key={group.key} className="gap-2">
+              <Text className="text-overline text-ink-muted">
+                {group.label}
+              </Text>
+              <View className="overflow-hidden rounded-lg border border-line bg-surface-raised">
+                {group.items.map((item, index) => {
+                  const style = NOTICE_STYLE[item.type]
+                  const target = noticeTarget(item)
+                  return (
+                    <View
+                      key={item.id}
+                      className={
+                        index < group.items.length - 1
+                          ? 'border-b border-line'
+                          : ''
+                      }
+                    >
+                      <NotificationRow
+                        title={item.title}
+                        text={item.body}
+                        time={noticeTime(item.createdAt, now)}
+                        icon={style.icon}
+                        tone={style.tone}
+                        unread={item.readAt === null}
+                        onPress={target ? () => open(item) : undefined}
+                        actions={
+                          hasTurnButtons(item) ? (
+                            <>
+                              <Button size="sm" onPress={() => open(item)}>
+                                Vou retirar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onPress={() => open(item)}
+                              >
+                                Desistir
+                              </Button>
+                            </>
+                          ) : undefined
+                        }
+                      />
+                    </View>
+                  )
+                })}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      )}
     </View>
   )
 }
