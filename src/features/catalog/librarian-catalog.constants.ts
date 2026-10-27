@@ -86,3 +86,8 @@ export const BOOK_NOTICE_TEXT: Record<(typeof BOOK_NOTICES)[number], string> = {
 
 // ISBN: só dígitos, com 10 ou 13 (a API confere o resto).
 export const ISBN_LENGTHS = [10, 13] as const
+
+// Dados de cada exemplar do cadastro: o design só pede a quantidade, e a API
+// exige formato e código da biblioteca (docs/modelo-de-dados-firestore.md, copies).
+export const COPY_FORMAT = 'Livro'
+export const COPY_LIBRARY_LABEL = 'Biblioteca · Livros'
