@@ -4,6 +4,8 @@ import { MATRICULA_LENGTH } from '@/features/auth/auth.constants'
 import { LOAN_STATE } from '@/features/loans/loans.constants'
 import type { CoverTone } from '@/shared/components'
 import { calendarDaysFromNow, toAppDate } from '@/shared/utils/dates'
+import { FINE_STATUS } from '@/shared/types'
+import { formatCents } from '@/shared/utils/money'
 import { pluralize } from '@/shared/utils/plural'
 import { PICKUP_CODE_PATTERN } from './desk.constants'
 import type {
@@ -11,6 +13,7 @@ import type {
   DeskLookupResponse,
   DeskStudent,
   DeskWithStudent,
+  ReturnFine,
 } from './desk.types'
 
 const MATRICULA_PATTERN = new RegExp(`^\\d{${MATRICULA_LENGTH}}$`)
@@ -105,4 +108,28 @@ export function withStudentChip(loan: DeskWithStudent): {
     kind: loan.state === LOAN_STATE.dueSoon ? 'vence' : 'devolver',
     text: due,
   }
+}
+
+// O que acontece com a multa depois da devolução (B06): sem multa, paga na hora
+// ou em aberto para cobrar no balcão.
+export function returnFineText(fine: ReturnFine | null): string {
+  if (!fine) return 'Devolvido no prazo: sem multa.'
+  const amount = formatCents(fine.amountCents)
+  return fine.status === FINE_STATUS.paid
+    ? `Multa de ${amount} paga no balcão.`
+    : `Multa de ${amount} em aberto: cobre no balcão (aba Multas).`
+}
+
+// Frase da confirmação de devolução: diz o que vai acontecer com a multa antes
+// de registrar (RNF-USA-05).
+export function returnConfirmationText(
+  bookTitle: string,
+  fineCents: number | null,
+  finePaidNow: boolean,
+): string {
+  if (fineCents === null) return `Registrar a devolução de ${bookTitle}.`
+  const amount = formatCents(fineCents)
+  return finePaidNow
+    ? `Registrar a devolução de ${bookTitle} e o pagamento de ${amount} recebido no balcão.`
+    : `Registrar a devolução de ${bookTitle} mantendo a multa de ${amount} em aberto.`
 }

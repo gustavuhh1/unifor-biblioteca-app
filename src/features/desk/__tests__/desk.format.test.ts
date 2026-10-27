@@ -8,6 +8,8 @@ import {
   overdueCount,
   overdueText,
   pickupDeadlineLabel,
+  returnConfirmationText,
+  returnFineText,
   studentLoansText,
   withStudentChip,
 } from '../desk.format'
@@ -181,5 +183,39 @@ describe('withStudentChip (chip dos livros com o aluno, B04)', () => {
       kind: 'devolver',
       text: 'Devolver até 28/10',
     })
+  })
+})
+
+describe('textos da devolução (B06)', () => {
+  it('diz o que aconteceu com a multa', () => {
+    expect(returnFineText(null)).toBe('Devolvido no prazo: sem multa.')
+    expect(
+      returnFineText({
+        id: 'f1',
+        status: 'open',
+        businessDaysLate: 3,
+        amountCents: 600,
+      }),
+    ).toBe('Multa de R$ 6,00 em aberto: cobre no balcão (aba Multas).')
+    expect(
+      returnFineText({
+        id: 'f1',
+        status: 'paid',
+        businessDaysLate: 3,
+        amountCents: 600,
+      }),
+    ).toBe('Multa de R$ 6,00 paga no balcão.')
+  })
+
+  it('avisa na confirmação o que vai acontecer com a multa', () => {
+    expect(returnConfirmationText('Cálculo, Vol. 1', null, false)).toBe(
+      'Registrar a devolução de Cálculo, Vol. 1.',
+    )
+    expect(returnConfirmationText('Cálculo, Vol. 1', 600, false)).toBe(
+      'Registrar a devolução de Cálculo, Vol. 1 mantendo a multa de R$ 6,00 em aberto.',
+    )
+    expect(returnConfirmationText('Cálculo, Vol. 1', 600, true)).toBe(
+      'Registrar a devolução de Cálculo, Vol. 1 e o pagamento de R$ 6,00 recebido no balcão.',
+    )
   })
 })

@@ -1,118 +1,218 @@
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { ScrollView, Switch, Text, View } from 'react-native'
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { AppBar, Button, Icon, FineCard, BookCover } from '@/shared/components'
+import { ApiError } from '@/shared/api/errors'
+import {
+  Alert,
+  AppBar,
+  BookCover,
+  Button,
+  DeadlineChip,
+  EmptyState,
+  FineCard,
+  Icon,
+  Toggle,
+} from '@/shared/components'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 import { useTheme } from '@/shared/theme/theme-provider'
-export interface DevolucaoProps {
-  multaPagaInicial?: boolean
-  onVoltar?: () => void
-  onConcluido?: () => void
+import { formatDayMonth } from '@/shared/utils/dates'
+import { formatCents } from '@/shared/utils/money'
+import {
+  coverToneOfTitle,
+  firstName,
+  returnConfirmationText,
+  returnFineText,
+  withStudentChip,
+} from '../desk.format'
+import { useDeskStudent } from '../hooks/use-desk-student'
+import { useRegisterReturn } from '../hooks/use-register-return'
+
+// O que a tela mostra depois de registrar: a ficha é relida e o livro deixa de
+// estar "com o aluno", então o texto fica guardado aqui.
+interface Returned {
+  bookTitle: string
+  studentName: string
 }
-export function RegisterReturnScreen({
-  multaPagaInicial = false,
-  onVoltar,
-  onConcluido,
-}: DevolucaoProps) {
+
+// Registrar devolução (B06, RF-BAL-04 e RF-BAL-08): recebe o livro que está com o
+// aluno (POST /librarian/loans/{loanId}/return). Com multa, o bibliotecário marca
+// "Multa paga agora" depois de receber o valor no balcão. O 1º da fila é avisado
+// na hora.
+export function RegisterReturnScreen() {
+  const router = useRouter()
   const safe = useSafeAreaInsets()
   const { colors } = useTheme()
-  const [confirmar, setConfirmar] = useState(false)
-  const [multaPaga, setMultaPaga] = useState(multaPagaInicial)
-  const [registrado, setRegistrado] = useState(false)
+  const { loanId, matricula } = useLocalSearchParams<{
+    loanId: string
+    matricula: string
+  }>()
+  const record = useDeskStudent(matricula)
+  const register = useRegisterReturn()
+  const [finePaidNow, setFinePaidNow] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [returned, setReturned] = useState<Returned | null>(null)
+
+  const loan = record.data?.withStudent.find((item) => item.id === loanId)
+
+  function confirm() {
+    if (!loan || !record.data) return
+    const snapshot = {
+      bookTitle: loan.bookTitle,
+      studentName: record.data.student.name,
+    }
+    setConfirming(false)
+    register.mutate(
+      { loanId: loan.id, finePaidNow: loan.fine ? finePaidNow : false },
+      { onSuccess: () => setReturned(snapshot) },
+    )
+  }
+
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Registrar devolução" back onBack={onVoltar} />
-      <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}
-      >
-        <View className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-4">
-          <BookCover title="Cálculo, Vol. 1" tone={5} size="sm" />
-          <View className="min-w-0 flex-1 gap-2">
-            <Text className="text-book-title text-ink">Cálculo, Vol. 1</Text>
-            <Text className="text-caption text-ink-muted">
-              Com Marina Castro · 2513320
-            </Text>
-            <Text className="text-caption text-ink-muted">
-              Retirado 26/09 · venceu 10/10
-            </Text>
-          </View>
+      <AppBar title="Registrar devolução" back />
+      {returned && register.data ? (
+        <View className="flex-1 gap-4 p-4">
+          <Alert tone="success" title="Devolução registrada">
+            {`${returned.bookTitle}, de ${firstName(returned.studentName)}. ${returnFineText(register.data.fine)}`}
+          </Alert>
+          {register.data.queueNotified ? (
+            <View className="flex-row gap-3 rounded-lg bg-brand-soft p-4">
+              <Icon name="users" color="brand" />
+              <Text className="flex-1 text-body text-ink">
+                O 1º da fila deste livro foi avisado na hora e tem 24h para
+                confirmar.
+              </Text>
+            </View>
+          ) : null}
+          <Button block onPress={() => router.back()}>
+            Voltar à ficha do aluno
+          </Button>
         </View>
-        <FineCard
-          amount="R$ 6,00"
-          daysLate={3}
-          book="Cálculo, Vol. 1 · venceu em 10/10"
-          note="Cobrar no balcão ao registrar a devolução"
-          showPayment={false}
-        />
-        <View className="flex-row items-center gap-3 rounded-lg border border-line bg-surface-raised p-4">
-          <View className="flex-1 gap-1">
-            <Text className="text-label text-ink">
-              Multa paga agora (R$ 6,00)
-            </Text>
-            <Text className="text-caption text-ink-muted">
-              Pagamento só presencial. Marque depois de receber.
-            </Text>
-          </View>
-          <Switch
-            accessibilityLabel="Multa paga agora"
-            value={multaPaga}
-            onValueChange={setMultaPaga}
-            trackColor={{ true: colors.brand }}
-          />
-        </View>
-        <View className="gap-3 rounded-lg bg-brand-soft p-4">
-          <View className="flex-row gap-2">
-            <Icon name="users" color="brand" />
-            <Text className="text-label text-brand">
-              2 alunos na fila deste livro
-            </Text>
-          </View>
-          <Text className="text-body text-ink-muted">
-            Ao registrar, Rafael Teixeira (1º da fila) é avisado na hora e tem
-            24h para confirmar. O bloqueio de Marina para novos empréstimos
-            termina com esta devolução.
-          </Text>
-        </View>
-        {registrado ? (
-          <Text
-            accessibilityLiveRegion="polite"
-            className="text-label text-success"
-          >
-            Devolução registrada apenas nesta simulação.
-          </Text>
-        ) : null}
-      </ScrollView>
-      <View
-        className="gap-2 border-t border-line bg-surface-raised px-4 pt-3"
-        style={{ paddingBottom: Math.max(safe.bottom, 16) }}
-      >
-        <Button
-          block
-          icon="check"
-          disabled={registrado}
-          onPress={() => setConfirmar(true)}
+      ) : record.isPending ? (
+        <View
+          accessibilityLabel="Carregando o empréstimo"
+          className="flex-1 items-center justify-center"
         >
-          Registrar devolução
-        </Button>
-        <Button block variant="ghost" onPress={onVoltar}>
-          Cancelar
-        </Button>
-      </View>
-      <ConfirmationSheet
-        visible={confirmar}
-        title="Confirmar devolução?"
-        description={
-          multaPaga
-            ? 'Demonstração: registrar devolução e pagamento presencial da multa de R$ 6,00.'
-            : 'Demonstração: registrar devolução mantendo a multa de R$ 6,00 em aberto.'
-        }
-        onCancel={() => setConfirmar(false)}
-        onConfirm={() => {
-          setConfirmar(false)
-          setRegistrado(true)
-          onConcluido?.()
-        }}
-      />
+          <ActivityIndicator color={colors.brand} />
+        </View>
+      ) : record.isError ? (
+        <EmptyState
+          icon="alert"
+          title="Não foi possível abrir o empréstimo"
+          text={
+            record.error instanceof ApiError ? record.error.message : undefined
+          }
+          action={
+            <Button icon="refresh" onPress={() => void record.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        />
+      ) : !loan ? (
+        <EmptyState
+          icon="inbox"
+          title="Este livro não está mais com o aluno"
+          text="Abra a ficha do aluno de novo para ver os livros de agora."
+          action={<Button onPress={() => router.back()}>Voltar</Button>}
+        />
+      ) : (
+        <>
+          <ScrollView
+            contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}
+          >
+            <View className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-4">
+              <BookCover
+                title={loan.bookTitle}
+                tone={coverToneOfTitle(loan.bookTitle)}
+                size="sm"
+              />
+              <View className="min-w-0 flex-1 gap-2">
+                <Text className="text-book-title text-ink">
+                  {loan.bookTitle}
+                </Text>
+                <Text className="text-caption text-ink-muted">
+                  Com {record.data.student.name} ·{' '}
+                  {record.data.student.matricula}
+                </Text>
+                <Text className="text-caption text-ink-muted">
+                  {loan.pickedUpAt
+                    ? `Retirado ${formatDayMonth(loan.pickedUpAt)}`
+                    : null}
+                  {loan.pickedUpAt && loan.dueAt ? ' · ' : null}
+                  {loan.dueAt
+                    ? `${loan.fine ? 'venceu' : 'vence'} ${formatDayMonth(loan.dueAt)}`
+                    : null}
+                </Text>
+                <View className="flex-row">
+                  <DeadlineChip kind={withStudentChip(loan).kind}>
+                    {withStudentChip(loan).text}
+                  </DeadlineChip>
+                </View>
+              </View>
+            </View>
+            {loan.fine ? (
+              <>
+                <FineCard
+                  amount={formatCents(loan.fine.amountCents)}
+                  daysLate={loan.fine.businessDaysLate}
+                  book={`${loan.bookTitle}${loan.dueAt ? ` · venceu em ${formatDayMonth(loan.dueAt)}` : ''}`}
+                  note="Cobrar no balcão ao registrar a devolução"
+                  showPayment={false}
+                />
+                <View className="gap-1 rounded-lg border border-line bg-surface-raised p-4">
+                  <Toggle
+                    label={`Multa paga agora (${formatCents(loan.fine.amountCents)})`}
+                    checked={finePaidNow}
+                    onChange={setFinePaidNow}
+                  />
+                  <Text className="text-caption text-ink-muted">
+                    Pagamento só presencial. Marque depois de receber o valor.
+                  </Text>
+                </View>
+              </>
+            ) : null}
+            {register.isError ? (
+              <Alert
+                tone="danger"
+                title="Não foi possível registrar a devolução"
+              >
+                {register.error instanceof ApiError
+                  ? register.error.message
+                  : 'Tente de novo.'}
+              </Alert>
+            ) : null}
+          </ScrollView>
+          <View
+            className="gap-2 border-t border-line bg-surface-raised px-4 pt-3"
+            style={{ paddingBottom: Math.max(safe.bottom, 16) }}
+          >
+            <Button
+              block
+              icon="check"
+              loading={register.isPending}
+              onPress={() => setConfirming(true)}
+            >
+              Registrar devolução
+            </Button>
+            <Button block variant="ghost" onPress={() => router.back()}>
+              Cancelar
+            </Button>
+          </View>
+          <ConfirmationSheet
+            visible={confirming}
+            title="Confirmar devolução?"
+            description={returnConfirmationText(
+              loan.bookTitle,
+              loan.fine ? loan.fine.amountCents : null,
+              finePaidNow,
+            )}
+            confirmText="Registrar devolução"
+            onCancel={() => setConfirming(false)}
+            onConfirm={confirm}
+          />
+        </>
+      )}
     </View>
   )
 }
