@@ -31,23 +31,110 @@
       }
     },
     "schemas": {
-      "SignupPendingResponse": {
+      "RecommendationsResponse": {
         "type": "object",
         "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "pending_email"
+          "reasonText": {
+            "type": [
+              "string",
+              "null"
             ]
           },
-          "resendAvailableInSeconds": {
-            "type": "integer",
-            "example": 60
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendationItem"
+            },
+            "maxItems": 6
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
-          "status",
-          "resendAvailableInSeconds"
+          "reasonText",
+          "items",
+          "generatedAt",
+          "validUntil"
+        ]
+      },
+      "RecommendationItem": {
+        "type": "object",
+        "properties": {
+          "book": {
+            "$ref": "#/components/schemas/BookSummary"
+          },
+          "reasonText": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "book",
+          "reasonText"
+        ]
+      },
+      "BookSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coverUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "coverTone": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "copiesTotal": {
+            "type": "integer"
+          },
+          "copiesAvailable": {
+            "type": "integer"
+          },
+          "queueLength": {
+            "type": "integer"
+          },
+          "nextReturnAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "unavailableForNewRequests": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "authors",
+          "coverUrl",
+          "coverTone",
+          "copiesTotal",
+          "copiesAvailable",
+          "queueLength",
+          "nextReturnAt",
+          "unavailableForNewRequests"
         ]
       },
       "ErrorResponse": {
@@ -96,6 +183,260 @@
           "code": "unauthorized",
           "message": "Sua sessão expirou ou é inválida. Entre novamente."
         }
+      },
+      "LibraryInfo": {
+        "type": "object",
+        "properties": {
+          "openingHours": {
+            "type": "object",
+            "properties": {
+              "mon": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "open": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "close": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  }
+                },
+                "required": [
+                  "open",
+                  "close"
+                ]
+              },
+              "tue": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "open": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "close": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  }
+                },
+                "required": [
+                  "open",
+                  "close"
+                ]
+              },
+              "wed": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "open": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "close": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  }
+                },
+                "required": [
+                  "open",
+                  "close"
+                ]
+              },
+              "thu": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "open": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "close": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  }
+                },
+                "required": [
+                  "open",
+                  "close"
+                ]
+              },
+              "fri": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "open": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "close": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  }
+                },
+                "required": [
+                  "open",
+                  "close"
+                ]
+              },
+              "sat": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "open": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "close": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  }
+                },
+                "required": [
+                  "open",
+                  "close"
+                ]
+              },
+              "sun": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "open": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  },
+                  "close": {
+                    "type": "string",
+                    "pattern": "^\\d{2}:\\d{2}$"
+                  }
+                },
+                "required": [
+                  "open",
+                  "close"
+                ]
+              }
+            },
+            "required": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri",
+              "sat",
+              "sun"
+            ]
+          },
+          "contact": {
+            "type": "object",
+            "properties": {
+              "place": {
+                "type": "string",
+                "minLength": 1
+              },
+              "biblioZap": {
+                "type": "string",
+                "minLength": 1
+              },
+              "loanPhone": {
+                "type": "string",
+                "minLength": 1
+              },
+              "loanEmail": {
+                "type": "string",
+                "format": "email"
+              }
+            },
+            "required": [
+              "place",
+              "biblioZap",
+              "loanPhone",
+              "loanEmail"
+            ]
+          },
+          "officialRulesUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "maxActiveLoans": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "loanDays": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "renewalDays": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "maxRenewals": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "fineCentsPerBusinessDay": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "maxActiveQueues": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "queueConfirmHours": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "pickupBusinessDays": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "openingHours",
+          "contact",
+          "officialRulesUrl",
+          "maxActiveLoans",
+          "loanDays",
+          "renewalDays",
+          "maxRenewals",
+          "fineCentsPerBusinessDay",
+          "maxActiveQueues",
+          "queueConfirmHours",
+          "pickupBusinessDays"
+        ]
+      },
+      "SignupPendingResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_email"
+            ]
+          },
+          "resendAvailableInSeconds": {
+            "type": "integer",
+            "example": 60
+          }
+        },
+        "required": [
+          "status",
+          "resendAvailableInSeconds"
+        ]
       },
       "SignupStartBody": {
         "type": "object",
@@ -665,65 +1006,6 @@
           "pageSize",
           "total",
           "totalPages"
-        ]
-      },
-      "BookSummary": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "authors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "coverUrl": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "coverTone": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 6
-          },
-          "copiesTotal": {
-            "type": "integer"
-          },
-          "copiesAvailable": {
-            "type": "integer"
-          },
-          "queueLength": {
-            "type": "integer"
-          },
-          "nextReturnAt": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "unavailableForNewRequests": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "authors",
-          "coverUrl",
-          "coverTone",
-          "copiesTotal",
-          "copiesAvailable",
-          "queueLength",
-          "nextReturnAt",
-          "unavailableForNewRequests"
         ]
       },
       "BookDetail": {
@@ -3622,6 +3904,274 @@
           "platform"
         ]
       },
+      "AssistantConversation": {
+        "type": "object",
+        "properties": {
+          "disclaimer": {
+            "type": "string",
+            "description": "Aviso de que a IA pode errar."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantMessage"
+            }
+          }
+        },
+        "required": [
+          "disclaimer",
+          "items"
+        ]
+      },
+      "AssistantMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sender": {
+            "type": "string",
+            "enum": [
+              "student",
+              "assistant"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "suggestedBooks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookSummary"
+            },
+            "description": "Livros mostrados como cartões (RF-ASS-02)."
+          },
+          "action": {
+            "$ref": "#/components/schemas/AssistantAction"
+          },
+          "blockedReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Quando uma regra bloqueia o pedido (tela A81)."
+          },
+          "error": {
+            "type": "boolean",
+            "description": "O Assistente não conseguiu responder (tela A49)."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "sender",
+          "text",
+          "suggestedBooks",
+          "action",
+          "blockedReason",
+          "error",
+          "createdAt"
+        ]
+      },
+      "AssistantAction": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "request_loan",
+              "join_queue"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "confirmed",
+              "cancelled",
+              "expired",
+              "blocked",
+              "failed"
+            ]
+          },
+          "books": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookSummary"
+            }
+          },
+          "blockedReason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "overdue",
+              "loan_limit",
+              "queue_limit",
+              "same_title",
+              "unavailable",
+              "not_queueable",
+              null
+            ]
+          },
+          "blockedMessage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Por que a regra bloqueia, para o aluno ler."
+          },
+          "preview": {
+            "$ref": "#/components/schemas/AssistantActionPreview"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resultLoanId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resultQueueEntryIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "books",
+          "blockedReason",
+          "blockedMessage",
+          "preview",
+          "expiresAt",
+          "resultLoanId",
+          "resultQueueEntryIds"
+        ]
+      },
+      "AssistantActionPreview": {
+        "type": "object",
+        "properties": {
+          "pickupDeadline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Pedido: até quando retirar no balcão."
+          },
+          "activeLoansAfter": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Pedido: quantos livros o aluno terá depois."
+          },
+          "queuePosition": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Fila: a posição que o aluno vai ocupar."
+          }
+        },
+        "required": [
+          "pickupDeadline",
+          "activeLoansAfter",
+          "queuePosition"
+        ]
+      },
+      "AssistantReply": {
+        "type": "object",
+        "properties": {
+          "disclaimer": {
+            "type": "string"
+          },
+          "question": {
+            "$ref": "#/components/schemas/AssistantMessage"
+          },
+          "reply": {
+            "$ref": "#/components/schemas/AssistantMessage"
+          }
+        },
+        "required": [
+          "disclaimer",
+          "question",
+          "reply"
+        ]
+      },
+      "AssistantMessageBody": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Ex.: \"Tem algum livro de arquitetura de software?\""
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "AssistantActionConfirmed": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/AssistantAction"
+          },
+          "loan": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Loan"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            ]
+          },
+          "queueEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueueEntry"
+            }
+          }
+        },
+        "required": [
+          "action",
+          "loan",
+          "queueEntries"
+        ]
+      },
+      "AssistantActionCancelled": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/AssistantAction"
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
       "JobRun": {
         "type": "object",
         "properties": {
@@ -3689,6 +4239,88 @@
     "parameters": {}
   },
   "paths": {
+    "/me/recommendations": {
+      "get": {
+        "tags": [
+          "Recomendados (aluno)"
+        ],
+        "summary": "Recomendados para você pelo histórico de leitura",
+        "description": "Até 6 livros ativos e abertos a novos pedidos, parecidos por assunto ou autor com os livros devolvidos. Exclui obras que o aluno já pegou em qualquer situação. Cada item explica qual leitura motivou a sugestão. O motivo geral indica o assunto mais frequente. A escolha fica em cache por 24 horas; durante a validade, a API mantém a ordem e não repõe livros removidos, fechados a pedidos ou pegos depois. Sem livro devolvido, items fica vazio e reasonText é null. Não usa Gemini (RF-ASS-03).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sugestões e datas do cache, em UTC.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado: só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/library/info": {
+      "get": {
+        "tags": [
+          "Biblioteca"
+        ],
+        "summary": "Regras, horários e contatos da biblioteca",
+        "description": "Lê settings/library, com os padrões oficiais para campos ausentes ou inválidos. Horários por dia, null quando fechado; multa em centavos. Acessível a aluno e bibliotecário com sessão (RF-PER-02).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Regras e contatos atuais.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/signup/start": {
       "post": {
         "tags": [
@@ -7599,6 +8231,272 @@
           },
           "403": {
             "description": "Perfil errado (`forbidden`): só o aluno usa esta rota.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/assistant/messages": {
+      "get": {
+        "tags": [
+          "Assistente (aluno)"
+        ],
+        "summary": "Conversa com o Assistente",
+        "description": "As 50 mensagens mais recentes da conversa, da mais antiga para a mais nova, com os livros sugeridos como cartões e a ação proposta (quando houver). Traz também `disclaimer`, o aviso de que a IA pode errar, que o app mostra junto da conversa (RF-ASS-05).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A conversa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantConversation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): o Assistente é só do aluno (RF-ASS-06).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Assistente (aluno)"
+        ],
+        "summary": "Pergunta ao Assistente",
+        "description": "Manda a pergunta ao Gemini e devolve a pergunta salva e a resposta. O Assistente ensina a usar o app (RF-ASS-01), busca no acervo e sugere parecidos (RF-ASS-02), sugere pelo histórico de leitura (RF-ASS-03) e prepara um pedido de empréstimo ou uma entrada na fila (RF-ASS-04).\n\nA preparação **não executa nada**: a resposta traz `reply.action` com `status: proposed` e a prévia (prazo de retirada, livros depois do pedido ou posição na fila), e o app mostra o cartão para o aluno confirmar em `POST /me/assistant/actions/{actionId}/confirm`. Se uma regra bloqueia (atraso, limite de livros, limite de filas, mesmo título, livro indisponível), a ação vem com `status: blocked`, `blockedReason` e `blockedMessage`, e o app não mostra o botão de confirmar.\n\nAo Gemini vão só a pergunta, as mensagens anteriores e dados do acervo; nunca matrícula, e-mail nem nome (RF-ASS-07). Se o Gemini falhar, a resposta vem com `error: true` e um texto pedindo para tentar de novo, e a pergunta fica salva.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantMessageBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "A pergunta salva e a resposta do Assistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (`validation_error`, com os campos errados).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): o Assistente é só do aluno (RF-ASS-06).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/assistant/actions/{actionId}/confirm": {
+      "post": {
+        "tags": [
+          "Assistente (aluno)"
+        ],
+        "summary": "Confirma a ação proposta pelo Assistente",
+        "description": "Executa a ação que está esperando a confirmação, pelo próprio serviço do empréstimo ou da fila, com a origem `assistant`. Todas as regras são conferidas de novo, porque o estado pode ter mudado; se uma delas recusar agora, a ação vira `failed` e a resposta é o mesmo erro do pedido (`POST /loans`) ou da fila (`POST /queues`). A ação vale 15 minutos (`settings/library.assistantActionMinutes`) (RF-ASS-04).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "actionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feito: a ação confirmada e o pedido criado (`loan`) ou os lugares na fila (`queueEntries`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantActionConfirmed"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): o Assistente é só do aluno (RF-ASS-06).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A ação não existe ou é de outro aluno (`assistant_action_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A ação não está mais esperando (`assistant_action_not_pending`), o tempo acabou (`assistant_action_expired`) ou uma regra recusou agora (`overdue`, `loan_limit`, `queue_limit`, `same_title`, `unavailable`, `not_queueable`, `no_copy_available`, `already_in_queue`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/assistant/actions/{actionId}/cancel": {
+      "post": {
+        "tags": [
+          "Assistente (aluno)"
+        ],
+        "summary": "Cancela a ação proposta pelo Assistente",
+        "description": "Desiste da ação que está esperando a confirmação. Nada é pedido nem entra na fila (RF-ASS-04).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "actionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A ação cancelada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantActionCancelled"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão expirada (`unauthorized`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil errado (`forbidden`): o Assistente é só do aluno (RF-ASS-06).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A ação não existe ou é de outro aluno (`assistant_action_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A ação não está mais esperando (`assistant_action_not_pending`).",
             "content": {
               "application/json": {
                 "schema": {
