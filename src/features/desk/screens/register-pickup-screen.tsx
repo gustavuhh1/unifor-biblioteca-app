@@ -1,145 +1,202 @@
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { ApiError } from '@/shared/api/errors'
 import {
+  Alert,
   AppBar,
-  Button,
-  Icon,
   BookCover,
-  coverToneOf,
+  Button,
+  DeadlineChip,
+  EmptyState,
+  Icon,
 } from '@/shared/components'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
-const pedidos = {
-  'RET-4817': {
-    nome: 'Beatriz Nogueira',
-    matricula: '2311052',
-    titulo: 'Padrões de Projeto',
-    autor: 'Gamma et al.',
-    estante: '005.1',
-    registro: '51902',
-  },
-  'RET-4809': {
-    nome: 'Rafael Teixeira',
-    matricula: '2210478',
-    titulo: 'Cálculo, Vol. 2',
-    autor: 'James Stewart',
-    estante: '515',
-    registro: '51903',
-  },
-  'RET-4821': {
-    nome: 'Lucas Almeida',
-    matricula: '2412858',
-    titulo: 'Código Limpo',
-    autor: 'Robert C. Martin',
-    estante: '005.1',
-    registro: '46122',
-  },
+import { useTheme } from '@/shared/theme/theme-provider'
+import {
+  coverToneOfTitle,
+  dueLabel,
+  firstName,
+  isLastPickupDay,
+  isPickupBlocked,
+  pickupDeadlineLabel,
+} from '../desk.format'
+import { useDeskStudent } from '../hooks/use-desk-student'
+import { useRegisterPickup } from '../hooks/use-register-pickup'
+
+// O que a tela mostra depois de registrar: a ficha é relida e o pedido deixa de
+// estar na lista, então o texto da confirmação fica guardado aqui.
+interface Delivered {
+  studentName: string
+  bookTitle: string
 }
-export type CodigoRetirada = keyof typeof pedidos
-export interface RegistrarRetiradaProps {
-  codigo?: CodigoRetirada
-  onVoltar?: () => void
-  onConcluido?: () => void
-}
-export function RegisterPickupScreen({
-  codigo = 'RET-4817',
-  onVoltar,
-  onConcluido,
-}: RegistrarRetiradaProps) {
+
+// Registrar retirada (B05, RF-BAL-02): confere o pedido da ficha do aluno e
+// registra a entrega do exemplar (POST /librarian/loans/{loanId}/pickup). O
+// empréstimo de 14 dias começa a contar e a tela mostra o dia da devolução.
+export function RegisterPickupScreen() {
+  const router = useRouter()
   const safe = useSafeAreaInsets()
-  const [confirmar, setConfirmar] = useState(false)
-  const [feito, setFeito] = useState(false)
-  const pedido = pedidos[codigo]
+  const { colors } = useTheme()
+  const { loanId, matricula } = useLocalSearchParams<{
+    loanId: string
+    matricula: string
+  }>()
+  const record = useDeskStudent(matricula)
+  const register = useRegisterPickup()
+  const [confirming, setConfirming] = useState(false)
+  const [delivered, setDelivered] = useState<Delivered | null>(null)
+
+  const pickup = record.data?.pickups.find((item) => item.id === loanId)
+  const blocked = record.data ? isPickupBlocked(record.data) : false
+
+  function confirm() {
+    if (!pickup || !record.data) return
+    const studentName = record.data.student.name
+    setConfirming(false)
+    register.mutate(pickup.id, {
+      onSuccess: () =>
+        setDelivered({ studentName, bookTitle: pickup.bookTitle }),
+    })
+  }
+
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Registrar retirada" back onBack={onVoltar} />
-      <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}
-      >
-        <View className="flex-row gap-3 rounded-lg bg-success-soft p-4">
-          <Icon name="qr" color="success" />
-          <View className="flex-1 gap-1">
-            <Text className="text-label text-ink">QR lido: {codigo}</Text>
-            <Text className="text-body text-ink-muted">
-              Pedido confirmado pela aluna e sem pendências. Entregue o exemplar
-              e registre.
-            </Text>
-          </View>
+      <AppBar title="Registrar retirada" back />
+      {delivered && register.data ? (
+        <View className="flex-1 gap-4 p-4">
+          <Alert tone="success" title="Retirada registrada">
+            {`${delivered.bookTitle} está com ${firstName(delivered.studentName)}. ${dueLabel(register.data.loan.dueAt) ?? ''}`.trim()}
+          </Alert>
+          <Button block onPress={() => router.back()}>
+            Voltar à ficha do aluno
+          </Button>
         </View>
-        <View className="gap-4 rounded-lg border border-line bg-surface-raised p-4">
-          <Text className="text-label text-ink">{pedido.nome}</Text>
-          <Text className="text-caption text-ink-muted">
-            Matrícula {pedido.matricula}
-          </Text>
-          <View className="flex-row gap-3">
-            <BookCover
-              title={pedido.titulo}
-              author={pedido.autor}
-              tone={coverToneOf(
-                codigo === 'RET-4821'
-                  ? 'cover1'
-                  : codigo === 'RET-4809'
-                    ? 'cover4'
-                    : 'cover2',
-              )}
-              size="md"
-            />
-            <View className="min-w-0 flex-1 gap-2">
-              <Text className="text-book-title text-ink">{pedido.titulo}</Text>
-              <Text className="text-caption text-ink-muted">
-                {pedido.autor}
+      ) : record.isPending ? (
+        <View
+          accessibilityLabel="Carregando o pedido"
+          className="flex-1 items-center justify-center"
+        >
+          <ActivityIndicator color={colors.brand} />
+        </View>
+      ) : record.isError ? (
+        <EmptyState
+          icon="alert"
+          title="Não foi possível abrir o pedido"
+          text={
+            record.error instanceof ApiError ? record.error.message : undefined
+          }
+          action={
+            <Button icon="refresh" onPress={() => void record.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        />
+      ) : !pickup ? (
+        <EmptyState
+          icon="inbox"
+          title="Este pedido não está mais aguardando retirada"
+          text="Abra a ficha do aluno de novo para ver os pedidos de agora."
+          action={<Button onPress={() => router.back()}>Voltar</Button>}
+        />
+      ) : (
+        <>
+          <ScrollView
+            contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}
+          >
+            <View className="flex-row gap-3 rounded-lg bg-success-soft p-4">
+              <Icon name="qr" color="success" />
+              <View className="flex-1 gap-1">
+                <Text className="text-label text-ink">
+                  {pickup.scanned ? 'QR lido' : 'Pedido'}:{' '}
+                  {pickup.pickupCode ?? pickup.id}
+                </Text>
+                <Text className="text-body text-ink-muted">
+                  {blocked
+                    ? 'O aluno tem livro em atraso. Registre a devolução antes de entregar.'
+                    : 'Pedido confirmado e sem pendências. Entregue o exemplar e registre.'}
+                </Text>
+              </View>
+            </View>
+            <View className="gap-4 rounded-lg border border-line bg-surface-raised p-4">
+              <Text className="text-label text-ink">
+                {record.data.student.name}
               </Text>
               <Text className="text-caption text-ink-muted">
-                Registro {pedido.registro} · Estante {pedido.estante}
+                Matrícula {record.data.student.matricula}
               </Text>
-              <Text className="text-overline text-brand">
-                Pronto para retirar
+              <View className="flex-row gap-3">
+                <BookCover
+                  title={pickup.bookTitle}
+                  tone={coverToneOfTitle(pickup.bookTitle)}
+                  size="md"
+                />
+                <View className="min-w-0 flex-1 gap-2">
+                  <Text className="text-book-title text-ink">
+                    {pickup.bookTitle}
+                  </Text>
+                  <Text className="text-caption text-ink-muted">
+                    {pickup.bookShelf}
+                  </Text>
+                  <View className="flex-row">
+                    <DeadlineChip
+                      kind={
+                        isLastPickupDay(pickup.pickupDeadline)
+                          ? 'vence'
+                          : 'retirar'
+                      }
+                    >
+                      {pickupDeadlineLabel(pickup.pickupDeadline)}
+                    </DeadlineChip>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View className="rounded-md bg-brand-soft p-4">
+              <Text className="text-caption text-ink">
+                O empréstimo de 14 dias começa a contar quando você registra a
+                entrega.
               </Text>
             </View>
-          </View>
-        </View>
-        <View className="flex-row justify-between gap-3 rounded-md bg-brand-soft p-4">
-          <Text className="text-caption text-ink">Empréstimo de 14 dias</Text>
-          <Text className="text-caption-strong text-ink">
-            Devolver até 29/10
-          </Text>
-        </View>
-        {feito ? (
-          <Text
-            accessibilityLiveRegion="polite"
-            className="rounded-md bg-success-soft p-4 text-label text-success"
+            {register.isError ? (
+              <Alert
+                tone="danger"
+                title="Não foi possível registrar a retirada"
+              >
+                {register.error instanceof ApiError
+                  ? register.error.message
+                  : 'Tente de novo.'}
+              </Alert>
+            ) : null}
+          </ScrollView>
+          <View
+            className="gap-2 border-t border-line bg-surface-raised px-4 pt-3"
+            style={{ paddingBottom: Math.max(safe.bottom, 16) }}
           >
-            Retirada registrada na simulação.
-          </Text>
-        ) : null}
-      </ScrollView>
-      <View
-        className="gap-2 border-t border-line bg-surface-raised px-4 pt-3"
-        style={{ paddingBottom: Math.max(safe.bottom, 16) }}
-      >
-        <Button
-          block
-          icon="check"
-          disabled={feito}
-          onPress={() => setConfirmar(true)}
-        >
-          {feito ? 'Registrado' : 'Registrar entrega'}
-        </Button>
-        <Button block variant="ghost" onPress={onVoltar}>
-          Cancelar
-        </Button>
-      </View>
-      <ConfirmationSheet
-        visible={confirmar}
-        title="Confirmar retirada?"
-        description="Demonstração: confirmar a entrega presencial do exemplar. Nenhum dado será enviado."
-        onCancel={() => setConfirmar(false)}
-        onConfirm={() => {
-          setConfirmar(false)
-          setFeito(true)
-          onConcluido?.()
-        }}
-      />
+            <Button
+              block
+              icon="check"
+              loading={register.isPending}
+              disabled={blocked}
+              onPress={() => setConfirming(true)}
+            >
+              Registrar entrega
+            </Button>
+            <Button block variant="ghost" onPress={() => router.back()}>
+              Cancelar
+            </Button>
+          </View>
+          <ConfirmationSheet
+            visible={confirming}
+            title="Confirmar retirada?"
+            description={`Entregue ${pickup.bookTitle} a ${firstName(record.data.student.name)}. O empréstimo de 14 dias começa a contar agora.`}
+            confirmText="Registrar entrega"
+            onCancel={() => setConfirming(false)}
+            onConfirm={confirm}
+          />
+        </>
+      )}
     </View>
   )
 }
