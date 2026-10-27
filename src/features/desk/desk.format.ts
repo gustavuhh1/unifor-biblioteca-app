@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { MATRICULA_LENGTH } from '@/features/auth/auth.constants'
+import { LOAN_STATE } from '@/features/loans/loans.constants'
 import type { CoverTone } from '@/shared/components'
 import { calendarDaysFromNow, toAppDate } from '@/shared/utils/dates'
 import { pluralize } from '@/shared/utils/plural'
@@ -9,6 +10,7 @@ import type {
   DeskLookupBody,
   DeskLookupResponse,
   DeskStudent,
+  DeskWithStudent,
 } from './desk.types'
 
 const MATRICULA_PATTERN = new RegExp(`^\\d{${MATRICULA_LENGTH}}$`)
@@ -84,4 +86,23 @@ export function overdueCount(record: DeskLookupResponse): number {
 // "1 livro em atraso" / "2 livros em atraso".
 export function overdueText(count: number): string {
   return `${pluralize(count, 'livro', 'livros')} em atraso`
+}
+
+// Chip de cada livro "com o aluno" na ficha (B04): atrasado com os dias úteis,
+// vencendo em breve ou o prazo de devolução. O atraso vem da multa acumulada.
+export function withStudentChip(loan: DeskWithStudent): {
+  kind: 'atrasado' | 'vence' | 'devolver'
+  text: string
+} {
+  if (loan.fine) {
+    return {
+      kind: 'atrasado',
+      text: `Atrasado · ${pluralize(loan.fine.businessDaysLate, 'dia útil', 'dias úteis')}`,
+    }
+  }
+  const due = dueLabel(loan.dueAt) ?? 'Sem prazo'
+  return {
+    kind: loan.state === LOAN_STATE.dueSoon ? 'vence' : 'devolver',
+    text: due,
+  }
 }

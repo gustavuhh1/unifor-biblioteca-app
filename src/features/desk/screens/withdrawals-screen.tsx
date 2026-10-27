@@ -1,7 +1,15 @@
+import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { ActivityIndicator, FlatList, Text, View } from 'react-native'
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from 'react-native'
 import { ApiError } from '@/shared/api/errors'
 import {
+  Alert,
   AppBar,
   BookCover,
   Button,
@@ -21,19 +29,36 @@ import {
   isLastPickupDay,
   pickupDeadlineLabel,
 } from '../desk.format'
+import { useDeskLookup } from '../hooks/use-desk-lookup'
 import { usePickups } from '../hooks/use-pickups'
 
 // Retiradas (B07, RF-BAL-05): pedidos aguardando retirada, do prazo mais curto
 // ao mais longo (GET /librarian/pickups), com busca pelos primeiros dígitos da
-// matrícula do aluno.
+// matrícula do aluno. Tocar num pedido abre a ficha do aluno pelo código do
+// pedido (POST /librarian/desk/lookup), de onde se registra a retirada.
 export function WithdrawalsScreen() {
+  const router = useRouter()
   const { colors } = useTheme()
+  const lookup = useDeskLookup()
   const [search, setSearch] = useState('')
   const debounced = useDebouncedValue(search, PICKUP_SEARCH_DEBOUNCE_MS)
   const matricula = MATRICULA_SEARCH_PATTERN.test(debounced)
     ? debounced
     : undefined
   const pickups = usePickups(matricula)
+
+  function openRecord(pickupCode: string) {
+    lookup.mutate(
+      { pickupCode },
+      {
+        onSuccess: (record) =>
+          router.push({
+            pathname: '/identify-student',
+            params: { matricula: record.student.matricula },
+          }),
+      },
+    )
+  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -60,6 +85,15 @@ export function WithdrawalsScreen() {
           maxLength={7}
         />
       </View>
+      {lookup.isError ? (
+        <View className="mx-4 mb-4">
+          <Alert tone="danger" title="Não foi possível abrir o pedido">
+            {lookup.error instanceof ApiError
+              ? lookup.error.message
+              : 'Tente de novo.'}
+          </Alert>
+        </View>
+      ) : null}
       {pickups.isPending ? (
         <View
           accessibilityLabel="Carregando retiradas"
@@ -106,7 +140,13 @@ export function WithdrawalsScreen() {
             </Text>
           }
           renderItem={({ item }) => (
-            <View className="gap-3 rounded-lg border border-line bg-surface-raised p-3">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Abrir o pedido ${item.pickupCode} de ${item.studentName}`}
+              disabled={lookup.isPending}
+              onPress={() => openRecord(item.pickupCode)}
+              className="gap-3 rounded-lg border border-line bg-surface-raised p-3"
+            >
               <View className="flex-row gap-3">
                 <BookCover
                   title={item.bookTitle}
@@ -134,7 +174,7 @@ export function WithdrawalsScreen() {
                   {pickupDeadlineLabel(item.pickupDeadline)}
                 </DeadlineChip>
               </View>
-            </View>
+            </Pressable>
           )}
         />
       )}

@@ -9,6 +9,7 @@ import {
   overdueText,
   pickupDeadlineLabel,
   studentLoansText,
+  withStudentChip,
 } from '../desk.format'
 import type { DeskLookupResponse, DeskStudent } from '../desk.types'
 
@@ -136,5 +137,49 @@ describe('coverToneOfTitle (capa sem cor na lista do balcão)', () => {
       expect(tone).toBeLessThanOrEqual(6)
       expect(coverToneOfTitle(title)).toBe(tone)
     }
+  })
+})
+
+describe('withStudentChip (chip dos livros com o aluno, B04)', () => {
+  const base = {
+    id: 'l1',
+    bookId: 'b1',
+    bookTitle: 'Engenharia de Software',
+    bookShelf: '005.1',
+    status: 'active' as const,
+    state: 'in_progress' as const,
+    pickupCode: null,
+    pickupDeadline: '2026-10-05T00:55:00.000Z',
+    pickedUpAt: null,
+    dueAt: '2026-10-29T00:55:00.000Z',
+    returnedAt: null,
+    progress: 0.5,
+  }
+
+  it('mostra os dias úteis de atraso de quem tem multa acumulada', () => {
+    const chip = withStudentChip({
+      ...base,
+      state: 'overdue',
+      fine: { businessDaysLate: 3, amountCents: 600 },
+    })
+    expect(chip).toEqual({ kind: 'atrasado', text: 'Atrasado · 3 dias úteis' })
+    expect(
+      withStudentChip({
+        ...base,
+        state: 'overdue',
+        fine: { businessDaysLate: 1, amountCents: 200 },
+      }).text,
+    ).toBe('Atrasado · 1 dia útil')
+  })
+
+  it('destaca o que vence em breve e escreve o prazo dos demais', () => {
+    expect(withStudentChip({ ...base, state: 'due_soon' })).toEqual({
+      kind: 'vence',
+      text: 'Devolver até 28/10',
+    })
+    expect(withStudentChip(base)).toEqual({
+      kind: 'devolver',
+      text: 'Devolver até 28/10',
+    })
   })
 })

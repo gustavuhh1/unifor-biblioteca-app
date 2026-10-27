@@ -1,46 +1,51 @@
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { ScrollView, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { AppBar, Button, TextField } from '@/shared/components'
-import { Caixa } from '@/shared/components/blocos'
-export interface IdentificarAlunoProps {
-  onVoltar?: () => void
-  onDevolucao?: () => void
-  onRetirada?: () => void
-}
-export function IdentifyStudentScreen({
-  onVoltar,
-  onDevolucao,
-  onRetirada,
-}: IdentificarAlunoProps) {
-  const safe = useSafeAreaInsets()
-  const [matricula, setMatricula] = useState('2513320')
-  const [aluno, setAluno] = useState<'marina' | 'beatriz' | null>('marina')
-  const [erro, setErro] = useState('')
-  function buscar() {
-    const valor = matricula.trim().toUpperCase()
-    if (!/^(\d{7}|RET-\d{4})$/.test(valor)) {
-      setErro('Informe uma matrícula de 7 dígitos ou um código RET-0000.')
-      setAluno(null)
+import { ActivityIndicator, ScrollView, View } from 'react-native'
+import { ApiError } from '@/shared/api/errors'
+import { AppBar, Button, EmptyState, TextField } from '@/shared/components'
+import { useTheme } from '@/shared/theme/theme-provider'
+import { StudentRecord } from '../components/student-record'
+import { DESK_MESSAGE } from '../desk.constants'
+import { lookupBodyFromInput } from '../desk.format'
+import { useDeskLookup } from '../hooks/use-desk-lookup'
+import { useDeskStudent } from '../hooks/use-desk-student'
+
+// Identificar aluno (B04 e B05, RF-BAL-02 e RF-BAL-03): sem QR, a pessoa digita a
+// matrícula ou o código do pedido e abre a mesma ficha que o QR abre
+// (POST /librarian/desk/lookup). Com `matricula` na rota (vindo do QR ou da
+// lista Retiradas), a ficha já abre pronta. Dali se registra a retirada e a
+// devolução.
+export function IdentifyStudentScreen() {
+  const router = useRouter()
+  const { colors } = useTheme()
+  const { matricula } = useLocalSearchParams<{ matricula?: string }>()
+  const [input, setInput] = useState('')
+  const [inputError, setInputError] = useState<string | null>(null)
+  const lookup = useDeskLookup()
+  const record = useDeskStudent(matricula)
+
+  function search() {
+    const body = lookupBodyFromInput(input)
+    if (!body) {
+      setInputError(DESK_MESSAGE.invalidSearch)
       return
     }
-    const encontrado =
-      valor === '2513320'
-        ? 'marina'
-        : valor === '2311052' || valor === 'RET-4817'
-          ? 'beatriz'
-          : null
-    setAluno(encontrado)
-    setErro(encontrado ? '' : 'Aluno não encontrado nesta demonstração.')
+    setInputError(null)
+    lookup.mutate(body, {
+      onSuccess: (found) =>
+        router.setParams({ matricula: found.student.matricula }),
+    })
   }
-  const marina = aluno === 'marina'
+
+  const lookupError =
+    lookup.error instanceof ApiError ? lookup.error.message : undefined
+
   return (
     <View className="flex-1 bg-surface">
       <AppBar
         title="Identificar aluno"
         subtitle="Sem QR: pela matrícula ou código"
         back
-        onBack={onVoltar}
       />
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -49,95 +54,68 @@ export function IdentifyStudentScreen({
         <TextField
           label="Matrícula ou código do pedido"
           icon="search"
-          value={matricula}
+          value={input}
           onChangeText={(value) => {
-            setMatricula(value)
-            setAluno(null)
-            setErro('')
+            setInput(value)
+            setInputError(null)
+            lookup.reset()
           }}
-          onSubmitEditing={buscar}
+          onSubmitEditing={search}
           returnKeyType="search"
-          hint="Ex.: 2513320 ou RET-4817"
-          error={erro || undefined}
+          autoCapitalize="characters"
+          hint="Ex.: 2412858 ou RET-4821"
+          error={inputError ?? lookupError}
         />
-        <Button block variant="secondary" onPress={buscar}>
+        <Button
+          block
+          variant="secondary"
+          loading={lookup.isPending}
+          onPress={search}
+        >
           Buscar aluno
         </Button>
-        {aluno ? (
-          <>
-            <Caixa>
-              <Text className="text-title-sm text-ink">
-                {marina ? 'Marina Castro' : 'Beatriz Nogueira'}
-              </Text>
-              <Text className="text-caption text-ink-muted">
-                {marina
-                  ? '2513320 · Sistemas de Informação'
-                  : '2311052 · Aluna em dia'}
-              </Text>
-              <Text className="text-overline text-brand">
-                {marina
-                  ? '3 de 10 livros · 1 atrasado'
-                  : 'Pedido pronto para retirar'}
-              </Text>
-            </Caixa>
-            {marina ? (
-              <>
-                <Caixa tom="erro">
-                  <Text className="text-label text-danger">
-                    Empréstimos bloqueados
-                  </Text>
-                  <Text className="text-body text-ink">
-                    Marina tem 1 livro em atraso: Cálculo, Vol. 1 (3 dias, multa
-                    de R$ 6,00). Registre a devolução; até lá ela não pode pedir
-                    nem retirar livros.
-                  </Text>
-                </Caixa>
-                <Text className="text-overline text-ink-muted">
-                  Com o aluno
-                </Text>
-                <Caixa>
-                  {[
-                    ['Cálculo, Vol. 1', '3 dias de atraso'],
-                    ['Engenharia de Software', 'vence 16/10'],
-                    ['Estruturas de Dados e Algoritmos', 'vence 23/10'],
-                  ].map(([title, due]) => (
-                    <View
-                      key={title}
-                      className="flex-row justify-between gap-3"
-                    >
-                      <Text className="flex-1 text-book-title-sm text-ink">
-                        {title}
-                      </Text>
-                      <Text className="text-caption text-ink-muted">{due}</Text>
-                    </View>
-                  ))}
-                </Caixa>
-              </>
-            ) : (
-              <Caixa tom="sucesso">
-                <Text className="text-label text-success">
-                  Pedido confirmado e sem pendências
-                </Text>
-                <Text className="text-body text-ink">
-                  Padrões de Projeto · RET-4817
-                </Text>
-              </Caixa>
-            )}
-          </>
+        {matricula ? (
+          record.isPending ? (
+            <View
+              accessibilityLabel="Abrindo a ficha do aluno"
+              className="items-center py-6"
+            >
+              <ActivityIndicator color={colors.brand} />
+            </View>
+          ) : record.isError ? (
+            <EmptyState
+              icon="alert"
+              title="Não foi possível abrir a ficha"
+              text={
+                record.error instanceof ApiError
+                  ? record.error.message
+                  : undefined
+              }
+              action={
+                <Button icon="refresh" onPress={() => void record.refetch()}>
+                  Tentar de novo
+                </Button>
+              }
+            />
+          ) : (
+            <StudentRecord
+              record={record.data}
+              onPickup={(loanId) =>
+                router.push({
+                  pathname: '/register-pickup',
+                  params: { loanId, matricula },
+                })
+              }
+              onReturn={(loanId) =>
+                router.push({
+                  pathname: '/register-return',
+                  params: { loanId, matricula },
+                })
+              }
+            />
+          )
         ) : null}
       </ScrollView>
-      {aluno ? (
-        <View
-          className="border-t border-line bg-surface-raised px-4 pt-3"
-          style={{ paddingBottom: Math.max(safe.bottom, 16) }}
-        >
-          <Button block onPress={marina ? onDevolucao : onRetirada}>
-            {marina
-              ? 'Registrar devolução de Cálculo, Vol. 1'
-              : 'Consultar retirada'}
-          </Button>
-        </View>
-      ) : null}
     </View>
   )
 }
