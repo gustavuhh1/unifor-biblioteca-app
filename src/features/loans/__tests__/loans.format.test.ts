@@ -1,8 +1,14 @@
 import {
+  daysLeftText,
   findPickupLoan,
   formatWeekdayDate,
+  historyDetailText,
+  loanBadge,
+  loanDueText,
+  loanStartText,
   nextDueLoan,
   pickupDeadlineText,
+  renewedNotice,
 } from '../loans.format'
 import type { MyLoan } from '../loans.types'
 
@@ -88,5 +94,115 @@ describe('findPickupLoan (A25, QR de retirada)', () => {
     const active = makeLoan({ id: 'ativo', status: 'active', qrToken: null })
     expect(findPickupLoan([active])).toBeUndefined()
     expect(findPickupLoan([active, waiting('a')], 'ativo')?.id).toBe('a')
+  })
+})
+
+// Quinta-feira, 15/10/2026, 12h em Fortaleza.
+const NOW = new Date('2026-10-15T15:00:00.000Z')
+
+describe('daysLeftText (selo dos empréstimos ativos)', () => {
+  it('conta os dias de calendário até o vencimento', () => {
+    expect(daysLeftText('2026-10-20T21:55:00.000Z', NOW)).toBe(
+      '5 dias restantes',
+    )
+  })
+
+  it('escreve hoje e amanhã por extenso', () => {
+    expect(daysLeftText('2026-10-15T21:55:00.000Z', NOW)).toBe('Vence hoje')
+    expect(daysLeftText('2026-10-16T21:55:00.000Z', NOW)).toBe('Vence amanhã')
+  })
+
+  it('marca atrasado depois do vencimento e não inventa sem prazo', () => {
+    expect(daysLeftText('2026-10-10T21:55:00.000Z', NOW)).toBe('Atrasado')
+    expect(daysLeftText(null, NOW)).toBeUndefined()
+  })
+})
+
+describe('loanBadge (palavra e tom do selo)', () => {
+  it('troca o tom pelo state da API', () => {
+    expect(loanBadge(makeLoan({ state: 'ready_for_pickup' }), NOW)).toEqual({
+      status: 'retirar',
+    })
+    expect(loanBadge(makeLoan({ state: 'overdue' }), NOW).status).toBe(
+      'atrasado',
+    )
+    expect(loanBadge(makeLoan({ state: 'returned' }), NOW).status).toBe(
+      'devolvido',
+    )
+    expect(loanBadge(makeLoan({ state: 'expired' }), NOW).status).toBe(
+      'expirado',
+    )
+    expect(loanBadge(makeLoan({ state: 'cancelled' }), NOW).status).toBe(
+      'cancelado',
+    )
+  })
+
+  it('mostra os dias restantes em andamento e perto de vencer', () => {
+    const dueAt = '2026-10-16T21:55:00.000Z'
+    expect(loanBadge(makeLoan({ state: 'due_soon', dueAt }), NOW)).toEqual({
+      status: 'vence',
+      label: 'Vence amanhã',
+    })
+    expect(loanBadge(makeLoan({ state: 'in_progress', dueAt }), NOW)).toEqual({
+      status: 'ativo',
+      label: 'Vence amanhã',
+    })
+  })
+})
+
+describe('loanStartText e loanDueText (prazos concretos)', () => {
+  it('escreve a retirada e marca a renovação', () => {
+    const loan = makeLoan({ pickedUpAt: '2026-10-06T15:00:00.000Z' })
+    expect(loanStartText(loan)).toBe('Retirado 06/10')
+    expect(loanStartText({ ...loan, renewalCount: 1 })).toBe(
+      'Retirado 06/10 · renovado',
+    )
+    expect(loanStartText({ ...loan, pickedUpAt: null })).toBeUndefined()
+  })
+
+  it('escreve "Devolver até" e, em atraso, "Venceu"', () => {
+    const dueAt = '2026-10-20T21:55:00.000Z'
+    expect(loanDueText(makeLoan({ dueAt, state: 'in_progress' }))).toBe(
+      'Devolver até 20/10',
+    )
+    expect(loanDueText(makeLoan({ dueAt, state: 'overdue' }))).toBe(
+      'Venceu 20/10',
+    )
+  })
+})
+
+describe('renewedNotice (A41)', () => {
+  it('mostra o novo vencimento com o dia da semana', () => {
+    expect(renewedNotice({ dueAt: '2026-11-06T21:55:00.000Z' })).toBe(
+      'Renovado até sex, 06/11.',
+    )
+    expect(renewedNotice({ dueAt: null })).toBe('Empréstimo renovado.')
+  })
+})
+
+describe('historyDetailText (A42)', () => {
+  it('conta o que aconteceu com cada item', () => {
+    expect(
+      historyDetailText(
+        makeLoan({
+          state: 'returned',
+          pickedUpAt: '2026-09-08T15:00:00.000Z',
+          returnedAt: '2026-09-20T15:00:00.000Z',
+        }),
+      ),
+    ).toBe('Retirado 08/09 · devolvido 20/09')
+    expect(
+      historyDetailText(
+        makeLoan({ state: 'expired', requestedAt: '2026-08-04T15:00:00.000Z' }),
+      ),
+    ).toBe('Pedido de 04/08 não retirado no prazo')
+    expect(
+      historyDetailText(
+        makeLoan({
+          state: 'cancelled',
+          cancelledAt: '2026-08-12T15:00:00.000Z',
+        }),
+      ),
+    ).toBe('Pedido cancelado em 12/08')
   })
 })

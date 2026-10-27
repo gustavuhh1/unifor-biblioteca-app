@@ -8,16 +8,14 @@ import {
   Alert,
   AppBar,
   Button,
-  ConfirmationSheet,
   EmptyState,
   Icon,
   QRPass,
 } from '@/shared/components'
 import { LOAN_PERIOD_DAYS } from '@/shared/config/library-rules'
 import { useTheme } from '@/shared/theme/theme-provider'
-import { useCancelLoan } from '../hooks/use-loan-actions'
+import { CancelLoanSheet } from '../components/cancel-loan-sheet'
 import { useMyLoans } from '../hooks/use-my-loans'
-import { loanErrorText } from '../loans.errors'
 import { findPickupLoan, formatWeekdayDate } from '../loans.format'
 
 // Retirada (A25 e A69, RF-EMP-07 e RF-EMP-05): o QR que o aluno mostra no
@@ -30,24 +28,8 @@ export function PickupQrScreen() {
   const { user } = useSession()
   const { loanId } = useLocalSearchParams<{ loanId?: string }>()
   const query = useMyLoans()
-  const cancel = useCancelLoan()
-  const [confirmingCancel, setConfirmingCancel] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const loan = findPickupLoan(query.data?.items ?? [], loanId)
-
-  function closeCancel() {
-    cancel.reset()
-    setConfirmingCancel(false)
-  }
-
-  function confirmCancel() {
-    if (!loan || cancel.isPending) return
-    cancel.mutate(loan.id, {
-      onSuccess: () => {
-        closeCancel()
-        router.replace('/loans')
-      },
-    })
-  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -116,32 +98,17 @@ export function PickupQrScreen() {
             </Text>
           </View>
 
-          <Button
-            block
-            variant="secondary"
-            onPress={() => setConfirmingCancel(true)}
-          >
+          <Button block variant="secondary" onPress={() => setCancelling(true)}>
             Cancelar pedido
           </Button>
         </ScrollView>
       )}
 
-      <ConfirmationSheet
-        visible={confirmingCancel && loan !== undefined}
-        danger
-        title={`Cancelar o pedido de ${loan?.bookTitle ?? 'este livro'}?`}
-        description="O exemplar volta para a estante ou segue para o próximo da fila. Você pode pedir de novo depois."
-        confirmText="Cancelar pedido"
-        cancelText="Manter pedido"
-        onCancel={closeCancel}
-        onConfirm={confirmCancel}
-      >
-        {cancel.isError ? (
-          <Alert tone="danger" title="Não foi possível cancelar">
-            {loanErrorText(cancel.error)}
-          </Alert>
-        ) : null}
-      </ConfirmationSheet>
+      <CancelLoanSheet
+        loan={cancelling ? (loan ?? null) : null}
+        onClose={() => setCancelling(false)}
+        onCancelled={() => router.replace('/loans')}
+      />
     </View>
   )
 }

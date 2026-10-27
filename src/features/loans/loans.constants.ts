@@ -5,6 +5,12 @@ export const LOAN_VIEWS = ['active', 'history'] as const
 export type LoanView = (typeof LOAN_VIEWS)[number]
 export const LOAN_VIEW = constantsOf(LOAN_VIEWS)
 
+// Abas da tela Meus empréstimos (A39): Ativos, Na fila (do bloco da fila) e
+// Histórico.
+export const LOANS_TABS = ['active', 'queue', 'history'] as const
+export type LoansTab = (typeof LOANS_TABS)[number]
+export const LOANS_TAB = constantsOf(LOANS_TABS)
+
 // Situação calculada na hora pela API para cada empréstimo (campo `state`).
 export const LOAN_STATES = [
   'ready_for_pickup',
