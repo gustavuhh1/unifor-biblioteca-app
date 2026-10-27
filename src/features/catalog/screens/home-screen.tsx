@@ -1,57 +1,44 @@
-import { BookCover, coverToneOf } from '@/shared/components'
+import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSession } from '@/features/auth/hooks/use-session'
+import { nextDueLoan } from '@/features/loans/loans.format'
+import { useMyLoans } from '@/features/loans/hooks/use-my-loans'
+import { useNotifications } from '@/features/notifications/hooks/use-notifications'
+import { useMyQueues } from '@/features/queues/hooks/use-my-queues'
+import { yourTurnEntry } from '@/features/queues/queues.format'
 import { Icon } from '@/shared/components/icon'
+import { MAX_ACTIVE_LOANS } from '@/shared/config/library-rules'
 import { useTheme } from '@/shared/theme/theme-provider'
+import { formatRelativeDateTime, formatRelativeDay } from '@/shared/utils/dates'
 
-export interface HomeAlunoProps {
-  onNotificacoes?: () => void
-  onAcervo?: () => void
-  onDetalheLivro?: () => void
-  onEmprestimos?: () => void
-  onAssistente?: () => void
-  onPerfil?: () => void
-  onMinhaVez?: () => void
-  onBuscar?: (texto: string) => void
-}
+// Maior número que o sino mostra; acima disso aparece "9+".
+const BELL_BADGE_MAX = 9
 
-const recomendados = [
-  {
-    id: 1,
-    titulo: 'Refatoração',
-    autor: 'Martin Fowler',
-    cor: 'cover2' as const,
-  },
-  {
-    id: 2,
-    titulo: 'Arquitetura Limpa',
-    autor: 'Robert C. Martin',
-    cor: 'cover6' as const,
-  },
-  {
-    id: 3,
-    titulo: 'Padrões de Projeto',
-    autor: 'Gamma et al.',
-    cor: 'cover3' as const,
-  },
-]
-
-export function HomeScreen({
-  onNotificacoes,
-  onAcervo,
-  onDetalheLivro,
-  onEmprestimos,
-  onAssistente,
-  onPerfil,
-  onMinhaVez,
-  onBuscar,
-}: HomeAlunoProps) {
+// Início do aluno (A07; RF-AVI-01, RF-EMP-08, RF-FIL-06). Tudo vem da API:
+// nome e contador de /me, o sino de /me/notifications, o aviso "É a sua vez" de
+// /me/queues e a próxima devolução de /me/loans. "Recomendados para você" fica
+// de fora até a API ter a rota de recomendações do Assistente (RF-ASS-03).
+export function HomeScreen() {
   const safe = useSafeAreaInsets()
+  const router = useRouter()
   const { colors } = useTheme()
   const { user } = useSession()
+  const notifications = useNotifications()
+  const queues = useMyQueues()
+  const loans = useMyLoans()
   const [busca, setBusca] = useState('')
+
+  const firstName = user?.fullName?.split(' ')[0]
+  const unread = notifications.data?.unreadCount ?? 0
+  const yourTurn = yourTurnEntry(queues.data?.items ?? [])
+  const nextLoan = nextDueLoan(loans.data?.items ?? [])
+
+  function buscar() {
+    router.push({ pathname: '/catalog', params: { q: busca.trim() } })
+    setBusca('')
+  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -63,22 +50,28 @@ export function HomeScreen({
         <View className="mb-6 flex-row items-center justify-between px-4">
           <View>
             <Text className="text-title-lg text-ink">
-              Olá, {user?.fullName?.split(' ')[0] ?? 'aluno'}
+              {firstName ? `Olá, ${firstName}` : 'Olá!'}
             </Text>
             <Text className="mt-1 text-body text-ink-muted">
               Matrícula {user?.matricula}
             </Text>
           </View>
           <Pressable
-            onPress={onNotificacoes}
+            onPress={() => router.push('/notifications')}
             accessibilityRole="button"
-            accessibilityLabel="Notificações, duas não lidas"
+            accessibilityLabel={
+              unread > 0 ? `Notificações, ${unread} não lidas` : 'Notificações'
+            }
             className="h-12 w-12 items-center justify-center"
           >
             <Icon name="bell" size={25} color="ink" />
-            <View className="absolute right-0 top-0 h-5 w-5 items-center justify-center rounded-pill bg-danger">
-              <Text className="text-caption-strong text-on-danger">2</Text>
-            </View>
+            {unread > 0 ? (
+              <View className="absolute right-0 top-0 h-5 w-5 items-center justify-center rounded-pill bg-danger">
+                <Text className="text-caption-strong text-on-danger">
+                  {unread > BELL_BADGE_MAX ? `${BELL_BADGE_MAX}+` : unread}
+                </Text>
+              </View>
+            ) : null}
           </Pressable>
         </View>
         <View className="mb-5 flex-row items-center gap-2 px-4">
@@ -87,7 +80,7 @@ export function HomeScreen({
             <TextInput
               value={busca}
               onChangeText={setBusca}
-              onSubmitEditing={() => onBuscar?.(busca)}
+              onSubmitEditing={buscar}
               placeholder="Buscar título, autor ou assunto"
               placeholderTextColor={colors.inkMuted}
               returnKeyType="search"
@@ -95,7 +88,7 @@ export function HomeScreen({
             />
           </View>
           <Pressable
-            onPress={() => onBuscar?.(busca)}
+            onPress={buscar}
             accessibilityRole="button"
             accessibilityLabel="Buscar no acervo"
             className="h-[52px] w-[52px] items-center justify-center rounded-pill border border-line bg-surface-raised"
@@ -103,81 +96,52 @@ export function HomeScreen({
             <Icon name="search" color="ink" size={22} />
           </Pressable>
         </View>
-        <Pressable
-          onPress={onMinhaVez}
-          accessibilityRole="button"
-          className="mx-4 mb-5 flex-row gap-3 rounded-md bg-warning-soft p-4"
-        >
-          <Icon name="bell" color="ink" size={22} />
-          <View className="flex-1 gap-1">
-            <Text className="text-label text-ink">
-              É a sua vez: Código Limpo
-            </Text>
-            <Text className="text-body text-ink">
-              Confirme até amanhã, 09:12, ou o livro passa para o próximo da
-              fila.
-            </Text>
-          </View>
-        </Pressable>
+        {yourTurn?.confirmDeadline ? (
+          <Pressable
+            onPress={() => router.push('/loans')}
+            accessibilityRole="button"
+            className="mx-4 mb-5 flex-row gap-3 rounded-md bg-warning-soft p-4"
+          >
+            <Icon name="bell" color="ink" size={22} />
+            <View className="flex-1 gap-1">
+              <Text className="text-label text-ink">
+                É a sua vez: {yourTurn.bookTitle}
+              </Text>
+              <Text className="text-body text-ink">
+                Confirme até {formatRelativeDateTime(yourTurn.confirmDeadline)},
+                ou o livro passa para o próximo da fila.
+              </Text>
+            </View>
+          </Pressable>
+        ) : null}
         <View className="mb-6 flex-row gap-3 px-4">
           <Pressable
-            onPress={onEmprestimos}
+            onPress={() => router.push('/loans')}
             accessibilityRole="button"
             className="min-h-[110px] flex-1 rounded-md border border-line bg-surface-raised p-4"
           >
             <Text className="text-caption-strong text-ink-muted">COM VOCÊ</Text>
-            <Text className="mt-1 text-title-lg text-ink">3 de 10</Text>
+            <Text className="mt-1 text-title-lg text-ink">
+              {user?.activeLoanCount ?? 0} de {MAX_ACTIVE_LOANS}
+            </Text>
             <Text className="text-body text-ink-muted">livros</Text>
           </Pressable>
           <Pressable
-            onPress={onEmprestimos}
+            onPress={() => router.push('/loans')}
             accessibilityRole="button"
             className="min-h-[110px] flex-1 rounded-md border border-line bg-surface-raised p-4"
           >
             <Text className="text-caption-strong text-ink-muted">
               PRÓXIMA DEVOLUÇÃO
             </Text>
-            <Text className="mt-1 text-title text-ink">Amanhã, 16/10</Text>
-            <Text className="text-body text-ink-muted">
-              Engenharia de Software
+            <Text className="mt-1 text-title text-ink">
+              {nextLoan?.dueAt ? formatRelativeDay(nextLoan.dueAt) : 'Nenhuma'}
+            </Text>
+            <Text className="text-body text-ink-muted" numberOfLines={2}>
+              {nextLoan?.bookTitle ?? 'Sem empréstimos ativos'}
             </Text>
           </Pressable>
         </View>
-        <View className="mb-4 gap-1 px-4">
-          <Text className="text-title text-ink">Recomendados para você</Text>
-          <View className="flex-row items-center gap-2">
-            <Icon name="sparkle" size={17} color="brand" />
-            <Text className="flex-1 text-body text-ink-muted">
-              Pelo que você mais leu em Engenharia de Software
-            </Text>
-          </View>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            gap: 16,
-            paddingBottom: 8,
-          }}
-        >
-          {recomendados.map((l) => (
-            <Pressable
-              key={l.id}
-              onPress={onDetalheLivro}
-              accessibilityRole="button"
-              style={{ width: 147, gap: 6 }}
-            >
-              <BookCover title={l.titulo} tone={coverToneOf(l.cor)} size="lg" />
-              <Text className="text-book-title text-ink" numberOfLines={2}>
-                {l.titulo}
-              </Text>
-              <Text className="text-caption text-ink-muted" numberOfLines={1}>
-                {l.autor}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
       </ScrollView>
     </View>
   )

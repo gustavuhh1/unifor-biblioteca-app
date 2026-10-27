@@ -50,6 +50,14 @@ const SIZE: Record<CoverSize, SizeStyle> = {
   },
 }
 
+// Até quanto uma palavra comprida do título pode encolher para caber na capa.
+const MIN_TITLE_FONT_SCALE = 0.55
+
+// Palavras do título, sem espaços sobrando.
+export function titleWords(title: string): string[] {
+  return title.split(/\s+/).filter(Boolean)
+}
+
 export interface BookCoverProps {
   title: string
   author?: string
@@ -90,7 +98,23 @@ export function BookCover({
     >
       {style.titleClass ? (
         <>
-          <Text className={`${style.titleClass} text-on-cover`}>{title}</Text>
+          {/* Cada palavra é um texto de uma linha que encolhe até caber na
+              largura da capa: o título quebra entre palavras, nunca no meio
+              delas ("Computad/ores"). */}
+          <View className="flex-row flex-wrap gap-x-1">
+            {titleWords(title).map((word, index) => (
+              <Text
+                key={`${word}-${index}`}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={MIN_TITLE_FONT_SCALE}
+                className={`${style.titleClass} text-on-cover`}
+                style={{ maxWidth: '100%' }}
+              >
+                {word}
+              </Text>
+            ))}
+          </View>
           {author ? (
             <Text className="text-capa-autor text-on-cover opacity-85">
               {author}

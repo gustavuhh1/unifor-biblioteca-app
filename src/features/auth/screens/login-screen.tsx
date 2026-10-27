@@ -5,6 +5,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { Image, Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BottomSheet, Button, Icon, TextField } from '@/shared/components'
+import { MATRICULA_HINT } from '../auth.constants'
 import { getAuthErrorMessage, isPasskeyCancelled } from '../auth.errors'
 import { usePasskeyLogin } from '../hooks/use-passkey-login'
 import { usePasswordLogin } from '../hooks/use-password-login'
@@ -98,7 +99,7 @@ export function LoginScreen() {
                 value={field.value}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
-                hint="7 dígitos. Os dois primeiros são o ano de ingresso."
+                hint={MATRICULA_HINT}
                 error={fieldState.error?.message}
               />
             )}

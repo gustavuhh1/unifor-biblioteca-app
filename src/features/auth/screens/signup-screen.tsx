@@ -1,61 +1,86 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import React, { useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { applyApiFieldErrors } from '@/shared/api/form-errors'
+import { Alert } from '@/shared/components/alert'
 import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
 import { TextField } from '@/shared/components/text-field'
 import {
-  institutionalEmailSchema,
-  newPasswordSchema,
-} from '@/features/auth/schemas/registration.schemas'
+  MATRICULA_HINT,
+  MATRICULA_LENGTH,
+  SIGNUP_STEPS,
+} from '../auth.constants'
+import {
+  AUTH_API_ERROR_CODE,
+  getAuthErrorMessage,
+  hasApiErrorCode,
+} from '../auth.errors'
+import { signupSchema, type SignupForm } from '../schemas/registration.schemas'
 
-type EstadoCadastro = 'normal' | 'validacao' | 'conta-existente'
-export interface CadastroProps {
-  estado?: EstadoCadastro
-  onVoltar?: () => void
-  onContinuar?: () => void
-  onEntrar?: () => void
+// Campos do formulário, com os mesmos nomes que a API usa em `fields`.
+const SIGNUP_FIELDS = [
+  'email',
+  'matricula',
+  'password',
+  'passwordConfirmation',
+] as const
+
+export interface SignupScreenProps {
+  // Dados já digitados (ao voltar de "Corrigir e-mail").
+  defaultValues?: Partial<SignupForm>
+  // Envia o cadastro; rejeita com o erro da API.
+  onSubmit: (values: SignupForm) => Promise<unknown>
+  onBack: () => void
+  onSignIn: () => void
 }
 
+// Cadastro, passo Dados (RF-AUT-01 e RF-AUT-02; telas A56, A57 e A78).
 export function SignupScreen({
-  estado = 'normal',
-  onVoltar,
-  onContinuar,
-  onEntrar,
-}: CadastroProps) {
+  defaultValues,
+  onSubmit,
+  onBack,
+  onSignIn,
+}: SignupScreenProps) {
   const safe = useSafeAreaInsets()
-  const [email, setEmail] = useState('')
-  const [matricula, setMatricula] = useState('')
-  const [senha, setSenha] = useState('')
-  const [confirmacao, setConfirmacao] = useState('')
-  const [tentar, setTentar] = useState(estado !== 'normal')
-  const [jaExiste, setJaExiste] = useState(estado === 'conta-existente')
-  const erroEmail =
-    tentar && !institutionalEmailSchema.safeParse(email.trim()).success
-  const erroMatricula = tentar && !/^\d{7}$/.test(matricula)
-  const erroSenha = tentar && !newPasswordSchema.safeParse(senha).success
-  const erroConfirmacao = tentar && confirmacao !== senha
-  function continuar() {
-    setTentar(true)
-    if (
-      !institutionalEmailSchema.safeParse(email.trim()).success ||
-      !/^\d{7}$/.test(matricula) ||
-      !newPasswordSchema.safeParse(senha).success ||
-      senha !== confirmacao
-    )
-      return
-    if (jaExiste) return
-    onContinuar?.()
-  }
+  const form = useForm<SignupForm>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: '',
+      matricula: '',
+      password: '',
+      passwordConfirmation: '',
+      ...defaultValues,
+    },
+  })
+  // Erro da API que não coube em nenhum campo (ex.: falha ao enviar o e-mail).
+  const [formError, setFormError] = useState<string | null>(null)
+  const [conflict, setConflict] = useState(false)
+
+  const continuar = form.handleSubmit(async (values) => {
+    setFormError(null)
+    setConflict(false)
+    try {
+      await onSubmit(values)
+    } catch (error) {
+      setConflict(hasApiErrorCode(error, [AUTH_API_ERROR_CODE.signupConflict]))
+      if (!applyApiFieldErrors(error, form.setError, SIGNUP_FIELDS)) {
+        setFormError(getAuthErrorMessage(error))
+      }
+    }
+  })
+
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Criar conta" back onBack={onVoltar} />
+      <AppBar title="Criar conta" back onBack={onBack} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}
       >
         <View className="flex-row gap-2">
-          {['Dados', 'E-mail', 'Passkey'].map((s, i) => (
+          {SIGNUP_STEPS.map((s, i) => (
             <View key={s} className="flex-1 gap-2">
               <Text
                 className={
@@ -72,88 +97,104 @@ export function SignupScreen({
             </View>
           ))}
         </View>
-        <TextField
-          label="E-mail institucional"
-          icon="mail"
-          value={email}
-          onChangeText={(v) => {
-            setEmail(v)
-            setJaExiste(false)
-          }}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          hint={
-            !erroEmail && !jaExiste ? 'Terminado em @edu.unifor.br.' : undefined
-          }
-          error={
-            erroEmail
-              ? 'Use o e-mail institucional, terminado em @edu.unifor.br.'
-              : jaExiste
-                ? 'Este e-mail já tem conta. Entre ou recupere a senha.'
-                : undefined
-          }
+        <Controller
+          control={form.control}
+          name="email"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="E-mail institucional"
+              icon="mail"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              hint="Terminado em @edu.unifor.br."
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        <TextField
-          label="Matrícula"
-          icon="user"
-          value={matricula}
-          onChangeText={(v) => setMatricula(v.replace(/\D/g, ''))}
-          inputMode="numeric"
-          maxLength={7}
-          hint={
-            !erroMatricula
-              ? '7 dígitos. Os dois primeiros são o ano de ingresso.'
-              : undefined
-          }
-          error={
-            erroMatricula
-              ? 'A matrícula tem 7 dígitos.'
-              : jaExiste
-                ? 'Esta matrícula já tem conta.'
-                : undefined
-          }
+        <Controller
+          control={form.control}
+          name="matricula"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="Matrícula"
+              icon="user"
+              value={field.value}
+              onChangeText={(v) => field.onChange(v.replace(/\D/g, ''))}
+              onBlur={field.onBlur}
+              inputMode="numeric"
+              keyboardType="number-pad"
+              maxLength={MATRICULA_LENGTH}
+              hint={MATRICULA_HINT}
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        <TextField
-          label="Senha"
-          icon="lock"
-          type="password"
-          value={senha}
-          onChangeText={setSenha}
-          hint={!erroSenha ? 'Use pelo menos 8 dígitos numéricos.' : undefined}
-          error={
-            erroSenha
-              ? 'Use uma senha numérica de pelo menos 8 dígitos.'
-              : undefined
-          }
+        <Controller
+          control={form.control}
+          name="password"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="Senha"
+              icon="lock"
+              type="password"
+              inputMode="numeric"
+              keyboardType="number-pad"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              hint="Use pelo menos 8 dígitos numéricos."
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        <TextField
-          label="Confirmar senha"
-          icon="lock"
-          type="password"
-          value={confirmacao}
-          onChangeText={setConfirmacao}
-          hint={!erroConfirmacao ? 'Repita a senha.' : undefined}
-          error={erroConfirmacao ? 'As senhas não são iguais.' : undefined}
+        <Controller
+          control={form.control}
+          name="passwordConfirmation"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="Confirmar senha"
+              icon="lock"
+              type="password"
+              inputMode="numeric"
+              keyboardType="number-pad"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              hint="Repita a senha."
+              error={fieldState.error?.message}
+            />
+          )}
         />
-        {jaExiste ? (
+        {conflict ? (
           <Pressable
-            onPress={onEntrar}
+            accessibilityRole="button"
+            onPress={onSignIn}
             className="rounded-md bg-danger-soft p-3"
           >
             <Text className="text-label text-danger">
               Já existe uma conta com esses dados. Toque para entrar.
             </Text>
           </Pressable>
+        ) : formError ? (
+          <Alert tone="danger">{formError}</Alert>
         ) : null}
       </ScrollView>
       <View
         className="gap-2 border-t border-line bg-surface-raised px-4 pt-3"
         style={{ paddingBottom: Math.max(safe.bottom, 16) }}
       >
-        <Button block onPress={continuar}>
+        <Button
+          block
+          loading={form.formState.isSubmitting}
+          onPress={() => void continuar()}
+        >
           Continuar
         </Button>
-        <Button block variant="ghost" onPress={onEntrar}>
+        <Button block variant="ghost" onPress={onSignIn}>
           Já tem conta? Entrar
         </Button>
       </View>

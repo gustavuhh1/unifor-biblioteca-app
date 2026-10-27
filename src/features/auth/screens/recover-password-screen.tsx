@@ -1,33 +1,56 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import React, { useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import { ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { applyApiFieldErrors } from '@/shared/api/form-errors'
+import { Alert } from '@/shared/components/alert'
 import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
 import { TextField } from '@/shared/components/text-field'
 import { Icon } from '@/shared/components/icon'
+import { MATRICULA_LENGTH } from '../auth.constants'
+import { getAuthErrorMessage } from '../auth.errors'
+import {
+  recoverPasswordSchema,
+  type RecoverPasswordForm,
+} from '../schemas/recovery.schemas'
 
-type RecuperarAcessoProps = {
-  onVoltar?: () => void
-  onEnviarToken?: () => void
+export interface RecoverPasswordScreenProps {
+  defaultMatricula?: string
+  // Pede o token; rejeita com o erro da API.
+  onSubmit: (matricula: string) => Promise<unknown>
+  onBack: () => void
 }
 
+// Recuperar senha, passo Matrícula (RF-AUT-08; tela A65).
 export function RecoverPasswordScreen({
-  onVoltar,
-  onEnviarToken,
-}: RecuperarAcessoProps) {
+  defaultMatricula = '',
+  onSubmit,
+  onBack,
+}: RecoverPasswordScreenProps) {
   const insets = useSafeAreaInsets()
-  const [matricula, setMatricula] = useState('')
-  const [tentou, setTentou] = useState(false)
-  function enviar() {
-    setTentou(true)
-    if (!/^\d{7}$/.test(matricula)) return
-    onEnviarToken?.()
-  }
+  const form = useForm<RecoverPasswordForm>({
+    resolver: zodResolver(recoverPasswordSchema),
+    defaultValues: { matricula: defaultMatricula },
+  })
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const enviar = form.handleSubmit(async ({ matricula }) => {
+    setFormError(null)
+    try {
+      await onSubmit(matricula)
+    } catch (error) {
+      if (!applyApiFieldErrors(error, form.setError, ['matricula'])) {
+        setFormError(getAuthErrorMessage(error))
+      }
+    }
+  })
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Recuperar acesso" back onBack={onVoltar} />
+      <AppBar title="Recuperar acesso" back onBack={onBack} />
 
       <ScrollView
         className="flex-1"
@@ -52,20 +75,26 @@ export function RecoverPasswordScreen({
         </View>
 
         {/* MATRÍCULA */}
-        <TextField
-          label="Matrícula"
-          icon="user"
-          value={matricula}
-          onChangeText={(valor) => setMatricula(valor.replace(/\D/g, ''))}
-          error={
-            tentou && !/^\d{7}$/.test(matricula)
-              ? 'Informe os 7 dígitos da matrícula.'
-              : undefined
-          }
-          inputMode="numeric"
-          maxLength={7}
-          hint="7 dígitos."
+        <Controller
+          control={form.control}
+          name="matricula"
+          render={({ field, fieldState }) => (
+            <TextField
+              label="Matrícula"
+              icon="user"
+              value={field.value}
+              onChangeText={(valor) => field.onChange(valor.replace(/\D/g, ''))}
+              onBlur={field.onBlur}
+              error={fieldState.error?.message}
+              inputMode="numeric"
+              keyboardType="number-pad"
+              maxLength={MATRICULA_LENGTH}
+              hint="7 dígitos."
+            />
+          )}
         />
+
+        {formError ? <Alert tone="danger">{formError}</Alert> : null}
 
         {/* INFORMAÇÃO */}
         <View className="flex-row items-start gap-3 rounded-md bg-brand-soft p-4">
@@ -85,7 +114,12 @@ export function RecoverPasswordScreen({
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        <Button block variant="primary" onPress={enviar}>
+        <Button
+          block
+          variant="primary"
+          loading={form.formState.isSubmitting}
+          onPress={() => void enviar()}
+        >
           Enviar token
         </Button>
       </View>

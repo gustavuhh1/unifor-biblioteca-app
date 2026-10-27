@@ -18,6 +18,7 @@ import {
   NotificationItem,
   PromptSugerido,
   QRPass,
+  titleWords,
   QueueInfo,
   QueueManagerRow,
   SearchBar,
@@ -71,10 +72,22 @@ describe('componentes do design system: montam e mostram o texto', () => {
     await renderInApp(
       <BookCover title="Código Limpo" author="Robert C. Martin" size="md" />,
     )
-    expect(screen.getByText('Código Limpo')).toBeTruthy()
+    // O título é desenhado palavra por palavra (a palavra nunca quebra no meio).
+    expect(screen.getByText('Código')).toBeTruthy()
+    expect(screen.getByText('Limpo')).toBeTruthy()
     expect(screen.getByText('Robert C. Martin')).toBeTruthy()
     await renderInApp(<BookCover title="Sem texto" size="sm" />)
-    expect(screen.queryByText('Sem texto')).toBeNull()
+    expect(screen.queryByText('Sem')).toBeNull()
+    expect(screen.queryByText('texto')).toBeNull()
+  })
+
+  it('titleWords separa o título em palavras e ignora espaços sobrando', () => {
+    expect(titleWords('  Padrões  de Projeto ')).toEqual([
+      'Padrões',
+      'de',
+      'Projeto',
+    ])
+    expect(titleWords('')).toEqual([])
   })
 
   it('Avatar mostra as iniciais', async () => {

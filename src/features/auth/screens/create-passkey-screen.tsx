@@ -2,19 +2,28 @@ import React from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { Alert } from '@/shared/components/alert'
 import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
 import { Icon, type IconName } from '@/shared/components/icon'
+import { formatDayMonth } from '@/shared/utils/dates'
+import { SIGNUP_STEPS } from '../auth.constants'
 
-type EstadoPasskey = 'criar' | 'concluido' | 'erro'
+export type CreatePasskeyStep = 'create' | 'done' | 'error'
 
-type CriarPasskeyProps = {
-  estado?: EstadoPasskey
-  onVoltar?: () => void
-  onCriar?: () => void
-  onPular?: () => void
-  onEntrar?: () => void
-  onTentarNovamente?: () => void
+export interface CreatePasskeyScreenProps {
+  step: CreatePasskeyStep
+  // Data em que a API registrou o passkey (passo "done").
+  createdAt?: string
+  creating?: boolean
+  signingIn?: boolean
+  // Falha ao entrar no app depois de criar o passkey.
+  signInError?: string | null
+  onBack: () => void
+  onCreate: () => void
+  onSkip: () => void
+  onSignIn: () => void
+  onRetry: () => void
 }
 
 type BeneficioProps = {
@@ -37,24 +46,28 @@ function Beneficio({ icone, titulo, descricao }: BeneficioProps) {
   )
 }
 
+// Cadastro, passo Passkey (RF-AUT-04; telas A59, A60 e A61): recomenda o
+// passkey, mostra o passkey criado ou o erro ao criar.
 export function CreatePasskeyScreen({
-  estado = 'criar',
-  onVoltar,
-  onCriar,
-  onPular,
-  onEntrar,
-  onTentarNovamente,
-}: CriarPasskeyProps) {
+  step,
+  createdAt,
+  creating = false,
+  signingIn = false,
+  signInError,
+  onBack,
+  onCreate,
+  onSkip,
+  onSignIn,
+  onRetry,
+}: CreatePasskeyScreenProps) {
   const insets = useSafeAreaInsets()
 
-  const concluido = estado === 'concluido'
-  const erro = estado === 'erro'
+  const concluido = step === 'done'
+  const erro = step === 'error'
 
   return (
     <View className="flex-1 bg-surface">
-      {!concluido && (
-        <AppBar title="Segurança da conta" back onBack={onVoltar} />
-      )}
+      {!concluido && <AppBar title="Segurança da conta" back onBack={onBack} />}
 
       <ScrollView
         className="flex-1"
@@ -63,11 +76,11 @@ export function CreatePasskeyScreen({
         }
       >
         {/* A59 — CRIAR PASSKEY */}
-        {estado === 'criar' && (
+        {step === 'create' && (
           <>
             {/* ETAPAS */}
             <View className="flex-row gap-2">
-              {['Dados', 'E-mail', 'Passkey'].map((nome) => (
+              {SIGNUP_STEPS.map((nome) => (
                 <View key={nome} className="flex-1 gap-2">
                   <Text className="text-caption-strong text-brand">{nome}</Text>
                   <View className="h-1.5 rounded-pill bg-brand" />
@@ -113,6 +126,8 @@ export function CreatePasskeyScreen({
             <Text className="text-center text-caption text-ink-muted">
               Se trocar de celular, você entra com a senha e cria outro.
             </Text>
+
+            {signInError ? <Alert tone="danger">{signInError}</Alert> : null}
           </>
         )}
 
@@ -129,8 +144,8 @@ export function CreatePasskeyScreen({
               </Text>
 
               <Text className="text-center text-body text-ink-muted">
-                Pronto, Lucas. A partir de agora você entra no app com a
-                biometria deste celular.
+                Pronto. A partir de agora você entra no app com a biometria
+                deste celular.
               </Text>
             </View>
 
@@ -140,15 +155,19 @@ export function CreatePasskeyScreen({
               <View className="flex-1 gap-1">
                 <Text className="text-label text-ink">Este aparelho</Text>
 
-                <Text className="text-caption text-ink-muted">
-                  Passkey criado hoje, 15/10
-                </Text>
+                {createdAt ? (
+                  <Text className="text-caption text-ink-muted">
+                    Passkey criado hoje, {formatDayMonth(createdAt)}
+                  </Text>
+                ) : null}
               </View>
             </View>
 
             <Text className="text-center text-caption text-ink-muted">
               Em Perfil › Meus passkeys você vê, cria e remove seus passkeys.
             </Text>
+
+            {signInError ? <Alert tone="danger">{signInError}</Alert> : null}
           </>
         )}
 
@@ -196,31 +215,52 @@ export function CreatePasskeyScreen({
           paddingBottom: Math.max(insets.bottom, 16),
         }}
       >
-        {estado === 'criar' && (
+        {step === 'create' && (
           <>
-            <Button block variant="primary" onPress={onCriar}>
+            <Button
+              block
+              variant="primary"
+              loading={creating}
+              onPress={onCreate}
+            >
               Criar passkey
             </Button>
 
-            <Button block variant="ghost" onPress={onPular}>
+            <Button
+              block
+              variant="ghost"
+              loading={signingIn}
+              disabled={creating}
+              onPress={onSkip}
+            >
               Agora não
             </Button>
           </>
         )}
 
         {concluido && (
-          <Button block variant="primary" onPress={onEntrar}>
+          <Button
+            block
+            variant="primary"
+            loading={signingIn}
+            onPress={onSignIn}
+          >
             Entrar no app
           </Button>
         )}
 
         {erro && (
           <>
-            <Button block variant="primary" onPress={onTentarNovamente}>
+            <Button
+              block
+              variant="primary"
+              loading={creating}
+              onPress={onRetry}
+            >
               Tentar de novo
             </Button>
 
-            <Button block variant="ghost" onPress={onVoltar}>
+            <Button block variant="ghost" onPress={onBack}>
               Voltar
             </Button>
           </>

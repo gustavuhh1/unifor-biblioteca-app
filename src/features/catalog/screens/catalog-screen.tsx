@@ -1,243 +1,205 @@
-import { BookCover, coverToneOf } from '@/shared/components'
-
-import React, { useState } from 'react'
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-
-import { Button } from '@/shared/components/button'
-import { Icon } from '@/shared/components/icon'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useState } from 'react'
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native'
+import { API_ERROR_CODE, ApiError } from '@/shared/api/errors'
+import {
+  AppBar,
+  BookCard,
+  Button,
+  EmptyState,
+  PromptSugerido,
+  SearchBar,
+} from '@/shared/components'
 import { useTheme } from '@/shared/theme/theme-provider'
-import type { ColorToken } from '@/shared/theme/tokens.generated'
+import { pluralize } from '@/shared/utils/plural'
+import {
+  authorsLine,
+  bookCardMeta,
+  bookCoverTone,
+  bookStatus,
+} from '../catalog.format'
+import { useBookSearch } from '../hooks/use-book-search'
 
-type EstadoAcervo = 'resultados' | 'vazio' | 'carregando' | 'sem-internet'
-
-type Livro = {
-  id: number
-  titulo: string
-  autor: string
-  descricao: string
-  disponivel: boolean
-  capa: string
-  cor: ColorToken
-}
-
-type AcervoProps = {
-  estado?: EstadoAcervo
-  buscaInicial?: string
-  onAbrirLivro?: (id: number) => void
-  onPerguntarAssistente?: () => void
-  onMostrarQR?: () => void
-}
-
-const livros: Livro[] = [
-  {
-    id: 1,
-    titulo: 'Código Limpo: habilidades práticas do agile software',
-    autor: 'Martin, Robert C. · 2011',
-    descricao: '1 pessoa na fila · 3 exemplares',
-    disponivel: false,
-    capa: 'Código\nLimpo',
-    cor: 'cover1',
-  },
-  {
-    id: 2,
-    titulo: 'O Codificador Limpo',
-    autor: 'Robert C. Martin · 2012',
-    descricao: '2 exemplares na estante',
-    disponivel: true,
-    capa: 'O\nCodificador\nLimpo',
-    cor: 'cover4',
-  },
-  {
-    id: 3,
-    titulo: 'Code Complete: Guia Prático para a Construção de Software',
-    autor: 'Steve McConnell · 2005',
-    descricao: 'Ninguém na fila: você seria o 1º',
-    disponivel: false,
-    capa: 'Code\nComplete',
-    cor: 'cover5',
-  },
+// Larguras das linhas de cada cartão de carregamento, como no Figma (A53).
+const SKELETON_LINES = [
+  { title: 'w-[200px]', byline: 'w-[130px]' },
+  { title: 'w-[170px]', byline: 'w-[110px]' },
+  { title: 'w-[220px]', byline: 'w-[150px]' },
 ]
 
-export function CatalogScreen({
-  estado = 'resultados',
-  buscaInicial,
-  onAbrirLivro,
-  onPerguntarAssistente,
-  onMostrarQR,
-}: AcervoProps) {
-  const insets = useSafeAreaInsets()
+// Distância do fim da lista (em px) que já carrega a próxima página.
+const LOAD_MORE_THRESHOLD = 300
+
+function isNearEnd({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) {
+  const { layoutMeasurement, contentOffset, contentSize } = nativeEvent
+  return (
+    layoutMeasurement.height + contentOffset.y >=
+    contentSize.height - LOAD_MORE_THRESHOLD
+  )
+}
+
+// Acervo do aluno (RF-ACE-01, RF-ACE-06 e RF-ACE-08): busca por título, autor ou
+// assunto no GET /books. Estados do Figma: resultados (A09), nenhum resultado
+// (A11), carregando (A53) e sem internet (A54).
+export function CatalogScreen() {
+  const router = useRouter()
   const { colors } = useTheme()
-  const [estadoLocal, setEstadoLocal] = useState(estado)
+  const params = useLocalSearchParams<{ q?: string }>()
+  const [text, setText] = useState(params.q ?? '')
+  // A busca do Início abre esta aba com ?q=, e a aba pode já estar montada:
+  // um ?q= novo troca o texto da busca.
+  const [lastParam, setLastParam] = useState(params.q)
+  if (params.q !== lastParam) {
+    setLastParam(params.q)
+    if (params.q !== undefined) setText(params.q)
+  }
+  const search = useBookSearch(text)
 
-  const [busca, setBusca] = useState(
-    buscaInicial ?? (estado === 'vazio' ? 'programação quântica' : 'código'),
-  )
+  const offline =
+    search.error instanceof ApiError &&
+    (search.error.code === API_ERROR_CODE.networkError ||
+      search.error.code === API_ERROR_CODE.timeout)
+  const searching = search.searchedText !== ''
 
-  const normalizar = (valor: string) =>
-    valor
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-  const resultados = livros.filter((livro) =>
-    normalizar(
-      livro.titulo + ' ' + livro.autor + ' ' + livro.descricao,
-    ).includes(normalizar(busca.trim())),
-  )
-  const semResultados = resultados.length === 0
+  function openBook(id: string) {
+    router.push({ pathname: '/book-details', params: { id } })
+  }
+
+  function loadMore(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    if (search.hasNextPage && !search.isFetchingNextPage && isNearEnd(event)) {
+      void search.fetchNextPage()
+    }
+  }
 
   return (
     <View className="flex-1 bg-surface">
-      {/* CABEÇALHO */}
-      <View className="px-4 pb-3" style={{ paddingTop: insets.top + 12 }}>
-        <Text className="mb-4 text-title-lg text-ink">Acervo</Text>
-
-        <View className="h-12 flex-row items-center gap-3 rounded-pill border border-line bg-surface-raised px-4">
-          <Icon name="search" color="inkMuted" size={20} />
-
-          <TextInput
-            value={busca}
-            onChangeText={setBusca}
-            className="flex-1 text-body text-ink"
-            placeholder="Buscar título, autor ou assunto"
-            placeholderTextColor={colors.inkMuted}
-            returnKeyType="search"
-            accessibilityLabel="Pesquisar no acervo"
-          />
-        </View>
+      <AppBar title="Acervo" large />
+      <View className="px-4 pb-3 pt-1">
+        <SearchBar value={text} onChangeText={setText} />
       </View>
 
       <ScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="px-4 pb-8"
+        contentContainerClassName="px-4 pb-4"
+        onScroll={loadMore}
+        scrollEventThrottle={200}
       >
-        {estadoLocal === 'carregando' ? (
-          <View accessibilityLabel="Carregando acervo" className="gap-3 pt-3">
-            {[0, 1, 2].map((item) => (
+        {search.isPending ? (
+          /* A53 — CARREGANDO */
+          <View accessibilityLabel="Carregando acervo" className="gap-3">
+            <View className="h-3.5 w-[180px] rounded-sm bg-surface-sunken" />
+            {SKELETON_LINES.map((lines, item) => (
               <View
                 key={item}
-                className="h-[144px] flex-row gap-3 rounded-lg border border-line bg-surface-raised p-4"
+                className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-4"
               >
-                <View className="w-14 rounded-md bg-surface-sunken" />
-                <View className="flex-1 gap-3">
-                  <View className="h-4 rounded-md bg-surface-sunken" />
-                  <View className="h-3 w-2/3 rounded-md bg-surface-sunken" />
-                  <View className="h-3 w-1/2 rounded-md bg-surface-sunken" />
+                <View className="h-[80px] w-14 rounded-sm bg-surface-sunken" />
+                <View className="flex-1 gap-2.5">
+                  <View
+                    className={`h-4 rounded-sm bg-surface-sunken ${lines.title}`}
+                  />
+                  <View
+                    className={`h-3 rounded-sm bg-surface-sunken ${lines.byline}`}
+                  />
+                  <View className="h-[22px] w-[90px] rounded-pill bg-surface-sunken" />
                 </View>
               </View>
             ))}
           </View>
-        ) : estadoLocal === 'sem-internet' ? (
-          <View className="items-center gap-4 py-12">
-            <View className="rounded-lg bg-brand-soft p-6">
-              <Icon name="wifiOff" size={36} color="brand" />
+        ) : search.isError ? (
+          offline ? (
+            /* A54 — SEM INTERNET */
+            <View className="items-center">
+              <EmptyState
+                icon="wifiOff"
+                title="Você está sem internet"
+                text="Confira o Wi-Fi ou os dados móveis. O QR de retirada continua funcionando sem conexão."
+                action={
+                  <Button icon="refresh" onPress={() => void search.refetch()}>
+                    Tentar de novo
+                  </Button>
+                }
+              />
+              <Button
+                variant="ghost"
+                icon="qr"
+                onPress={() => router.push('/loans')}
+              >
+                Ver QR de retirada
+              </Button>
             </View>
-            <Text className="text-title text-ink">Você está sem internet</Text>
-            <Text className="text-center text-body text-ink-muted">
-              Confira o Wi-Fi ou os dados móveis. O QR de retirada continua
-              funcionando sem conexão.
-            </Text>
-            <Button icon="refresh" onPress={() => setEstadoLocal('resultados')}>
-              Tentar de novo
-            </Button>
-            <Button variant="ghost" icon="qr" onPress={onMostrarQR}>
-              Ver QR de retirada
-            </Button>
-          </View>
-        ) : !semResultados ? (
-          <>
-            {/* A09 — RESULTADOS */}
-            <Text className="mb-5 text-body text-ink-muted">
-              {resultados.length} resultados para “{busca}”
-            </Text>
-
+          ) : (
+            <EmptyState
+              icon="alert"
+              title="Não foi possível buscar"
+              text={
+                search.error instanceof ApiError
+                  ? search.error.message
+                  : undefined
+              }
+              action={
+                <Button icon="refresh" onPress={() => void search.refetch()}>
+                  Tentar de novo
+                </Button>
+              }
+            />
+          )
+        ) : search.books.length === 0 ? (
+          searching ? (
+            /* A11 — NENHUM RESULTADO */
             <View className="gap-4">
-              {resultados.map((livro) => (
-                <Pressable
-                  key={livro.id}
-                  onPress={() => onAbrirLivro?.(livro.id)}
-                  accessibilityRole="button"
-                  className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3"
-                >
-                  {/* CAPA ILUSTRATIVA */}
-                  <BookCover
-                    title={livro.capa.split('\n').join(' ')}
-                    tone={coverToneOf(livro.cor)}
-                    size="md"
-                  />
-
-                  {/* INFORMAÇÕES */}
-                  <View className="min-w-0 flex-1 gap-2">
-                    <Text
-                      className="text-book-title text-ink"
-                      numberOfLines={3}
-                    >
-                      {livro.titulo}
-                    </Text>
-
-                    <Text
-                      className="text-caption text-ink-muted"
-                      numberOfLines={2}
-                    >
-                      {livro.autor}
-                    </Text>
-
-                    <Text className="text-caption text-ink-muted">
-                      {livro.descricao}
-                    </Text>
-
-                    <View
-                      className={
-                        livro.disponivel
-                          ? 'self-start rounded-pill bg-success-soft px-3 py-1'
-                          : 'self-start rounded-pill bg-warning-soft px-3 py-1'
-                      }
-                    >
-                      <Text
-                        className={
-                          livro.disponivel
-                            ? 'text-caption-strong text-success'
-                            : 'text-caption-strong text-warning'
-                        }
-                      >
-                        {livro.disponivel ? 'Disponível' : 'Emprestado'}
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              ))}
+              <EmptyState
+                icon="books"
+                title={`Nenhum resultado para “${search.searchedText}”`}
+                text="Confira a ortografia, use menos palavras ou busque pelo nome do autor."
+                // O Assistente ainda não tem rota na API: o botão e a pergunta
+                // pronta ficam sem ação por enquanto (RF-ACE-06).
+                action={
+                  <Button variant="secondary" icon="sparkle">
+                    Perguntar ao Assistente
+                  </Button>
+                }
+              />
+              <PromptSugerido
+                text={`“Procure livros sobre ${search.searchedText}. Se não tiver no acervo, sugira parecidos.”`}
+              />
             </View>
-          </>
+          ) : (
+            <EmptyState icon="books" title="O acervo está vazio" />
+          )
         ) : (
-          /* A11 — NENHUM RESULTADO */
-          <View className="flex-1 items-center gap-5 pt-14">
-            <View className="h-[80px] w-[80px] items-center justify-center rounded-pill bg-brand-soft">
-              <Icon name="search" color="brand" size={36} />
-            </View>
-
-            <Text className="text-center text-title text-ink">
-              Nenhum resultado para{'\n'}
-              “programação quântica”
+          /* A09 — RESULTADOS */
+          <View className="gap-3">
+            <Text className="text-caption text-ink-muted">
+              {searching
+                ? `${pluralize(search.total, 'resultado', 'resultados')} para “${search.searchedText}”`
+                : `${pluralize(search.total, 'livro', 'livros')} no acervo`}
             </Text>
-
-            <Text className="text-center text-body text-ink-muted">
-              Confira a ortografia, use menos palavras ou busque pelo nome do
-              autor.
-            </Text>
-
-            <Button variant="secondary" onPress={onPerguntarAssistente}>
-              Perguntar ao Assistente
-            </Button>
-
-            <View className="mt-6 w-full gap-3 rounded-md bg-brand-soft p-4">
-              <Text className="text-overline text-brand">PERGUNTA PRONTA</Text>
-
-              <Text className="text-body text-ink">
-                “Procure livros sobre programação quântica. Se não tiver no
-                acervo, sugira parecidos.”
-              </Text>
-            </View>
+            {search.books.map((book) => (
+              <BookCard
+                key={book.id}
+                title={book.title}
+                author={authorsLine(book.authors)}
+                tone={bookCoverTone(book)}
+                status={bookStatus(book)}
+                meta={bookCardMeta(book)}
+                onPress={() => openBook(book.id)}
+              />
+            ))}
+            {search.isFetchingNextPage ? (
+              <ActivityIndicator
+                accessibilityLabel="Carregando mais livros"
+                color={colors.brand}
+              />
+            ) : null}
           </View>
         )}
       </ScrollView>

@@ -1,4 +1,6 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import React, { type ComponentRef, useRef, useState } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -6,43 +8,71 @@ import { AppBar } from '@/shared/components/app-bar'
 import { Button } from '@/shared/components/button'
 import { Icon } from '@/shared/components/icon'
 import { useResendCooldown } from '@/shared/utils/use-resend-cooldown'
+import { EMAIL_TOKEN_LENGTH } from '../auth.constants'
+import { getAuthErrorMessage } from '../auth.errors'
+import {
+  emailTokenFormSchema,
+  type EmailTokenForm,
+} from '../schemas/registration.schemas'
 
-type VerificarTokenProps = {
-  tokenEsperado?: string
-  onVoltar?: () => void
-  onContinuar?: (token: string) => void
-  onReenviar?: () => void
+export interface RecoveryTokenScreenProps {
+  // Mensagem da API sobre o envio do token (igual exista a conta ou não).
+  message: string
+  // Espera, em segundos, antes de poder pedir outro token.
+  resendWaitSeconds: number
+  // Erro do token devolvido pelo passo da nova senha (errado, vencido...).
+  tokenError?: string | null
+  onContinue: (token: string) => void
+  // Pede outro token e devolve a nova espera, em segundos.
+  onResend: () => Promise<number>
+  onBack: () => void
 }
 
+// Recuperar senha, passo Token (RF-AUT-08; tela A66). A API não confere o token
+// sozinho: ele segue com a nova senha no passo seguinte.
 export function RecoveryTokenScreen({
-  tokenEsperado,
-  onVoltar,
-  onContinuar,
-  onReenviar,
-}: VerificarTokenProps) {
+  message,
+  resendWaitSeconds,
+  tokenError,
+  onContinue,
+  onResend,
+  onBack,
+}: RecoveryTokenScreenProps) {
   const insets = useSafeAreaInsets()
-  const cooldown = useResendCooldown(42)
-
-  const [token, setToken] = useState('')
-  const [erroToken, setErroToken] = useState('')
-  function confirmarToken() {
-    if (token.length !== 6) {
-      setErroToken('Digite os seis dígitos do token.')
-      return
-    }
-
-    if (tokenEsperado && token !== tokenEsperado) {
-      setErroToken('Token incorreto. Confira o código recebido.')
-      return
-    }
-    setErroToken('')
-    onContinuar?.(token)
-  }
+  const cooldown = useResendCooldown(resendWaitSeconds)
+  const form = useForm<EmailTokenForm>({
+    resolver: zodResolver(emailTokenFormSchema),
+    defaultValues: { token: '' },
+  })
+  const token = useWatch({ control: form.control, name: 'token' })
+  // O erro que voltou do passo da nova senha some quando chega outro token.
+  const [erroAnterior, setErroAnterior] = useState(tokenError ?? null)
+  const erroToken = form.formState.errors.token?.message ?? erroAnterior
+  const [reenviando, setReenviando] = useState(false)
   const inputRef = useRef<ComponentRef<typeof TextInput>>(null)
+
+  const confirmarToken = form.handleSubmit(({ token: valor }) =>
+    onContinue(valor),
+  )
+
+  async function reenviar() {
+    if (cooldown.waiting || reenviando) return
+    setReenviando(true)
+    try {
+      const espera = await onResend()
+      form.reset({ token: '' })
+      setErroAnterior(null)
+      cooldown.restart(espera)
+    } catch (error) {
+      form.setError('token', { message: getAuthErrorMessage(error) })
+    } finally {
+      setReenviando(false)
+    }
+  }
 
   return (
     <View className="flex-1 bg-surface">
-      <AppBar title="Recuperar acesso" back onBack={onVoltar} />
+      <AppBar title="Recuperar acesso" back onBack={onBack} />
 
       <ScrollView
         className="flex-1"
@@ -58,17 +88,9 @@ export function RecoveryTokenScreen({
         <View className="gap-2">
           <Text className="text-title-lg text-ink">Digite o token</Text>
 
-          <Text className="text-body text-ink-muted">
-            Enviamos para lu***@edu.unifor.br. Digite o código de 6 dígitos.
-          </Text>
+          <Text className="text-body text-ink-muted">{message}</Text>
         </View>
 
-        {tokenEsperado ? (
-          <Text className="text-caption text-ink-muted">
-            Demonstração: use 123456 para confirmar ou outro código para testar
-            o erro.
-          </Text>
-        ) : null}
         {erroToken ? (
           <Text accessibilityRole="alert" className="text-caption text-danger">
             {erroToken}
@@ -84,7 +106,7 @@ export function RecoveryTokenScreen({
             onPress={() => inputRef.current?.focus()}
             className="flex-row gap-2"
           >
-            {Array.from({ length: 6 }, (_, index) => (
+            {Array.from({ length: EMAIL_TOKEN_LENGTH }, (_, index) => (
               <View
                 key={index}
                 className="h-14 flex-1 items-center justify-center rounded-md border border-line-strong bg-surface-raised"
@@ -96,17 +118,25 @@ export function RecoveryTokenScreen({
             ))}
           </Pressable>
 
-          <TextInput
-            ref={inputRef}
-            value={token}
-            onChangeText={(valor) =>
-              setToken(valor.replace(/\D/g, '').slice(0, 6))
-            }
-            keyboardType="number-pad"
-            maxLength={6}
-            autoComplete="one-time-code"
-            accessibilityLabel="Token de seis dígitos"
-            className="h-0 w-0 opacity-0"
+          <Controller
+            control={form.control}
+            name="token"
+            render={({ field }) => (
+              <TextInput
+                ref={inputRef}
+                value={field.value}
+                onChangeText={(valor) =>
+                  field.onChange(
+                    valor.replace(/\D/g, '').slice(0, EMAIL_TOKEN_LENGTH),
+                  )
+                }
+                keyboardType="number-pad"
+                maxLength={EMAIL_TOKEN_LENGTH}
+                autoComplete="one-time-code"
+                accessibilityLabel="Token de seis dígitos"
+                className="h-0 w-0 opacity-0"
+              />
+            )}
           />
 
           <Text className="text-caption text-ink-muted">
@@ -118,15 +148,9 @@ export function RecoveryTokenScreen({
         <View className="items-center">
           <Pressable
             accessibilityRole="button"
-            onPress={() => {
-              if (cooldown.waiting) return
-              setToken('')
-              setErroToken('')
-              cooldown.restart()
-              onReenviar?.()
-            }}
-            disabled={cooldown.waiting}
-            accessibilityState={{ disabled: cooldown.waiting }}
+            onPress={() => void reenviar()}
+            disabled={cooldown.waiting || reenviando}
+            accessibilityState={{ disabled: cooldown.waiting || reenviando }}
             className="min-h-[44px] justify-center rounded-md bg-surface-sunken px-5"
           >
             <Text className="text-label text-brand">
@@ -148,8 +172,8 @@ export function RecoveryTokenScreen({
         <Button
           block
           variant="primary"
-          disabled={token.length !== 6}
-          onPress={confirmarToken}
+          disabled={token.length !== EMAIL_TOKEN_LENGTH}
+          onPress={() => void confirmarToken()}
         >
           Continuar
         </Button>

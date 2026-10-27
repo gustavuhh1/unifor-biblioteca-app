@@ -3,7 +3,16 @@ import type {
   PasskeyGetRequest,
 } from 'react-native-passkey'
 import { apiRequest } from '@/shared/api/client'
-import type { CustomTokenResponse, Me, PasskeySummary } from '../auth.types'
+import type {
+  CustomTokenResponse,
+  Me,
+  MessageResponse,
+  PasskeySummary,
+  PasswordResetBody,
+  SignupConfirmResponse,
+  SignupPendingResponse,
+  SignupStartBody,
+} from '../auth.types'
 
 // Dados de quem está logado (GET /me).
 export function getMe() {
@@ -40,6 +49,52 @@ export function postPasskeyLoginOptions(matricula: string) {
 // Confere o passkey e recebe o custom token (POST /auth/passkey/login/verify).
 export function postPasskeyLoginVerify(body: unknown) {
   return apiRequest<CustomTokenResponse>('/auth/passkey/login/verify', {
+    method: 'POST',
+    body,
+    authenticated: false,
+  })
+}
+
+// Começa o cadastro e envia o token ao e-mail (POST /auth/signup/start).
+export function postSignupStart(body: SignupStartBody) {
+  return apiRequest<SignupPendingResponse>('/auth/signup/start', {
+    method: 'POST',
+    body,
+    authenticated: false,
+  })
+}
+
+// Confirma o e-mail com o token e recebe as opções do passkey
+// (POST /auth/signup/confirm).
+export function postSignupConfirm(body: { matricula: string; token: string }) {
+  return apiRequest<SignupConfirmResponse>('/auth/signup/confirm', {
+    method: 'POST',
+    body,
+    authenticated: false,
+  })
+}
+
+// Reenvia o token de confirmação (POST /auth/signup/resend).
+export function postSignupResend(matricula: string) {
+  return apiRequest<SignupPendingResponse>('/auth/signup/resend', {
+    method: 'POST',
+    body: { matricula },
+    authenticated: false,
+  })
+}
+
+// Pede o token de recuperação de senha (POST /auth/password/recover).
+export function postPasswordRecover(matricula: string) {
+  return apiRequest<MessageResponse>('/auth/password/recover', {
+    method: 'POST',
+    body: { matricula },
+    authenticated: false,
+  })
+}
+
+// Grava a nova senha com o token do e-mail (POST /auth/password/reset).
+export function postPasswordReset(body: PasswordResetBody) {
+  return apiRequest<void>('/auth/password/reset', {
     method: 'POST',
     body,
     authenticated: false,

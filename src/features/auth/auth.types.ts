@@ -1,3 +1,4 @@
+import type { PasskeyCreateRequest } from 'react-native-passkey'
 import type { NotificationPrefs, UserRole, UserStatus } from '@/shared/types'
 
 // Resposta de GET /me (schema `Me` do Swagger): o perfil de quem está logado.
@@ -39,3 +40,35 @@ export type AccessGroup = '(auth)' | '(student)' | '(librarian)'
 
 // Situação da sessão no app.
 export type SessionStatus = 'loading' | 'signedOut' | 'signedIn' | 'error'
+
+// Corpo de POST /auth/signup/start (o formulário do cadastro, RF-AUT-01).
+export interface SignupStartBody {
+  email: string
+  matricula: string
+  password: string
+  passwordConfirmation: string
+}
+
+// Resposta de POST /auth/signup/start e /auth/signup/resend: o token foi enviado.
+export interface SignupPendingResponse {
+  status: Extract<UserStatus, 'pending_email'>
+  resendAvailableInSeconds: number
+}
+
+// Resposta de POST /auth/signup/confirm: opções para o celular criar o passkey.
+export interface SignupConfirmResponse {
+  passkeyOptions: PasskeyCreateRequest
+}
+
+// Corpo de POST /auth/password/reset (RF-AUT-08).
+export interface PasswordResetBody {
+  matricula: string
+  token: string
+  password: string
+  passwordConfirmation: string
+}
+
+// Resposta de POST /auth/password/recover: mensagem igual exista a conta ou não.
+export interface MessageResponse {
+  message: string
+}

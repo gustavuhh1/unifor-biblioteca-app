@@ -25,6 +25,39 @@ export const PASSKEY_ERROR = {
 export const AUTH_FLOW_ERROR_CODES = ['no_passkey', 'not_signed_in'] as const
 export const AUTH_FLOW_ERROR_CODE = constantsOf(AUTH_FLOW_ERROR_CODES)
 
+// Códigos de erro da API usados nos fluxos de cadastro e recuperação de senha
+// (docs/api-openapi.json).
+export const AUTH_API_ERROR_CODES = [
+  'signup_conflict',
+  'token_invalid',
+  'token_expired_or_used',
+  'token_attempts_exceeded',
+  'token_resend_too_soon',
+] as const
+export const AUTH_API_ERROR_CODE = constantsOf(AUTH_API_ERROR_CODES)
+
+// Diz se o erro da API é de um código desta lista.
+export function hasApiErrorCode(
+  error: unknown,
+  codes: readonly string[],
+): error is ApiError {
+  return error instanceof ApiError && codes.includes(error.code)
+}
+
+// Token errado, vencido, já usado ou com tentativas demais: o aluno volta a
+// digitar (ou pede outro).
+export const TOKEN_ERROR_CODES = [
+  AUTH_API_ERROR_CODE.tokenInvalid,
+  AUTH_API_ERROR_CODE.tokenExpiredOrUsed,
+  AUTH_API_ERROR_CODE.tokenAttemptsExceeded,
+]
+
+// Token que não vale mais: só um novo resolve (tela A77).
+export const TOKEN_GONE_ERROR_CODES = [
+  AUTH_API_ERROR_CODE.tokenExpiredOrUsed,
+  AUTH_API_ERROR_CODE.tokenAttemptsExceeded,
+]
+
 // Mensagens de acesso mostradas ao usuário (pt-BR).
 export const AUTH_MESSAGE = {
   wrongCredentials: 'Matrícula ou senha incorretos.',
