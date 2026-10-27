@@ -34,6 +34,10 @@ import { formatDayMonth } from '@/shared/utils/dates'
 import { pluralize } from '@/shared/utils/plural'
 import { RequestLoanSheet } from '@/features/loans/components/request-loan-sheet'
 import { JoinQueueSheet } from '@/features/queues/components/join-queue-sheet'
+import { SaveToFolderSheet } from '@/features/saved/components/save-to-folder-sheet'
+import { useSavedBooks } from '@/features/saved/hooks/use-saved'
+import { useToggleSaved } from '@/features/saved/hooks/use-saved-actions'
+import { savedStateOf } from '@/features/saved/saved.format'
 import {
   BOOK_ACTION_LABEL,
   BOOK_SUGGESTED_ACTION,
@@ -131,6 +135,10 @@ function BookDetail({
   const [synopsisTruncated, setSynopsisTruncated] = useState(false)
   const [requesting, setRequesting] = useState(false)
   const [joiningQueue, setJoiningQueue] = useState(false)
+  const [folderSheet, setFolderSheet] = useState(false)
+  const savedList = useSavedBooks()
+  const toggleSaved = useToggleSaved()
+  const { saved } = savedStateOf(savedList.data, book.id)
 
   const emprestado = book.copiesAvailable === 0
   const action = book.action
@@ -195,11 +203,27 @@ function BookDetail({
           </Text>
         </View>
 
-        {/* SALVAR E COMPARTILHAR (Salvar chega na Etapa 5) */}
+        {/* SALVAR E COMPARTILHAR (A15 e A16; RF-SAL-01 e RF-SAL-03) */}
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Button block variant="secondary" icon="bookmark">
-              Salvar
+            <Button
+              block
+              variant="secondary"
+              icon={saved ? 'bookmarkFill' : 'bookmark'}
+              loading={toggleSaved.isPending}
+              disabled={savedList.isPending}
+              onPress={() => {
+                if (saved) {
+                  setFolderSheet(true)
+                  return
+                }
+                toggleSaved.mutate(
+                  { bookId: book.id, saved: false },
+                  { onSuccess: () => setFolderSheet(true) },
+                )
+              }}
+            >
+              {saved ? 'Salvo' : 'Salvar'}
             </Button>
           </View>
 
@@ -469,6 +493,11 @@ function BookDetail({
         bookId={book.id}
         bookTitle={book.title}
         onClose={() => setJoiningQueue(false)}
+      />
+      <SaveToFolderSheet
+        visible={folderSheet}
+        bookId={book.id}
+        onClose={() => setFolderSheet(false)}
       />
     </>
   )
