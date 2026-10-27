@@ -1,60 +1,78 @@
+import { useRouter } from 'expo-router'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { AppBar, Icon, type IconName } from '@/shared/components'
-export interface PainelProps {
-  onRetiradas?: () => void
-  onEscanear?: () => void
-  onFilas?: () => void
-  onMultas?: () => void
-  onPerfil?: () => void
-  onAcervo?: () => void
-  onDevolucao?: () => void
-}
+
+// Rotas do bibliotecário abertas pelo Painel (as abas e o Acervo).
+const ROUTE = {
+  withdrawals: '/withdrawals',
+  queues: '/queues',
+  fines: '/fines',
+  scan: '/scan',
+  collection: '/collection-management',
+  profile: '/librarian-profile',
+} as const
+
 const itens: {
   icone: IconName
   titulo: string
   valor: string
   tom: 'brand' | 'warning' | 'danger' | 'success'
+  href: string
 }[] = [
-  { icone: 'inbox', titulo: 'Livros para separar', valor: '12', tom: 'brand' },
+  {
+    icone: 'inbox',
+    titulo: 'Livros para separar',
+    valor: '12',
+    tom: 'brand',
+    href: ROUTE.withdrawals,
+  },
   {
     icone: 'bell',
     titulo: 'Aguardando o aluno confirmar',
     valor: '7',
     tom: 'warning',
+    href: ROUTE.queues,
   },
   {
     icone: 'alert',
     titulo: 'Empréstimos atrasados',
     valor: '5',
     tom: 'danger',
+    href: ROUTE.fines,
   },
-  { icone: 'check', titulo: 'Devoluções hoje', valor: '31', tom: 'success' },
+  {
+    icone: 'check',
+    titulo: 'Devoluções hoje',
+    valor: '31',
+    tom: 'success',
+    href: ROUTE.scan,
+  },
 ]
-export function PanelScreen({
-  onRetiradas,
-  onEscanear,
-  onFilas,
-  onMultas,
-  onPerfil,
-  onAcervo,
-  onDevolucao,
-}: PainelProps) {
-  const acoes = [onRetiradas, onFilas, onMultas, onDevolucao]
+
+// Painel do bibliotecário (B01, RF-BAL-01): atalhos para as abas, o Acervo e o Perfil.
+export function PanelScreen() {
+  const router = useRouter()
   return (
     <View className="flex-1 bg-surface">
       <AppBar
         title="Biblioteca"
         subtitle="Praça Central · balcão · Ana Souza"
-        actions={[{ icon: 'user', label: 'Perfil', onPress: onPerfil }]}
+        actions={[
+          {
+            icon: 'user',
+            label: 'Perfil',
+            onPress: () => router.push(ROUTE.profile),
+          },
+        ]}
       />
       <ScrollView
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}
       >
         <View className="flex-row flex-wrap gap-3">
-          {itens.map((item, i) => (
+          {itens.map((item) => (
             <Pressable
               key={item.titulo}
-              onPress={acoes[i]}
+              onPress={() => router.push(item.href)}
               accessibilityRole="button"
               className="min-w-0 grow basis-[45%] gap-3 rounded-lg border border-line bg-surface-raised p-4"
             >
@@ -65,7 +83,7 @@ export function PanelScreen({
           ))}
         </View>
         <Pressable
-          onPress={onAcervo}
+          onPress={() => router.push(ROUTE.collection)}
           accessibilityRole="button"
           className="min-h-18 flex-row items-center gap-3 rounded-lg border border-line bg-surface-raised p-4"
         >
@@ -82,7 +100,7 @@ export function PanelScreen({
           <Text className="text-title text-ink">Retiradas de hoje</Text>
           <Pressable
             accessibilityRole="button"
-            onPress={onRetiradas}
+            onPress={() => router.push(ROUTE.withdrawals)}
             className="min-h-[44px] justify-center"
           >
             <Text className="text-label text-brand">Ver todas</Text>
@@ -97,7 +115,7 @@ export function PanelScreen({
             <Pressable
               key={sigla}
               accessibilityRole="button"
-              onPress={onRetiradas}
+              onPress={() => router.push(ROUTE.withdrawals)}
               className="flex-row items-center gap-3 border-b border-line p-3"
             >
               <View className="h-10 w-10 items-center justify-center rounded-pill bg-brand-soft">
