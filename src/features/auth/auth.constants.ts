@@ -18,6 +18,9 @@ export const PASSKEY_DEVICE_NAME_MAX_LENGTH = 60
 // Chave do TanStack Query para os dados de quem está logado (GET /me).
 export const ME_QUERY_KEY = ['me'] as const
 
+// Chave do TanStack Query para a lista de passkeys (GET /auth/passkeys).
+export const PASSKEYS_QUERY_KEY = ['passkeys'] as const
+
 // Token de e-mail (confirmação e recuperação): 6 dígitos, vale 20 minutos.
 export const EMAIL_TOKEN_LENGTH = 6
 

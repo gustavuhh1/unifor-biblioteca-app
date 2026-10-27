@@ -30,6 +30,11 @@ export interface PasskeySummary {
   lastUsedAt: string | null
 }
 
+// Resposta de GET /auth/passkeys: os aparelhos cadastrados.
+export interface PasskeyListResponse {
+  passkeys: PasskeySummary[]
+}
+
 // Resposta de POST /auth/passkey/login/verify.
 export interface CustomTokenResponse {
   customToken: string

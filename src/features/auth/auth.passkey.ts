@@ -1,3 +1,4 @@
+import { Platform } from 'react-native'
 import { PASSKEY_DEVICE_NAME_MAX_LENGTH } from './auth.constants'
 
 // Nome do aparelho quando o sistema não informa marca nem modelo.
@@ -25,4 +26,11 @@ export function buildDeviceName(constants: {
 }): string {
   const name = [constants.Brand, constants.Model].filter(Boolean).join(' ')
   return (name || DEFAULT_DEVICE_NAME).slice(0, PASSKEY_DEVICE_NAME_MAX_LENGTH)
+}
+
+// Nome deste aparelho, o mesmo que o passkey criado aqui leva na lista.
+export function currentDeviceName(): string {
+  return buildDeviceName(
+    Platform.constants as { Brand?: string; Model?: string },
+  )
 }

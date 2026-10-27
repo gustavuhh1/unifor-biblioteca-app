@@ -7,6 +7,7 @@ import type {
   CustomTokenResponse,
   Me,
   MessageResponse,
+  PasskeyListResponse,
   PasskeySummary,
   PasswordResetBody,
   SignupConfirmResponse,
@@ -22,6 +23,18 @@ export function getMe() {
 // Encerra a sessão na API, que revoga os refresh tokens (POST /auth/logout).
 export function postLogout() {
   return apiRequest<void>('/auth/logout', { method: 'POST' })
+}
+
+// Lista os passkeys da conta, um por aparelho (GET /auth/passkeys).
+export function getPasskeys() {
+  return apiRequest<PasskeyListResponse>('/auth/passkeys')
+}
+
+// Remove o passkey de um aparelho (DELETE /auth/passkeys/{id}).
+export function deletePasskey(id: string) {
+  return apiRequest<void>(`/auth/passkeys/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  })
 }
 
 // Pede as opções para criar um passkey neste aparelho (POST /auth/passkeys).
