@@ -18,24 +18,30 @@ function refreshAfterLoanChange(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: [BOOK_QUERY_KEY] })
 }
 
+// Põe um pedido recém-criado no cache dos ativos, para a tela "Pedido feito" já o
+// encontrar. Vale para quem pede o livro e para quem confirma a vez na fila.
+export function addLoanToActiveCache(queryClient: QueryClient, loan: MyLoan) {
+  queryClient.setQueryData<MyLoansResponse>(
+    [MY_LOANS_QUERY_KEY, LOAN_VIEW.active],
+    (previous) => ({
+      view: LOAN_VIEW.active,
+      items: [
+        loan,
+        ...(previous?.items ?? []).filter((item) => item.id !== loan.id),
+      ],
+    }),
+  )
+}
+
 // Solicita o empréstimo de um livro (RF-EMP-01): POST /loans. O pedido novo entra
-// no cache dos ativos na hora, para a tela "Pedido feito" já o encontrar. Numa
-// recusa (409), as regras podem ter mudado: a página do livro é buscada de novo.
+// no cache dos ativos na hora. Numa recusa (409), as regras podem ter mudado: a
+// página do livro é buscada de novo.
 export function useRequestLoan() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (bookId: string) => postLoan(bookId),
     onSuccess: (loan) => {
-      queryClient.setQueryData<MyLoansResponse>(
-        [MY_LOANS_QUERY_KEY, LOAN_VIEW.active],
-        (previous) => ({
-          view: LOAN_VIEW.active,
-          items: [
-            loan,
-            ...(previous?.items ?? []).filter((item) => item.id !== loan.id),
-          ],
-        }),
-      )
+      addLoanToActiveCache(queryClient, loan)
       refreshAfterLoanChange(queryClient)
     },
     onError: () => refreshAfterLoanChange(queryClient),

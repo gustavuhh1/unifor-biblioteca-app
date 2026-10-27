@@ -33,6 +33,7 @@ import { BLOCKED_REASON_MESSAGE } from '@/shared/utils/blocked-reason'
 import { formatDayMonth } from '@/shared/utils/dates'
 import { pluralize } from '@/shared/utils/plural'
 import { RequestLoanSheet } from '@/features/loans/components/request-loan-sheet'
+import { JoinQueueSheet } from '@/features/queues/components/join-queue-sheet'
 import {
   BOOK_ACTION_LABEL,
   BOOK_SUGGESTED_ACTION,
@@ -129,6 +130,7 @@ function BookDetail({
   const [synopsisOpen, setSynopsisOpen] = useState(false)
   const [synopsisTruncated, setSynopsisTruncated] = useState(false)
   const [requesting, setRequesting] = useState(false)
+  const [joiningQueue, setJoiningQueue] = useState(false)
 
   const emprestado = book.copiesAvailable === 0
   const action = book.action
@@ -431,7 +433,7 @@ function BookDetail({
       </ScrollView>
 
       {/* AÇÃO INFERIOR: Solicitar empréstimo abre a confirmação (A23, RF-EMP-01);
-          Entrar na fila chega com o bloco da fila */}
+          Entrar na fila abre a prévia e a confirmação (A28 e A36, RF-FIL-01) */}
       {action ? (
         <View
           className="border-t border-line bg-surface-raised px-4 pt-3"
@@ -446,7 +448,7 @@ function BookDetail({
             onPress={
               action.suggestedAction === BOOK_SUGGESTED_ACTION.request
                 ? () => setRequesting(true)
-                : undefined
+                : () => setJoiningQueue(true)
             }
           >
             {pausado
@@ -461,6 +463,12 @@ function BookDetail({
         bookId={book.id}
         bookTitle={book.title}
         onClose={() => setRequesting(false)}
+      />
+      <JoinQueueSheet
+        visible={joiningQueue}
+        bookId={book.id}
+        bookTitle={book.title}
+        onClose={() => setJoiningQueue(false)}
       />
     </>
   )
