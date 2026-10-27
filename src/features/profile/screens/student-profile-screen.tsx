@@ -1,39 +1,44 @@
+import { useRouter } from 'expo-router'
 import { Pressable, ScrollView, Text, View } from 'react-native'
+import { useLogout } from '@/features/auth/hooks/use-logout'
+import { useSession } from '@/features/auth/hooks/use-session'
 import { AppBar, Icon, type IconName } from '@/shared/components'
-export type PerfilAlunoProps = {
-  estado?: 'em-dia' | 'multa'
-  onEmprestimos?: () => void
-  onMinhasFilas?: () => void
-  onSalvos?: () => void
-  onAparencia?: () => void
-  onPasskeys?: () => void
-  onHistorico?: () => void
-  onAvisos?: () => void
-  onRegras?: () => void
-  onMulta?: () => void
-  onSair?: () => void
+import { toAppDate } from '@/shared/utils/dates'
+import { buildStudentProfile } from '../profile.format'
+
+interface MenuItem {
+  label: string
+  icon: IconName
+  // Rota aberta ao tocar no item.
+  href: string
 }
-export function StudentProfileScreen({
-  estado = 'em-dia',
-  onSalvos,
-  onAparencia,
-  onPasskeys,
-  onHistorico,
-  onAvisos,
-  onRegras,
-  onMulta,
-  onSair,
-}: PerfilAlunoProps) {
-  const multa = estado === 'multa'
-  const menu: { label: string; icon: IconName; action?: () => void }[] = [
-    { label: 'Salvos', icon: 'bookmark', action: onSalvos },
-    { label: 'Meus passkeys', icon: 'fingerprint', action: onPasskeys },
-    { label: 'Histórico de empréstimos', icon: 'clock', action: onHistorico },
-    { label: 'Avisos e lembretes', icon: 'bell', action: onAvisos },
-    { label: 'Aparência', icon: 'moon', action: onAparencia },
-    { label: 'Regras da biblioteca', icon: 'info', action: onRegras },
-    { label: 'Sair', icon: 'logout', action: onSair },
+
+// Itens do Perfil do aluno, na ordem do design (A50).
+const MENU: MenuItem[] = [
+  { label: 'Salvos', icon: 'bookmark', href: '/saved' },
+  { label: 'Meus passkeys', icon: 'fingerprint', href: '/passkeys' },
+  { label: 'Histórico de empréstimos', icon: 'clock', href: '/loans' },
+  { label: 'Avisos e lembretes', icon: 'bell', href: '/notification-settings' },
+  { label: 'Aparência', icon: 'moon', href: '/appearance' },
+  { label: 'Regras da biblioteca', icon: 'info', href: '/library-rules' },
+]
+
+// Perfil do aluno (A47 e A50, RF-PER-01): dados de GET /me, menu que abre cada
+// tela e o Sair (POST /auth/logout e depois o Firebase, RF-AUT-11).
+export function StudentProfileScreen() {
+  const router = useRouter()
+  const { user } = useSession()
+  const logout = useLogout()
+  if (!user) return null
+
+  const year = toAppDate(new Date().toISOString()).getFullYear()
+  const view = buildStudentProfile(user, year)
+  const stats = [
+    [view.loans, 'livros com você'],
+    [view.activeQueues, 'filas ativas'],
+    [view.readThisYear, `lidos em ${view.readYear}`],
   ]
+
   return (
     <View className="flex-1 bg-surface">
       <AppBar title="Perfil" large />
@@ -46,29 +51,20 @@ export function StudentProfileScreen({
       >
         <View className="flex-row items-center gap-3">
           <View className="h-[64px] w-[64px] items-center justify-center rounded-pill bg-brand-soft">
-            <Text className="text-label text-brand">{multa ? 'MC' : 'LA'}</Text>
+            <Text className="text-label text-brand">{view.initials}</Text>
           </View>
           <View className="min-w-0 flex-1 gap-1">
-            <Text className="text-title text-ink">
-              {multa ? 'Marina Castro' : 'Lucas Almeida'}
-            </Text>
+            <Text className="text-title text-ink">{view.name}</Text>
             <Text className="text-caption text-ink-muted">
-              Matrícula{' '}
-              {multa
-                ? '2513320 · ingresso em 2025'
-                : '2412858 · ingresso em 2024'}
+              {view.matriculaLine}
             </Text>
-            <Text className="text-caption text-ink-muted">
-              {multa ? 'Sistemas de Informação' : 'Ciência da Computação'}
-            </Text>
+            {view.course ? (
+              <Text className="text-caption text-ink-muted">{view.course}</Text>
+            ) : null}
           </View>
         </View>
         <View className="flex-row gap-3">
-          {[
-            [multa ? '2/10' : '3/10', 'livros com você'],
-            [multa ? '0' : '2', 'filas ativas'],
-            [multa ? '9' : '17', 'lidos em 2026'],
-          ].map(([value, label]) => (
+          {stats.map(([value, label]) => (
             <View
               key={label}
               className="min-w-0 flex-1 gap-1 rounded-lg border border-line bg-surface-raised p-3"
@@ -78,14 +74,14 @@ export function StudentProfileScreen({
             </View>
           ))}
         </View>
-        {multa ? (
+        {view.fineAmount ? (
           <Pressable
             accessibilityRole="button"
-            onPress={onMulta}
+            onPress={() => router.push('/fine')}
             className="gap-1 rounded-lg bg-warning-soft p-4"
           >
             <Text className="text-label text-warning">
-              Multa em aberto: R$ 6,00
+              Multa em aberto: {view.fineAmount}
             </Text>
             <Text className="text-body text-ink">
               Pague no balcão da biblioteca. Você pode continuar pegando livros.
@@ -101,28 +97,28 @@ export function StudentProfileScreen({
           </View>
         )}
         <View className="overflow-hidden rounded-lg border border-line bg-surface-raised">
-          {menu.map((item, index) => (
+          {MENU.map((item) => (
             <Pressable
               key={item.label}
               accessibilityRole="button"
-              disabled={!item.action}
-              onPress={item.action}
-              className={`min-h-12 flex-row items-center gap-3 p-4 ${index < menu.length - 1 ? 'border-b border-line' : ''}`}
+              onPress={() => router.push(item.href)}
+              className="min-h-12 flex-row items-center gap-3 border-b border-line p-4"
             >
-              <Icon
-                name={item.icon}
-                color={item.label === 'Sair' ? 'danger' : 'inkMuted'}
-              />
-              <Text
-                className={`flex-1 text-label ${item.label === 'Sair' ? 'text-danger' : 'text-ink'}`}
-              >
-                {item.label}
-              </Text>
-              {item.label !== 'Sair' ? (
-                <Icon name="chevronRight" color="inkMuted" size={18} />
-              ) : null}
+              <Icon name={item.icon} color="inkMuted" />
+              <Text className="flex-1 text-label text-ink">{item.label}</Text>
+              <Icon name="chevronRight" color="inkMuted" size={18} />
             </Pressable>
           ))}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ busy: logout.isPending }}
+            disabled={logout.isPending}
+            onPress={() => logout.mutate()}
+            className="min-h-12 flex-row items-center gap-3 p-4"
+          >
+            <Icon name="logout" color="danger" />
+            <Text className="flex-1 text-label text-danger">Sair</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>

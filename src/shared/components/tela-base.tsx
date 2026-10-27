@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router'
 import type { ReactNode } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -22,6 +23,7 @@ export default function TelaBase({
 }: Props) {
   const { colors } = useTheme()
   const safe = useSafeAreaInsets()
+  const router = useRouter()
   return (
     <View
       style={{ flex: 1, backgroundColor: colors.surface, paddingTop: safe.top }}
@@ -40,7 +42,7 @@ export default function TelaBase({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Voltar"
-              onPress={onVoltar}
+              onPress={onVoltar ?? (() => router.back())}
               style={{
                 minWidth: 44,
                 minHeight: 44,

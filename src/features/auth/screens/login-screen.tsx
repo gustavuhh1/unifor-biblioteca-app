@@ -1,44 +1,32 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
 import { Image, Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BottomSheet, Button, Icon, TextField } from '@/shared/components'
 import { MATRICULA_HINT } from '../auth.constants'
-import { getAuthErrorMessage, isPasskeyCancelled } from '../auth.errors'
+import { isPasskeyCancelled } from '../auth.errors'
 import { usePasskeyLogin } from '../hooks/use-passkey-login'
-import { usePasswordLogin } from '../hooks/use-password-login'
+import { usePasswordLoginForm } from '../hooks/use-password-login-form'
 import { useSession } from '../hooks/use-session'
-import {
-  passwordLoginSchema,
-  type PasswordLoginForm,
-} from '../schemas/login.schemas'
 
 export function LoginScreen() {
   const { notice, clearNotice } = useSession()
   const router = useRouter()
   const params = useLocalSearchParams<{ state?: string }>()
   const insets = useSafeAreaInsets()
-  const passwordLogin = usePasswordLogin()
+  const { form, passwordLogin, errorMessage, submit } = usePasswordLoginForm()
   const passkeyLogin = usePasskeyLogin()
   const [otherWays, setOtherWays] = useState(false)
   const [passwordMode, setPasswordMode] = useState(
     params.state === 'session-expired' || Boolean(notice),
   )
   const sessionExpired = params.state === 'session-expired' || Boolean(notice)
-  const form = useForm<PasswordLoginForm>({
-    resolver: zodResolver(passwordLoginSchema),
-    defaultValues: { matricula: '', password: '' },
-  })
 
   const busy = passwordLogin.isPending || passkeyLogin.isPending
   const failedPasskey = Boolean(
     passkeyLogin.error && !isPasskeyCancelled(passkeyLogin.error),
   )
-  const errorMessage = passwordLogin.error
-    ? getAuthErrorMessage(passwordLogin.error)
-    : null
 
   async function submitPasskey() {
     if (!(await form.trigger('matricula'))) return
@@ -54,9 +42,12 @@ export function LoginScreen() {
 
   return (
     <View className="flex-1 bg-surface">
+      {/* Os botões ficam dentro da rolagem: com o teclado aberto, o rodapé não
+          cobre o campo Senha e o aluno ainda alcança "Entrar". */}
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="flex-grow px-6 pb-5"
+        contentContainerClassName="flex-grow px-6"
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}
       >
         <View className="items-center pt-3">
           <Image
@@ -146,13 +137,8 @@ export function LoginScreen() {
             </>
           )}
         </View>
-      </ScrollView>
-      <View
-        className="gap-2 bg-surface px-6 pt-3"
-        style={{ paddingBottom: Math.max(insets.bottom, 24) }}
-      >
-        {!passwordMode ? (
-          <>
+        <View className="mt-auto gap-2 pt-6">
+          {!passwordMode ? (
             <Button
               block
               icon="fingerprint"
@@ -162,58 +148,39 @@ export function LoginScreen() {
             >
               Entrar
             </Button>
-            <Button
-              block
-              variant="secondary"
-              onPress={() => router.push('/signup')}
-            >
-              Criar conta
-            </Button>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push('/librarian-login')}
-              className="min-h-10 items-center justify-center"
-            >
-              <Text className="text-label-sm text-brand">
-                Acessar como bibliotecário
-              </Text>
-            </Pressable>
-          </>
-        ) : (
-          <>
+          ) : (
             <Button
               block
               loading={passwordLogin.isPending}
               disabled={busy && !passwordLogin.isPending}
               onPress={() =>
-                void form.handleSubmit((values) => {
+                submit(() => {
                   clearNotice()
                   passkeyLogin.reset()
-                  passwordLogin.mutate(values)
-                })()
+                })
               }
             >
               Entrar
             </Button>
-            <Button
-              block
-              variant="secondary"
-              onPress={() => router.push('/signup')}
-            >
-              Criar conta
-            </Button>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push('/librarian-login')}
-              className="min-h-10 items-center justify-center"
-            >
-              <Text className="text-label-sm text-brand">
-                Acessar como bibliotecário
-              </Text>
-            </Pressable>
-          </>
-        )}
-      </View>
+          )}
+          <Button
+            block
+            variant="secondary"
+            onPress={() => router.push('/signup')}
+          >
+            Criar conta
+          </Button>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/librarian-login')}
+            className="min-h-10 items-center justify-center"
+          >
+            <Text className="text-label-sm text-brand">
+              Acessar como bibliotecário
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
 
       <BottomSheet
         visible={otherWays}
