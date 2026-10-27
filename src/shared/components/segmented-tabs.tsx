@@ -45,7 +45,7 @@ export function SegmentedTabs({
             >
               {item.count === undefined
                 ? item.label
-                : `${item.label} ${item.count}`}
+                : `${item.label} (${item.count})`}
             </Text>
           </Pressable>
         )

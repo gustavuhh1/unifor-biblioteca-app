@@ -126,7 +126,7 @@ describe('componentes do design system: montam e mostram o texto', () => {
       />,
     )
     expect(screen.getByText('Ativos')).toBeTruthy()
-    expect(screen.getByText('Na fila 2')).toBeTruthy()
+    expect(screen.getByText('Na fila (2)')).toBeTruthy()
   })
 
   it('BookCard mostra título, autor com ano e o status', async () => {

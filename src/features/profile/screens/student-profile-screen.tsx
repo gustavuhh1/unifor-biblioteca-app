@@ -89,11 +89,14 @@ export function StudentProfileScreen() {
             </Text>
           </Pressable>
         ) : (
-          <View className="gap-1 rounded-lg bg-success-soft p-4">
-            <Text className="text-label text-success">Nenhuma pendência</Text>
-            <Text className="text-body text-ink">
-              Você está em dia: pode pegar livros e entrar em filas.
-            </Text>
+          <View className="flex-row items-start gap-3 rounded-lg bg-success-soft p-4">
+            <Icon name="check" size={20} color="success" />
+            <View className="flex-1 gap-1">
+              <Text className="text-label text-success">Nenhuma pendência</Text>
+              <Text className="text-body text-ink">
+                Você está em dia: pode pegar livros e entrar em filas.
+              </Text>
+            </View>
           </View>
         )}
         <View className="overflow-hidden rounded-lg border border-line bg-surface-raised">

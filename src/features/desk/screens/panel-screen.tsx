@@ -11,6 +11,7 @@ import { displayNameOf } from '@/features/profile/profile.format'
 import {
   AppBar,
   Button,
+  DeadlineChip,
   EmptyState,
   Icon,
   type IconName,
@@ -19,7 +20,7 @@ import { initialsOf } from '@/shared/components/avatar'
 import { useTheme } from '@/shared/theme/theme-provider'
 import { ApiError } from '@/shared/api/errors'
 import { PANEL_PICKUPS_LIMIT } from '../desk.constants'
-import { pickupDeadlineLabel } from '../desk.format'
+import { isLastPickupDay, pickupDeadlineLabel } from '../desk.format'
 import type { DeskSummary } from '../desk.types'
 import { useDeskSummary } from '../hooks/use-desk-summary'
 import { usePickups } from '../hooks/use-pickups'
@@ -210,9 +211,13 @@ export function PanelScreen() {
                     {item.bookTitle} · {item.pickupCode}
                   </Text>
                 </View>
-                <Text className="text-caption-strong text-brand">
+                <DeadlineChip
+                  kind={
+                    isLastPickupDay(item.pickupDeadline) ? 'vence' : 'retirar'
+                  }
+                >
                   {pickupDeadlineLabel(item.pickupDeadline)}
-                </Text>
+                </DeadlineChip>
               </Pressable>
             ))}
           </View>

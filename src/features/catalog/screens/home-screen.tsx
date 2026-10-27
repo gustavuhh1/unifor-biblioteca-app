@@ -8,12 +8,12 @@ import { useMyLoans } from '@/features/loans/hooks/use-my-loans'
 import { useNotifications } from '@/features/notifications/hooks/use-notifications'
 import { useMyQueues } from '@/features/queues/hooks/use-my-queues'
 import { yourTurnEntry } from '@/features/queues/queues.format'
-import { BookCard } from '@/shared/components'
+import { BookCover } from '@/shared/components'
 import { Icon } from '@/shared/components/icon'
 import { MAX_ACTIVE_LOANS } from '@/shared/config/library-rules'
 import { useTheme } from '@/shared/theme/theme-provider'
 import { formatRelativeDateTime, formatRelativeDay } from '@/shared/utils/dates'
-import { authorsLine, bookCoverTone, bookStatus } from '../catalog.format'
+import { authorsLine, bookCoverTone } from '../catalog.format'
 import { useRecommendations } from '../hooks/use-recommendations'
 import { HOME_RECOMMENDATIONS_LIMIT } from '../recommendations.constants'
 
@@ -157,8 +157,8 @@ export function HomeScreen() {
           </Pressable>
         </View>
         {recommended.length > 0 ? (
-          <View className="gap-3 px-4">
-            <View className="gap-1">
+          <View className="gap-3">
+            <View className="gap-1 px-4">
               <Text className="text-title text-ink">
                 Recomendados para você
               </Text>
@@ -168,22 +168,43 @@ export function HomeScreen() {
                 </Text>
               ) : null}
             </View>
-            {recommended.map(({ book, reasonText }) => (
-              <BookCard
-                key={book.id}
-                title={book.title}
-                author={authorsLine(book.authors)}
-                tone={bookCoverTone(book)}
-                status={bookStatus(book)}
-                meta={reasonText}
-                onPress={() =>
-                  router.push({
-                    pathname: '/book-details',
-                    params: { id: book.id },
-                  })
-                }
-              />
-            ))}
+            {/* Carrossel de capas, como no Figma (A07). */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="gap-3 px-4"
+            >
+              {recommended.map(({ book, reasonText }) => (
+                <Pressable
+                  key={book.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${book.title}, de ${authorsLine(book.authors)}. ${reasonText}`}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/book-details',
+                      params: { id: book.id },
+                    })
+                  }
+                  className="w-40 gap-2"
+                >
+                  <BookCover
+                    title={book.title}
+                    author={authorsLine(book.authors)}
+                    tone={bookCoverTone(book)}
+                    size="lg"
+                  />
+                  <Text className="text-label text-ink" numberOfLines={1}>
+                    {book.title}
+                  </Text>
+                  <Text
+                    className="text-caption text-ink-muted"
+                    numberOfLines={2}
+                  >
+                    {authorsLine(book.authors)}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
         ) : null}
       </ScrollView>
