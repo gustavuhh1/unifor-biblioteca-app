@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
-import { Controller, useForm, type Control } from 'react-hook-form'
+import { Controller, useForm, useWatch, type Control } from 'react-hook-form'
 import { ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ApiError } from '@/shared/api/errors'
@@ -42,6 +42,7 @@ import {
   formValuesFromBook,
   isIsbnLike,
   normalizeIsbn,
+  nowMs,
   applyLookupToForm,
   type BookFormExtras,
   type BookFormValues,
@@ -157,7 +158,7 @@ function BookForm({ book }: { book: LibrarianBook | undefined }) {
   function finish(notice: (typeof BOOK_NOTICE)[keyof typeof BOOK_NOTICE]) {
     router.dismissTo({
       pathname: '/collection-management',
-      params: { notice, noticeKey: String(Date.now()) },
+      params: { notice, noticeKey: String(nowMs()) },
     })
   }
 
@@ -194,7 +195,7 @@ function BookForm({ book }: { book: LibrarianBook | undefined }) {
     setFormError(null)
     if (!saved) {
       const year = toAppDate(new Date().toISOString()).getFullYear()
-      create.mutate(buildCreateBody(values, extras, Date.now(), year), {
+      create.mutate(buildCreateBody(values, extras, nowMs(), year), {
         onSuccess: () => finish(BOOK_NOTICE.created),
         onError,
       })
@@ -249,7 +250,9 @@ function BookForm({ book }: { book: LibrarianBook | undefined }) {
   const isbnError =
     form.formState.errors.isbn?.message ??
     (notFound ? ISBN_NOT_FOUND : undefined)
-  const typedIsbn = normalizeIsbn(form.watch('isbn'))
+  const typedIsbn = normalizeIsbn(
+    useWatch({ control: form.control, name: 'isbn' }),
+  )
   const canApplySync = saved !== undefined && typedIsbn === (saved.isbn ?? '')
 
   // Atualizar pelas fontes externas (B23).

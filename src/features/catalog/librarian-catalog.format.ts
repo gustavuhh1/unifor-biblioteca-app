@@ -107,6 +107,12 @@ export function buildCopies(
   })
 }
 
+// Instante atual em milissegundos. Fica aqui, fora da tela, porque a tela só o usa
+// ao salvar (o registro dos exemplares e a chave do aviso), nunca ao desenhar.
+export function nowMs(): number {
+  return Date.now()
+}
+
 // Texto vazio vira undefined, para o campo opcional nem seguir no corpo.
 function optional(text: string | undefined): string | undefined {
   const trimmed = text?.trim()
