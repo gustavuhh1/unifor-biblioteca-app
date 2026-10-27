@@ -1,4 +1,5 @@
 import {
+  findPickupLoan,
   formatWeekdayDate,
   nextDueLoan,
   pickupDeadlineText,
@@ -68,5 +69,24 @@ describe('pickupDeadlineText (A24 e A39)', () => {
   it('monta "Retire até" com o dia da semana', () => {
     const loan = makeLoan({ pickupDeadline: '2026-10-19T21:55:00.000Z' })
     expect(pickupDeadlineText(loan)).toBe('Retire até seg, 19/10')
+  })
+})
+
+describe('findPickupLoan (A25, QR de retirada)', () => {
+  const waiting = (id: string) =>
+    makeLoan({ id, status: 'awaiting_pickup', qrToken: `token-${id}` })
+
+  it('acha o pedido pelo id', () => {
+    expect(findPickupLoan([waiting('a'), waiting('b')], 'b')?.id).toBe('b')
+  })
+
+  it('sem id, usa o pedido mais novo (o primeiro da lista)', () => {
+    expect(findPickupLoan([waiting('a'), waiting('b')])?.id).toBe('a')
+  })
+
+  it('ignora empréstimo já retirado, que não tem QR', () => {
+    const active = makeLoan({ id: 'ativo', status: 'active', qrToken: null })
+    expect(findPickupLoan([active])).toBeUndefined()
+    expect(findPickupLoan([active, waiting('a')], 'ativo')?.id).toBe('a')
   })
 })

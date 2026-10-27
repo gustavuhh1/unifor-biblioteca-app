@@ -21,6 +21,19 @@ export function pickupDeadlineText(
   return `Retire até ${formatWeekdayDate(loan.pickupDeadline)}`
 }
 
+// Pedido que o QR de retirada mostra (A25): o do `loanId`, se ainda espera a
+// retirada; sem id, o mais novo. A API manda os mais novos primeiro. Só pedido
+// aguardando retirada tem `qrToken`.
+export function findPickupLoan(
+  loans: MyLoan[],
+  loanId?: string,
+): MyLoan | undefined {
+  const waiting = loans.filter(
+    (loan) => loan.status === LOAN_STATUS.awaitingPickup && loan.qrToken,
+  )
+  return waiting.find((loan) => loan.id === loanId) ?? waiting[0]
+}
+
 // Empréstimo ativo com a devolução mais próxima (A07, "Próxima devolução").
 // Pedidos ainda não retirados não têm prazo de devolução, então ficam de fora.
 export function nextDueLoan(loans: MyLoan[]): MyLoan | null {
