@@ -37,6 +37,12 @@ const SKELETON_LINES = [
 // Distância do fim da lista (em px) que já carrega a próxima página.
 const LOAD_MORE_THRESHOLD = 300
 
+// Pergunta pronta da busca sem resultado (A11): o Assistente busca e, se não
+// achar no acervo, sugere parecidos.
+function noResultQuestion(term: string): string {
+  return `Procure livros sobre ${term}. Se não tiver no acervo, sugira parecidos.`
+}
+
 function isNearEnd({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) {
   const { layoutMeasurement, contentOffset, contentSize } = nativeEvent
   return (
@@ -70,6 +76,14 @@ export function CatalogScreen() {
 
   function openBook(id: string) {
     router.push({ pathname: '/book-details', params: { id } })
+  }
+
+  // Abre o Assistente já perguntando (a aba lê ?q= uma vez ao abrir).
+  function askAssistant(term: string) {
+    router.push({
+      pathname: '/assistant',
+      params: { q: noResultQuestion(term) },
+    })
   }
 
   function loadMore(event: NativeSyntheticEvent<NativeScrollEvent>) {
@@ -160,16 +174,20 @@ export function CatalogScreen() {
                 icon="books"
                 title={`Nenhum resultado para “${search.searchedText}”`}
                 text="Confira a ortografia, use menos palavras ou busque pelo nome do autor."
-                // O Assistente ainda não tem rota na API: o botão e a pergunta
-                // pronta ficam sem ação por enquanto (RF-ACE-06).
+                // Os dois botões abrem o Assistente já com a pergunta enviada (RF-ACE-06).
                 action={
-                  <Button variant="secondary" icon="sparkle">
+                  <Button
+                    variant="secondary"
+                    icon="sparkle"
+                    onPress={() => askAssistant(search.searchedText)}
+                  >
                     Perguntar ao Assistente
                   </Button>
                 }
               />
               <PromptSugerido
-                text={`“Procure livros sobre ${search.searchedText}. Se não tiver no acervo, sugira parecidos.”`}
+                text={`“${noResultQuestion(search.searchedText)}”`}
+                onPress={() => askAssistant(search.searchedText)}
               />
             </View>
           ) : (
