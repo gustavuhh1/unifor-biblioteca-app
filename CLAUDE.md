@@ -94,7 +94,7 @@ Regras:
 ## Convenções
 
 - **Nomes no código** (variáveis, funções, arquivos, componentes) em **inglês**. **Comentários e textos dos testes (`describe`/`it`) em português (pt-BR)**, por decisão do Gustavo em 20/10. **README em inglês** (exigência da cadeira de Mobile). **Interface em português.**
-- **Commits em português**, curtos e no imperativo. Uma **branch curta por tarefa** com PR para a `main`. **Não faça push nem abra PR sem o Gustavo pedir.**
+- **Commits em português**, curtos e no imperativo. Uma **branch curta por tarefa** criada da `development`, com PR para a `development`; a `development` vai para a `main` só depois de testada localmente e aprovada pelo Gustavo. **Não faça push nem abra PR sem o Gustavo pedir.**
 - Cite no PR os requisitos e os códigos de tela atendidos (ex.: `RF-AUT-05`, `A62`).
 - Acessibilidade mínima: alvos de toque de 44 px, `accessibilityLabel` em ícones sem texto, contraste dos tokens.
 
