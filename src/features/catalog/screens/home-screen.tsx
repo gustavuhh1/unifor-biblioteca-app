@@ -185,7 +185,9 @@ export function HomeScreen() {
                       params: { id: book.id },
                     })
                   }
-                  className="w-40 gap-2"
+                  // Largura da capa G: título e autor quebram dentro dela. (w-40
+                  // não existe na escala de tokens e deixava o item sem largura.)
+                  className="w-[148px] gap-2"
                 >
                   <BookCover
                     title={book.title}

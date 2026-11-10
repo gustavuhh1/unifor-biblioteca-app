@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Image, Text, View } from 'react-native'
+import { Image, StyleSheet, Text, View } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
 
 export type CoverTone = 1 | 2 | 3 | 4 | 5 | 6
@@ -144,7 +144,9 @@ export function BookCover({
           resizeMode="cover"
           accessibilityIgnoresInvertColors
           onError={() => setFailedUrl(imageUrl)}
-          className="absolute inset-0 h-full w-full"
+          // Presa nas quatro bordas (e não w-full/h-full, que no Yoga contam só a
+          // área dentro do padding): cobre a capa inteira e esconde a gerada.
+          style={StyleSheet.absoluteFill}
         />
       ) : null}
     </View>
