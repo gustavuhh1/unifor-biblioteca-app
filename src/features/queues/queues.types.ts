@@ -10,6 +10,9 @@ export interface MyQueueEntry {
   id: string
   bookId: string
   bookTitle: string
+  // Capa do livro: a imagem (null sem imagem) e o tom da capa gerada (1 a 6).
+  bookCoverUrl: string | null
+  bookCoverTone: number
   // Só `waiting` ou `your_turn`.
   status: Extract<QueueEntryStatus, 'waiting' | 'your_turn'>
   position: number

@@ -18,8 +18,8 @@ import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 import { useTheme } from '@/shared/theme/theme-provider'
 import { formatDayMonth } from '@/shared/utils/dates'
 import { formatCents } from '@/shared/utils/money'
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import {
-  coverToneOfTitle,
   firstName,
   returnConfirmationText,
   returnFineText,
@@ -124,7 +124,7 @@ export function RegisterReturnScreen() {
             <View className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-4">
               <BookCover
                 title={loan.bookTitle}
-                tone={coverToneOfTitle(loan.bookTitle)}
+                {...itemBookCover(loan)}
                 size="sm"
               />
               <View className="min-w-0 flex-1 gap-2">

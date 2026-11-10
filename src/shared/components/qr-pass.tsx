@@ -15,6 +15,8 @@ export interface QRPassProps {
   book: string
   author?: string
   tone?: CoverTone
+  // Imagem oficial da capa; sem ela, a capa gerada pelo tom.
+  coverUrl?: string | null
   // Prazo de retirada por extenso: "até seg, 19/10".
   expires?: string
   heading?: string
@@ -34,6 +36,7 @@ export function QRPass({
   book,
   author,
   tone,
+  coverUrl,
   expires,
   heading = 'Retirada no balcão',
 }: QRPassProps) {
@@ -76,7 +79,13 @@ export function QRPass({
         <View className="h-px self-stretch bg-line" />
       </View>
       <View className="flex-row items-center gap-3 px-5 pb-5 pt-4">
-        <BookCover title={book} author={author} tone={tone} size="sm" />
+        <BookCover
+          title={book}
+          author={author}
+          tone={tone}
+          coverUrl={coverUrl}
+          size="sm"
+        />
         <View className="min-w-0 flex-1 gap-0.5">
           <Text className="text-book-title text-ink" numberOfLines={2}>
             {book}

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native'
+import { fireEvent, render, screen } from '@testing-library/react-native'
 import type { ReactElement } from 'react'
 import { Text } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -80,6 +80,33 @@ describe('componentes do design system: montam e mostram o texto', () => {
     await renderInApp(<BookCover title="Sem texto" size="sm" />)
     expect(screen.queryByText('Sem')).toBeNull()
     expect(screen.queryByText('texto')).toBeNull()
+  })
+
+  it('BookCover põe a imagem oficial por cima e volta à capa gerada se ela falhar', async () => {
+    await renderInApp(
+      <BookCover
+        title="Código Limpo"
+        coverUrl="https://covers.openlibrary.org/b/id/1-L.jpg"
+        size="md"
+      />,
+    )
+    const image = screen.getByTestId('book-cover-image')
+    expect(image.props.source).toEqual({
+      uri: 'https://covers.openlibrary.org/b/id/1-L.jpg',
+    })
+    // A capa gerada continua por baixo (aparece enquanto a imagem carrega).
+    expect(screen.getByText('Código')).toBeTruthy()
+
+    await fireEvent(image, 'error')
+    expect(screen.queryByTestId('book-cover-image')).toBeNull()
+    expect(screen.getByText('Código')).toBeTruthy()
+  })
+
+  it('BookCover sem imagem mostra só a capa gerada', async () => {
+    await renderInApp(
+      <BookCover title="Código Limpo" coverUrl={null} size="md" />,
+    )
+    expect(screen.queryByTestId('book-cover-image')).toBeNull()
   })
 
   it('titleWords separa o título em palavras e ignora espaços sobrando', () => {

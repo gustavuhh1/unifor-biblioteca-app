@@ -18,15 +18,16 @@ export interface SegmentedTabsProps { items: { label: string; count?: number }[]
 export declare function SegmentedTabs(props: SegmentedTabsProps): React.ReactElement;
 export interface StatusBadgeProps { status: Status; label?: string }
 export declare function StatusBadge(props: StatusBadgeProps): React.ReactElement;
-export interface BookCoverProps { title: string; author?: string; tone?: 1 | 2 | 3 | 4 | 5 | 6; size?: 'sm' | 'md' | 'lg' }
+// coverUrl (decisão de 10/11/2026): imagem oficial da capa (Open Library ou BrasilAPI), por cima da capa gerada; sem ela, ou se não carregar, fica a capa gerada pelo tom.
+export interface BookCoverProps { title: string; author?: string; tone?: 1 | 2 | 3 | 4 | 5 | 6; size?: 'sm' | 'md' | 'lg'; coverUrl?: string | null }
 export declare function BookCover(props: BookCoverProps): React.ReactElement;
-export interface BookCardProps { title: string; author: string; year?: number; tone?: 1 | 2 | 3 | 4 | 5 | 6; status?: Status; statusLabel?: string; meta?: React.ReactNode; action?: React.ReactNode; layout?: 'row' | 'grid' }
+export interface BookCardProps { title: string; author: string; year?: number; tone?: 1 | 2 | 3 | 4 | 5 | 6; coverUrl?: string | null; status?: Status; statusLabel?: string; meta?: React.ReactNode; action?: React.ReactNode; layout?: 'row' | 'grid' }
 export declare function BookCard(props: BookCardProps): React.ReactElement;
 export interface QueueInfoProps { ahead: number; joined?: boolean; note?: string }
 export declare function QueueInfo(props: QueueInfoProps): React.ReactElement;
 export interface DeadlineChipProps { kind: 'confirmar' | 'retirar' | 'devolver' | 'vence' | 'atrasado' | 'ok' | 'neutro'; children: React.ReactNode }
 export declare function DeadlineChip(props: DeadlineChipProps): React.ReactElement;
-export interface LoanCardProps { title: string; author: string; tone?: 1 | 2 | 3 | 4 | 5 | 6; status?: Status; statusLabel?: string; progress?: number; startLabel?: string; dueLabel?: string; deadline?: React.ReactNode; renewBlocked?: boolean; renewReason?: string; actions?: React.ReactNode }
+export interface LoanCardProps { title: string; author: string; tone?: 1 | 2 | 3 | 4 | 5 | 6; coverUrl?: string | null; status?: Status; statusLabel?: string; progress?: number; startLabel?: string; dueLabel?: string; deadline?: React.ReactNode; renewBlocked?: boolean; renewReason?: string; actions?: React.ReactNode }
 export declare function LoanCard(props: LoanCardProps): React.ReactElement;
 export interface LoanTimelineProps { steps: { label: string; detail?: string; state?: 'done' | 'current' | 'todo' | 'skipped' }[] }
 export declare function LoanTimeline(props: LoanTimelineProps): React.ReactElement;
@@ -38,7 +39,7 @@ export interface ChatBubbleProps { from?: 'assistant' | 'user'; children?: React
 export declare function ChatBubble(props: ChatBubbleProps): React.ReactElement;
 export interface ChatComposerProps { value?: string; placeholder?: string }
 export declare function ChatComposer(props: ChatComposerProps): React.ReactElement;
-export interface QRPassProps { code: string; matricula: string; name: string; book: string; author?: string; tone?: 1 | 2 | 3 | 4 | 5 | 6; expires?: string; heading?: string }
+export interface QRPassProps { code: string; matricula: string; name: string; book: string; author?: string; tone?: 1 | 2 | 3 | 4 | 5 | 6; coverUrl?: string | null; expires?: string; heading?: string }
 export declare function QRPass(props: QRPassProps): React.ReactElement;
 export interface AppBarProps { title: string; subtitle?: string; back?: boolean; large?: boolean; actions?: { icon: IconName; label: string; badge?: number }[] }
 export declare function AppBar(props: AppBarProps): React.ReactElement;

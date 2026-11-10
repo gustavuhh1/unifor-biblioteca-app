@@ -7,8 +7,8 @@ import {
   Icon,
 } from '@/shared/components'
 import { formatCents } from '@/shared/utils/money'
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import {
-  coverToneOfTitle,
   firstName,
   isLastPickupDay,
   isPickupBlocked,
@@ -78,7 +78,7 @@ export function StudentRecord({
             <View className="flex-row gap-3">
               <BookCover
                 title={pickup.bookTitle}
-                tone={coverToneOfTitle(pickup.bookTitle)}
+                {...itemBookCover(pickup)}
                 size="sm"
               />
               <View className="min-w-0 flex-1 gap-2">

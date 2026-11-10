@@ -14,8 +14,8 @@ import {
 } from '@/shared/components'
 import { ConfirmationSheet } from '@/shared/components/confirmation-sheet'
 import { useTheme } from '@/shared/theme/theme-provider'
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import {
-  coverToneOfTitle,
   dueLabel,
   firstName,
   isLastPickupDay,
@@ -129,7 +129,7 @@ export function RegisterPickupScreen() {
               <View className="flex-row gap-3">
                 <BookCover
                   title={pickup.bookTitle}
-                  tone={coverToneOfTitle(pickup.bookTitle)}
+                  {...itemBookCover(pickup)}
                   size="md"
                 />
                 <View className="min-w-0 flex-1 gap-2">

@@ -1,5 +1,4 @@
 import {
-  coverToneOfTitle,
   dueLabel,
   firstName,
   isLastPickupDay,
@@ -107,6 +106,8 @@ describe('textos da ficha do aluno', () => {
       bookId: 'b1',
       bookTitle: 'Cálculo, Vol. 1',
       bookShelf: '515',
+      bookCoverUrl: null,
+      bookCoverTone: 1,
       status: 'active' as const,
       state: 'overdue' as const,
       pickupCode: null,
@@ -133,23 +134,14 @@ describe('textos da ficha do aluno', () => {
   })
 })
 
-describe('coverToneOfTitle (capa sem cor na lista do balcão)', () => {
-  it('sempre devolve um tom de 1 a 6 e o mesmo para o mesmo título', () => {
-    for (const title of ['a', 'Código Limpo', 'zzzzzzzz', '']) {
-      const tone = coverToneOfTitle(title)
-      expect(tone).toBeGreaterThanOrEqual(1)
-      expect(tone).toBeLessThanOrEqual(6)
-      expect(coverToneOfTitle(title)).toBe(tone)
-    }
-  })
-})
-
 describe('withStudentChip (chip dos livros com o aluno, B04)', () => {
   const base = {
     id: 'l1',
     bookId: 'b1',
     bookTitle: 'Engenharia de Software',
     bookShelf: '005.1',
+    bookCoverUrl: null,
+    bookCoverTone: 1,
     status: 'active' as const,
     state: 'in_progress' as const,
     pickupCode: null,

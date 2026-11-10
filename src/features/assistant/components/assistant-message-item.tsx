@@ -69,6 +69,7 @@ export function AssistantMessageItem({
           title={book.title}
           author={authorsLine(book.authors)}
           tone={bookCoverTone(book)}
+          coverUrl={book.coverUrl}
           status={bookStatus(book)}
           meta={bookCardMeta(book)}
           onPress={() => onOpenBook(book.id)}

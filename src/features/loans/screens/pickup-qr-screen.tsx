@@ -1,3 +1,4 @@
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
@@ -87,6 +88,7 @@ export function PickupQrScreen() {
             matricula={user.matricula}
             name={displayNameOf(user)}
             book={loan.bookTitle}
+            {...itemBookCover(loan)}
             expires={`até ${formatWeekdayDate(loan.pickupDeadline)}`}
           />
 

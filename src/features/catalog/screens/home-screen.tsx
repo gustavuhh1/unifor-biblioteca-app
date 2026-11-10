@@ -191,6 +191,7 @@ export function HomeScreen() {
                     title={book.title}
                     author={authorsLine(book.authors)}
                     tone={bookCoverTone(book)}
+                    coverUrl={book.coverUrl}
                     size="lg"
                   />
                   <Text className="text-label text-ink" numberOfLines={1}>

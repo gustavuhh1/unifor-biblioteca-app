@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native'
+import { useState } from 'react'
+import { Image, Text, View } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
 
 export type CoverTone = 1 | 2 | 3 | 4 | 5 | 6
@@ -63,6 +64,9 @@ export interface BookCoverProps {
   author?: string
   tone?: CoverTone
   size?: CoverSize
+  // Imagem oficial da capa (Open Library ou BrasilAPI). Sem ela, ou se ela não
+  // carregar, fica a capa gerada pelo tom.
+  coverUrl?: string | null
 }
 
 // Os três arcos concêntricos da marca no canto da capa (README do DS, Marca):
@@ -81,15 +85,23 @@ function Arcs({ size }: { size: number }) {
   )
 }
 
-// Capa gerada quando o acervo não tem imagem (components.d.ts, BookCover). O
-// título vai na serifa e o texto fica em on-cover nos dois temas.
+// Capa do livro (components.d.ts, BookCover; decisão de 10/11/2026): a imagem
+// oficial por cima da capa gerada. A capa gerada aparece enquanto a imagem
+// carrega, quando o livro não tem imagem e quando ela falha (sem internet ou link
+// quebrado). Na capa gerada, o título vai na serifa e o texto fica em on-cover nos
+// dois temas.
 export function BookCover({
   title,
   author,
   tone = 1,
   size = 'sm',
+  coverUrl,
 }: BookCoverProps) {
   const style = SIZE[size]
+  // A imagem que falhou não é tentada de novo; outra imagem (lista reaproveitando
+  // o componente) volta a ser tentada.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const imageUrl = coverUrl && coverUrl !== failedUrl ? coverUrl : null
   return (
     <View
       accessible
@@ -125,6 +137,16 @@ export function BookCover({
       <View pointerEvents="none" className="absolute" style={style.arcsOffset}>
         <Arcs size={style.arcs} />
       </View>
+      {imageUrl ? (
+        <Image
+          testID="book-cover-image"
+          source={{ uri: imageUrl }}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          onError={() => setFailedUrl(imageUrl)}
+          className="absolute inset-0 h-full w-full"
+        />
+      ) : null}
     </View>
   )
 }

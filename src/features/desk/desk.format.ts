@@ -2,7 +2,6 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { MATRICULA_LENGTH } from '@/features/auth/auth.constants'
 import { LOAN_STATE } from '@/features/loans/loans.constants'
-import type { CoverTone } from '@/shared/components'
 import { calendarDaysFromNow, toAppDate } from '@/shared/utils/dates'
 import { FINE_STATUS } from '@/shared/types'
 import { formatCents } from '@/shared/utils/money'
@@ -26,14 +25,6 @@ export function lookupBodyFromInput(input: string): DeskLookupBody | null {
   if (MATRICULA_PATTERN.test(text)) return { matricula: text }
   if (PICKUP_CODE_PATTERN.test(text)) return { pickupCode: text.toUpperCase() }
   return null
-}
-
-// Tom da capa (1 a 6) a partir do título do livro: a lista do balcão não traz a cor
-// da capa, então o mesmo livro sempre cai no mesmo tom.
-export function coverToneOfTitle(title: string): CoverTone {
-  let sum = 0
-  for (const char of title) sum += char.charCodeAt(0)
-  return ((sum % 6) + 1) as CoverTone
 }
 
 // Quando o prazo de retirada é hoje, destaca como último dia (B07).

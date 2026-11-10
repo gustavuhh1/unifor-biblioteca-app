@@ -42,6 +42,7 @@ App mobile da biblioteca da Unifor para dois perfis: o **aluno** busca no acervo
   - `danger` / `danger-soft`: Atrasado, multa, ações destrutivas.
   - `neutral-soft` com `neutral-ink`: Expirado, Cancelado.
 - Capas geradas usam `cover-1`…`cover-6` com texto em `on-cover`. Não use essas cores fora das capas.
+- **Capa oficial (decisão de 10/11/2026):** todo componente que mostra um livro (BookCover, e por ele BookCard, LoanCard e QRPass) usa a imagem oficial da capa (coverUrl, da Open Library ou da BrasilAPI) quando o livro tem uma. A imagem fica por cima da capa gerada, que aparece enquanto ela carrega, quando o livro não tem imagem e quando ela falha (sem internet ou link quebrado). A capa gerada continua sendo a reserva, nunca um espaço vazio.
 - Texto sobre `danger` cheio (contador de avisos) usa `on-danger`.
 - O QR de retirada usa `qr-ink` sobre `qr-paper` e fica escuro sobre branco também no tema escuro, para o leitor do balcão.
 - No tema escuro o azul clareia (`brand` vira #7FA6FF), então texto sobre ele usa `on-brand` (escuro). O mesmo vale para `danger` e `on-danger`. Nunca escreva branco literal sobre `brand` ou `danger`.

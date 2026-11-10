@@ -1,3 +1,4 @@
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
@@ -155,7 +156,11 @@ export function YourTurnScreen() {
       >
         {/* LIVRO */}
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-3">
-          <BookCover title={entry.bookTitle} size="md" />
+          <BookCover
+            title={entry.bookTitle}
+            {...itemBookCover(entry)}
+            size="md"
+          />
           <View className="flex-1 justify-center gap-2">
             <Text className="text-book-title text-ink">{entry.bookTitle}</Text>
             <Text className="text-body text-ink-muted">

@@ -1,3 +1,4 @@
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import { Pressable, Text, View } from 'react-native'
 import { BookCover, StatusBadge } from '@/shared/components'
 import { historyDetailText, loanBadge } from '../loans.format'
@@ -19,7 +20,7 @@ export function LoanHistoryRow({ loan, onPress }: LoanHistoryRowProps) {
       onPress={onPress}
       className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-3"
     >
-      <BookCover title={loan.bookTitle} size="sm" />
+      <BookCover title={loan.bookTitle} {...itemBookCover(loan)} size="sm" />
       <View className="min-w-0 flex-1 gap-1">
         <Text className="text-book-title text-ink">{loan.bookTitle}</Text>
         <Text className="text-caption text-ink-muted">
