@@ -173,6 +173,7 @@ export function LibrarianCatalogScreen() {
               title={book.title}
               author={authorsLine(book.authors)}
               tone={bookCoverTone(book)}
+              coverUrl={book.coverUrl}
               status={bookStatus(book)}
               meta={librarianBookMeta(book)}
               onPress={() => openForm(book.id)}

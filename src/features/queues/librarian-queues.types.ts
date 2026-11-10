@@ -8,6 +8,7 @@ export interface LibrarianQueueBook {
   authors: string[]
   edition: string | null
   year: number | null
+  coverUrl: string | null
   coverTone: number
   copiesTotal: number
   copiesAvailable: number
@@ -48,6 +49,8 @@ export interface LibrarianQueue {
   book: {
     id: string
     title: string
+    coverUrl: string | null
+    coverTone: number
     edition: string | null
     year: number | null
     copiesTotal: number

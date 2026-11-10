@@ -188,6 +188,12 @@ Aprovadas pelo aluno depois da auditoria design × escopo. Aplicadas no Figma e 
 - **Recuperar senha pela matrícula:** o aluno (ou o bibliotecário) informa a matrícula; a API envia o token ao e-mail da conta e responde sempre a mesma mensagem, sem revelar se a conta existe. A tela A65 continua como está.
 - **Reenviar token:** espera de 60 segundos entre envios, como o contador "Reenviar em 00:42" da tela A58.
 
+## Capas oficiais e acervo ampliado (decidido em 10/11/2026)
+- **Capa oficial em todo lugar:** todo componente e card que mostra um título ou exemplar usa a imagem oficial da capa (Open Library ou BrasilAPI), com a capa gerada por baixo como reserva (enquanto carrega, sem imagem ou se a imagem falhar). Vale para o acervo, Meus empréstimos, o QR de retirada, as filas do aluno e do bibliotecário e o balcão. O `BookCover` do design system ganhou `coverUrl` (decisão do aluno, que muda o contrato de `components.d.ts`).
+- **A API manda a capa:** as respostas de empréstimo, fila e balcão trazem `bookCoverUrl` e `bookCoverTone` (e a fila do bibliotecário, `book.coverUrl` e `book.coverTone`). A capa vem do livro na hora da leitura, não é copiada para os documentos: muda junto quando o bibliotecário atualiza o livro. As listas usam o cache do acervo; a resposta de uma ação lê só o livro dela.
+- **Acervo do seed na escala de uma biblioteca universitária:** cerca de 300 títulos de 14 áreas, no máximo 4 exemplares por título, com dados reais de edições em português e capa oficial (`scripts/data/catalog.json`, feito por `npm run seed:catalog`). Os alunos e a circulação do seed não mudam.
+- **Card do empréstimo:** os botões de `LoanCard` (Mostrar QR, Renovar, Ver multa, Confirmar a vez) ocupam a largura do card; antes ficavam encolhidos do lado esquerdo.
+
 ## Pendente
 - README da API e do app: só quando a definição do projeto estiver 100% (decisão do aluno em 18/10).
 - **Datas de exemplo (decidido em 16/10):** vale a linha do tempo do Figma. Hoje é quinta 15/10/2026. Marina Castro retirou Cálculo, Vol. 1 no sábado 26/09, o livro venceu no sábado 10/10 e ela deve R$ 6,00 (3 dias úteis: 13, 14 e 15/10; 12/10 é feriado). O balcão abre aos sábados, então as duas datas são válidas. Lucas Almeida está em dia: Engenharia de Software vence amanhã (retirado 02/10, devolver até 16/10), Redes de Computadores vence 20/10 (5 dias restantes) e Estruturas de Dados vence 23/10 (8 dias restantes). Pedido feito hoje: retirar até seg 19/10.
@@ -195,7 +201,7 @@ Aprovadas pelo aluno depois da auditoria design × escopo. Aplicadas no Figma e 
 - **Navegação do bibliotecário decidida em 16/10:** Multas na barra e Acervo pelo Painel, já nos dois (a tela de editar livro tem a lixeira "Remover livro" no topo).
 - **Login do aluno (decidido em 16/10; vale para as duas entregas desde 18/10):** passkey como método principal e senha como alternativa, para manter a mesma interface nas duas entregas. O aluno confirmou que atende o critério de autenticação da cadeira; sem pendência com o professor.
 - **E-mail para @edu.unifor.br:** mandar um e-mail de teste do Resend para o e-mail institucional do aluno e conferir se chega na caixa de entrada. Se a Unifor filtrar, o cadastro ao vivo não funciona.
-- Dados e capas: BookCover com imagem real (Open Library) e capa gerada como reserva; corrigir quebra de palavras longas no título da capa M.
+- Dados e capas: ~~BookCover com imagem real (Open Library) e capa gerada como reserva~~ feito em 10/11 (seção "Capas oficiais e acervo ampliado"); falta corrigir a quebra de palavras longas no título da capa M.
 - Decisões de escopo: fechadas em 17/10 e ajustadas em 18/10 pela auditoria de design (seção própria). Nenhuma em aberto.
 - Para a entrega aos devs: nomes acessíveis dos botões só com ícone (voltar, lápis, +, enviar, mais, sino), texto alternativo das capas ("Título, de Autor") e teste real com leitor de tela (VoiceOver/TalkBack).
 - Final: separar style guide e telas em dois arquivos (publicar biblioteca); protótipo clicável; apagar o arquivo antigo da conta Gmail (aluno).

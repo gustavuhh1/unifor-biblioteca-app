@@ -1947,6 +1947,17 @@
           "bookShelf": {
             "type": "string"
           },
+          "bookCoverUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bookCoverTone": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -2073,6 +2084,8 @@
           "bookId",
           "bookTitle",
           "bookShelf",
+          "bookCoverUrl",
+          "bookCoverTone",
           "status",
           "state",
           "requestedAt",
@@ -2245,6 +2258,17 @@
           "bookTitle": {
             "type": "string"
           },
+          "bookCoverUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bookCoverTone": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -2287,6 +2311,8 @@
           "id",
           "bookId",
           "bookTitle",
+          "bookCoverUrl",
+          "bookCoverTone",
           "status",
           "position",
           "peopleAhead",
@@ -2404,6 +2430,17 @@
               "title": {
                 "type": "string"
               },
+              "coverUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "coverTone": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 6
+              },
               "edition": {
                 "type": [
                   "string",
@@ -2426,6 +2463,8 @@
             "required": [
               "id",
               "title",
+              "coverUrl",
+              "coverTone",
               "edition",
               "year",
               "copiesTotal",
@@ -2557,6 +2596,17 @@
                   "title": {
                     "type": "string"
                   },
+                  "coverUrl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "coverTone": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 6
+                  },
                   "edition": {
                     "type": [
                       "string",
@@ -2579,6 +2629,8 @@
                 "required": [
                   "id",
                   "title",
+                  "coverUrl",
+                  "coverTone",
                   "edition",
                   "year",
                   "copiesTotal",
@@ -2943,6 +2995,17 @@
                 "bookShelf": {
                   "type": "string"
                 },
+                "bookCoverUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "bookCoverTone": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 6
+                },
                 "status": {
                   "type": "string",
                   "enum": [
@@ -3020,6 +3083,8 @@
                 "bookId",
                 "bookTitle",
                 "bookShelf",
+                "bookCoverUrl",
+                "bookCoverTone",
                 "status",
                 "state",
                 "pickupCode",
@@ -3049,6 +3114,17 @@
                 },
                 "bookShelf": {
                   "type": "string"
+                },
+                "bookCoverUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "bookCoverTone": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 6
                 },
                 "status": {
                   "type": "string",
@@ -3145,6 +3221,8 @@
                 "bookId",
                 "bookTitle",
                 "bookShelf",
+                "bookCoverUrl",
+                "bookCoverTone",
                 "status",
                 "state",
                 "pickupCode",
@@ -3269,6 +3347,17 @@
           "bookShelf": {
             "type": "string"
           },
+          "bookCoverUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bookCoverTone": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -3342,6 +3431,8 @@
           "bookId",
           "bookTitle",
           "bookShelf",
+          "bookCoverUrl",
+          "bookCoverTone",
           "status",
           "state",
           "pickupCode",
@@ -3450,6 +3541,17 @@
           "bookShelf": {
             "type": "string"
           },
+          "bookCoverUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bookCoverTone": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
           "pickupDeadline": {
             "type": "string",
             "format": "date-time",
@@ -3463,6 +3565,8 @@
           "studentName",
           "bookTitle",
           "bookShelf",
+          "bookCoverUrl",
+          "bookCoverTone",
           "pickupDeadline"
         ]
       },

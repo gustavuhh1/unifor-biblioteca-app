@@ -1,3 +1,4 @@
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import { View } from 'react-native'
 import { Button, DeadlineChip, LoanCard } from '@/shared/components'
 import { LOAN_PERIOD_DAYS } from '@/shared/config/library-rules'
@@ -47,6 +48,7 @@ export function ActiveLoanCard({
   return (
     <LoanCard
       title={loan.bookTitle}
+      {...itemBookCover(loan)}
       author={loan.bookShelf}
       status={badge.status}
       statusLabel={badge.label}

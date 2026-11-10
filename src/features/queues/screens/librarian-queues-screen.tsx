@@ -86,6 +86,7 @@ export function LibrarianQueuesScreen() {
               <BookCover
                 title={book.title}
                 tone={bookCoverTone(book)}
+                coverUrl={book.coverUrl}
                 size="sm"
               />
               <View className="min-w-0 flex-1 gap-1">

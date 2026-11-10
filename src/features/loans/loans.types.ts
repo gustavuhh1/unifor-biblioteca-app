@@ -14,6 +14,9 @@ export interface MyLoan {
   bookId: string
   bookTitle: string
   bookShelf: string
+  // Capa do livro: a imagem (null sem imagem) e o tom da capa gerada (1 a 6).
+  bookCoverUrl: string | null
+  bookCoverTone: number
   status: LoanStatus
   state: LoanState
   requestedAt: string

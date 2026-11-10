@@ -1,3 +1,4 @@
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, Text, View } from 'react-native'
@@ -110,6 +111,7 @@ export function MyQueuesList({ onNotice }: MyQueuesListProps) {
           <LoanCard
             key={entry.id}
             title={entry.bookTitle}
+            {...itemBookCover(entry)}
             author={joinedSinceText(entry.joinedAt)}
             status={hisTurn ? 'aguardando' : 'fila'}
             statusLabel={

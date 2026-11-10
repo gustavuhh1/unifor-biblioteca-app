@@ -24,11 +24,8 @@ import {
   MATRICULA_SEARCH_PATTERN,
   PICKUP_SEARCH_DEBOUNCE_MS,
 } from '../desk.constants'
-import {
-  coverToneOfTitle,
-  isLastPickupDay,
-  pickupDeadlineLabel,
-} from '../desk.format'
+import { itemBookCover } from '@/features/catalog/catalog.format'
+import { isLastPickupDay, pickupDeadlineLabel } from '../desk.format'
 import { useDeskLookup } from '../hooks/use-desk-lookup'
 import { usePickups } from '../hooks/use-pickups'
 
@@ -150,7 +147,7 @@ export function WithdrawalsScreen() {
               <View className="flex-row gap-3">
                 <BookCover
                   title={item.bookTitle}
-                  tone={coverToneOfTitle(item.bookTitle)}
+                  {...itemBookCover(item)}
                   size="sm"
                 />
                 <View className="min-w-0 flex-1 gap-2">

@@ -18,11 +18,7 @@ import { QueueChangeSheet } from '../components/queue-change-sheet'
 import { QueueCutSheet } from '../components/queue-cut-sheet'
 import { QueueEntrySheet } from '../components/queue-entry-sheet'
 import { QueueRemoveSheet } from '../components/queue-remove-sheet'
-import {
-  useBookQueue,
-  useQueueActions,
-  useQueueBooks,
-} from '../hooks/use-librarian-queue'
+import { useBookQueue, useQueueActions } from '../hooks/use-librarian-queue'
 import {
   QUEUE_NOTICE,
   buildAddBody,
@@ -68,16 +64,12 @@ export function QueueManagerScreen() {
   const { colors } = useTheme()
   const { bookId } = useLocalSearchParams<{ bookId: string }>()
   const query = useBookQueue(bookId)
-  const books = useQueueBooks()
   const { add, move, remove, resend } = useQueueActions(bookId)
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const [notice, setNotice] = useState('')
 
   const queue = query.data
   const entries = queue?.items ?? []
-  const coverTone = bookCoverTone({
-    coverTone: books.data?.find((book) => book.id === bookId)?.coverTone ?? 1,
-  })
 
   function openSheet(next: Sheet | null) {
     add.reset()
@@ -222,7 +214,8 @@ export function QueueManagerScreen() {
           <View className="flex-row gap-3 rounded-lg border border-line bg-surface-raised p-3">
             <BookCover
               title={query.data.book.title}
-              tone={coverTone}
+              tone={bookCoverTone(query.data.book)}
+              coverUrl={query.data.book.coverUrl}
               size="md"
             />
             <View className="min-w-0 flex-1 gap-2">

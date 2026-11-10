@@ -13,6 +13,8 @@ export interface BookCardProps extends Omit<
   author: string
   year?: number
   tone?: CoverTone
+  // Imagem oficial da capa; sem ela, a capa gerada pelo tom.
+  coverUrl?: string | null
   status?: Status
   statusLabel?: string
   // Linha de apoio abaixo do autor (ex.: "3 pessoas na fila").
@@ -29,6 +31,7 @@ export function BookCard({
   author,
   year,
   tone,
+  coverUrl,
   status,
   statusLabel,
   meta,
@@ -48,7 +51,13 @@ export function BookCard({
         className="w-[148px] gap-2"
         {...rest}
       >
-        <BookCover title={title} author={author} tone={tone} size="lg" />
+        <BookCover
+          title={title}
+          author={author}
+          tone={tone}
+          coverUrl={coverUrl}
+          size="lg"
+        />
         <Text className="text-book-title-sm text-ink" numberOfLines={3}>
           {title}
         </Text>
@@ -69,7 +78,7 @@ export function BookCard({
       {...rest}
     >
       {/* No cartão em linha a capa só leva o título (Figma, A09). */}
-      <BookCover title={title} tone={tone} size="md" />
+      <BookCover title={title} tone={tone} coverUrl={coverUrl} size="md" />
       <View className="min-w-0 flex-1 gap-1">
         <Text className="text-book-title text-ink" numberOfLines={3}>
           {title}

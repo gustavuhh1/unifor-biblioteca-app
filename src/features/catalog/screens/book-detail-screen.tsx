@@ -169,6 +169,7 @@ function BookDetail({
             title={book.title}
             author={authorsLine(book.authors)}
             tone={bookCoverTone(book)}
+            coverUrl={book.coverUrl}
             size="lg"
           />
 

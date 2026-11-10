@@ -7,6 +7,7 @@ import {
   bookStatus,
   copiesText,
   bookCoverTone,
+  itemBookCover,
   nextReturnText,
   queueText,
   reservationsText,
@@ -41,6 +42,22 @@ describe('textos do acervo', () => {
     expect(bookCoverTone(makeBook({ coverTone: 5 }))).toBe(5)
     expect(bookCoverTone(makeBook({ coverTone: 0 }))).toBe(1)
     expect(bookCoverTone(makeBook({ coverTone: 9 }))).toBe(1)
+  })
+
+  it('monta a capa dos itens de empréstimo, fila e balcão a partir de bookCover*', () => {
+    expect(
+      itemBookCover({
+        bookCoverUrl: 'https://covers.openlibrary.org/b/id/1-L.jpg',
+        bookCoverTone: 4,
+      }),
+    ).toEqual({
+      coverUrl: 'https://covers.openlibrary.org/b/id/1-L.jpg',
+      tone: 4,
+    })
+    expect(itemBookCover({ bookCoverUrl: null, bookCoverTone: 7 })).toEqual({
+      coverUrl: null,
+      tone: 1,
+    })
   })
 
   it('junta os autores e avisa quando não há nenhum', () => {

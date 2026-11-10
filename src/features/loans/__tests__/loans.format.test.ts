@@ -19,6 +19,8 @@ function makeLoan(overrides: Partial<MyLoan> = {}): MyLoan {
     bookId: 'b1',
     bookTitle: 'Código Limpo',
     bookShelf: 'Estante 005.1',
+    bookCoverUrl: null,
+    bookCoverTone: 1,
     status: 'active',
     state: 'in_progress',
     requestedAt: '2026-10-01T12:00:00.000Z',

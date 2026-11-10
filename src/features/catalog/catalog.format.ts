@@ -19,6 +19,18 @@ export function bookCoverTone(book: Pick<BookSummary, 'coverTone'>): CoverTone {
   return tone >= 1 && tone <= 6 ? (tone as CoverTone) : 1
 }
 
+// Props do BookCover para os itens que mostram o livro fora do acervo
+// (empréstimo, fila e balcão), que trazem a capa como bookCoverUrl e bookCoverTone.
+export function itemBookCover(item: {
+  bookCoverUrl: string | null
+  bookCoverTone: number
+}): { coverUrl: string | null; tone: CoverTone } {
+  return {
+    coverUrl: item.bookCoverUrl,
+    tone: bookCoverTone({ coverTone: item.bookCoverTone }),
+  }
+}
+
 // "Martin, Robert C. e Fowler, Martin" para o byline do card.
 export function authorsLine(authors: string[]): string {
   if (authors.length === 0) return 'Autoria não informada'

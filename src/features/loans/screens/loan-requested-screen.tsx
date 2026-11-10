@@ -1,3 +1,4 @@
+import { itemBookCover } from '@/features/catalog/catalog.format'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -82,7 +83,11 @@ export function LoanRequestedScreen() {
         </View>
 
         <View className="flex-row gap-3 rounded-md border border-line bg-surface-raised p-4">
-          <BookCover title={loan.bookTitle} size="md" />
+          <BookCover
+            title={loan.bookTitle}
+            {...itemBookCover(loan)}
+            size="md"
+          />
           <View className="flex-1 justify-center gap-2">
             <Text className="text-book-title text-ink">{loan.bookTitle}</Text>
             <Text className="text-caption text-ink-muted">

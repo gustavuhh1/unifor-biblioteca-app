@@ -13,6 +13,8 @@ export interface LoanCardProps extends Omit<
   title: string
   author: string
   tone?: CoverTone
+  // Imagem oficial da capa; sem ela, a capa gerada pelo tom.
+  coverUrl?: string | null
   status?: Status
   statusLabel?: string
   // Quanto do prazo já passou, de 0 a 1.
@@ -42,6 +44,7 @@ export function LoanCard({
   title,
   author,
   tone,
+  coverUrl,
   status,
   statusLabel,
   progress,
@@ -68,7 +71,13 @@ export function LoanCard({
       {...rest}
     >
       <View className="flex-row items-start gap-3">
-        <BookCover title={title} author={author} tone={tone} size="sm" />
+        <BookCover
+          title={title}
+          author={author}
+          tone={tone}
+          coverUrl={coverUrl}
+          size="sm"
+        />
         <View className="min-w-0 flex-1 gap-1">
           <Text className="text-book-title text-ink" numberOfLines={2}>
             {title}
