@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react-native'
 import type { ReactElement } from 'react'
+import { Text } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import {
   Alert,
@@ -186,6 +187,19 @@ describe('componentes do design system: montam e mostram o texto', () => {
     expect(
       screen.getByText('Renovação indisponível: 2 alunos na fila deste livro.'),
     ).toBeTruthy()
+  })
+
+  it('LoanCard põe as ações numa coluna, para os botões ocuparem a largura do cartão', async () => {
+    await renderInApp(
+      <LoanCard
+        title="Código Limpo"
+        author="Estante 005.1"
+        status="retirar"
+        actions={<Text>Mostrar QR</Text>}
+      />,
+    )
+    const wrapper = screen.getByText('Mostrar QR').parent
+    expect(wrapper?.props.className).toBe('gap-2')
   })
 
   it('LoanTimeline mostra todas as etapas', async () => {

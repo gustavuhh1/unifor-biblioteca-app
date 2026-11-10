@@ -107,7 +107,9 @@ export function LoanCard({
           </Text>
         </View>
       ) : null}
-      {actions ? <View className="flex-row gap-2">{actions}</View> : null}
+      {/* Coluna (e não linha): assim o conteúdo de `actions` estica na largura
+          do cartão e os botões `block` ocupam a linha toda. */}
+      {actions ? <View className="gap-2">{actions}</View> : null}
     </Pressable>
   )
 }
