@@ -226,7 +226,7 @@ describe('componentes do design system: montam e mostram o texto', () => {
       />,
     )
     const wrapper = screen.getByText('Mostrar QR').parent
-    expect(wrapper?.props.className).toBe('gap-2')
+    expect(wrapper?.props.className).toBe('gap-2 self-stretch')
   })
 
   it('LoanTimeline mostra todas as etapas', async () => {
