@@ -116,9 +116,9 @@ export function LoanCard({
           </Text>
         </View>
       ) : null}
-      {/* Coluna (e não linha): assim o conteúdo de `actions` estica na largura
+      {/* Coluna esticada (e não linha): o conteúdo de `actions` ocupa a largura
           do cartão e os botões `block` ocupam a linha toda. */}
-      {actions ? <View className="gap-2">{actions}</View> : null}
+      {actions ? <View className="gap-2 self-stretch">{actions}</View> : null}
     </Pressable>
   )
 }

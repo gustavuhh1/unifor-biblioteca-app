@@ -1,5 +1,4 @@
 import { itemBookCover } from '@/features/catalog/catalog.format'
-import { View } from 'react-native'
 import { Button, DeadlineChip, LoanCard } from '@/shared/components'
 import { LOAN_PERIOD_DAYS } from '@/shared/config/library-rules'
 import { LOAN_STATUS } from '@/shared/types'
@@ -64,7 +63,7 @@ export function ActiveLoanCard({
       renewReason={reason ? RENEWAL_DENIAL_MESSAGE[reason] : undefined}
       onPress={onOpenBook}
       actions={
-        <View className="gap-2">
+        <>
           {waiting ? (
             <>
               <Button block size="sm" icon="qr" onPress={onShowQr}>
@@ -106,7 +105,7 @@ export function ActiveLoanCard({
               {renewalUsed ? 'Renovação já utilizada' : 'Renovar'}
             </Button>
           )}
-        </View>
+        </>
       }
     />
   )

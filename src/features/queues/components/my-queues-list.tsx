@@ -126,7 +126,7 @@ export function MyQueuesList({ onNotice }: MyQueuesListProps) {
             }
             onPress={() => openBook(entry)}
             actions={
-              <View className="gap-2">
+              <>
                 {hisTurn ? null : (
                   <QueueInfo
                     joined
@@ -156,7 +156,7 @@ export function MyQueuesList({ onNotice }: MyQueuesListProps) {
                 >
                   {hisTurn ? 'Desistir da vez' : 'Sair da fila'}
                 </Button>
-              </View>
+              </>
             }
           />
         )
